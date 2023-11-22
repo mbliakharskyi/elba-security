@@ -156,7 +156,7 @@ async function refreshAccessToken(refreshToken: string): Promise<RefreshTokenRes
     return { access_token, expires_in };
   } catch (error) {
     console.error('Error refreshing access token:');
-    throw new Error('Failed to refresh Asana access token'); // Explicitly return undefined
+    throw new Error('Failed to refresh Asana access token', { cause: error }); // Explicitly return undefined
   }
 }
 
