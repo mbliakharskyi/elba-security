@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function createWebhook(acessToken: string, organisationId: string) {
+async function createWebhook(accessToken: string, organisationId: string) {
   const client = Asana.ApiClient.instance;
   const token = client.authentications['token'];
   token.accessToken = acessToken;
