@@ -94,6 +94,6 @@ async function createWebhook(accessToken: string, organisationId: string) {
   try {
     const webhook = await webhooksApiInstance.createWebhook(body, opts);
   } catch (error) {
-    throw new Error("Webhook error")
+    throw new Error("Webhook error", { cause: error })
   }
 }
