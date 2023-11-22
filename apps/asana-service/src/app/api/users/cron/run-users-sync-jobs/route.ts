@@ -40,17 +40,13 @@ export async function GET(request: NextRequest) {
 }
 
 async function getNextJob(): Promise<Job | null> {
-  const { rows: jobRows } = await sql`
+  const { rows: [job] } = await sql`
     SELECT * FROM users_sync_jobs
     ORDER BY priority ASC, sync_started_at ASC
     LIMIT 1;
   `;
-  if (jobRows.length === 0) {
-    return null;
-  }
-
-  const job = jobRows[0] as Job; // Explicitly cast the row to type Job
-  return job;
+  
+  return job as Job | nulll
 }
 
 async function updateJobToken(organisationId: string, paginationToken?: string): Promise<void> {
