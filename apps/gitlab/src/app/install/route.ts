@@ -27,8 +27,6 @@ export function GET(request: NextRequest) {
   redirectUrl.searchParams.append('response_type', 'code');
   redirectUrl.searchParams.append('state', organisationId);
   redirectUrl.searchParams.append('scope', "sudo read_user api read_api"); // Scopes are space-separated.
-  redirectUrl.searchParams.append('code_challenge', "2i0WFA-0AerkjQm4X4oDEhqA17QIAKNjXpagHBXmO_U");
-  redirectUrl.searchParams.append('code_challenge_method', "S256");
 
   // we redirect the user to the installation page of the SaaS application
   redirect(redirectUrl.toString());
