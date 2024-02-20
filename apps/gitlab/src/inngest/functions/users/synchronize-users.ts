@@ -9,7 +9,7 @@ import { env } from '@/env';
 import { inngest } from '@/inngest/client';
 
 const formatElbaUser = (user: GitlabUser): User => ({
-  id: user.id,
+  id: String(user.id),
   displayName: user.name,
   email: user.email,
   additionalEmails: [],
@@ -53,28 +53,28 @@ export const synchronizeUsers = inngest.createFunction(
         .select({ token: Organisation.accessToken })
         .from(Organisation)
         .where(eq(Organisation.id, organisationId));
-      console.log("organisation Token:", organisation?.token)
+      console.log('organisation Token:', organisation?.token);
       if (!organisation) {
         throw new NonRetriableError(`Could not retrieve organisation with id=${organisationId}`);
       }
       return organisation.token;
     });
 
-    console.log("token:", token)
+    console.log('token:', token);
     const nextPage = await step.run('list-users', async () => {
       // retrieve this users page
-      const data= await getUsers({token, page});
-      
+      const data = await getUsers({ token, page });
+
       // format each SaaS users to elba users
       const users = data.data.map(formatElbaUser);
-      console.log("users:", users)
+      console.log('users:', users);
 
       // send the batch of users to elba
       await elba.users.update({ users });
 
       return data.paging;
     });
-    console.log("nextPage:", nextPage)
+    console.log('nextPage:', nextPage);
 
     // if there is a next page enqueue a new sync user event
     if (nextPage) {

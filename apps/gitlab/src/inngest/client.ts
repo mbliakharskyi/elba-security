@@ -26,7 +26,7 @@ export const inngest = new Inngest({
         organisationId: string;
         region: string;
       };
-      ts: number,
+      ts: number;
     };
     'gitlab/gitlab.elba_app.uninstalled': {
       data: {

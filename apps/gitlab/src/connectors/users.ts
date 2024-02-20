@@ -11,7 +11,7 @@ import { GitlabError } from './commons/error';
 import { getNextPageFromLink } from './commons/pagination';
 
 export type GitlabUser = {
-  id: string;
+  id: number;
   username: string;
   name: string;
   email: string | undefined;
@@ -20,7 +20,7 @@ export type GitlabUser = {
 type GitlabResponse = GitlabUser[];
 
 export type GitlabPaginatedResponse<T> = {
-  'next'?: string;
+  next?: string;
   data: T[];
 };
 
@@ -28,11 +28,11 @@ export type GetUsersParams = {
   token: string;
   page: string | null;
 };
-export const getUsers = async ({ token, page }: GetUsersParams) => {
 
+export const getUsers = async ({ token, page }: GetUsersParams) => {
   const url = new URL(`${env.GITLAB_API_BASE_URL}api/v4/users`);
   url.searchParams.append('pagination', 'keyset');
-  url.searchParams.append('per_page', env.USERS_SYNC_BATCH_SIZE);
+  url.searchParams.append('per_page', String(env.USERS_SYNC_BATCH_SIZE));
   url.searchParams.append('order_by', 'id');
   url.searchParams.append('sort', 'asc');
   if (page) {
@@ -46,7 +46,7 @@ export const getUsers = async ({ token, page }: GetUsersParams) => {
       Authorization: `Bearer ${token}`,
     },
   });
-  
+
   if (!response.ok) {
     throw new GitlabError('Could not retrieve users', { response });
   }
@@ -56,5 +56,5 @@ export const getUsers = async ({ token, page }: GetUsersParams) => {
   const linkHeader = response.headers.get('Link');
   const paging = getNextPageFromLink(linkHeader);
 
-  return {data, paging};
+  return { data, paging };
 };

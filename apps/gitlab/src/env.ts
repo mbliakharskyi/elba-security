@@ -43,6 +43,7 @@ export const env = z
     ELBA_REDIRECT_URL: z.string().url(),
     ELBA_SOURCE_ID: z.string().uuid(),
     ELBA_WEBHOOK_SECRET: z.string().min(1),
+    USERS_SYNC_BATCH_SIZE: z.coerce.number().default(10),
     DATABASE_URL: z.string().min(1),
     DATABASE_HOST: z.string().min(1),
     DATABASE_PORT: z.coerce.number().int().positive(),
