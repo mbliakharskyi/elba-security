@@ -17,15 +17,17 @@ export function GET(request: NextRequest) {
     redirect(`${env.ELBA_REDIRECT_URL}?error=true`);
   }
 
+  const state = crypto.randomUUID();
   // we store the organisationId in the cookies to be able to retrieve after the SaaS redirection
   cookies().set('organisation_id', organisationId);
   cookies().set('region', region);
-
+  cookies().set('state', state);
+  
   const redirectUrl = new URL(`${env.GITLAB_APP_INSTALL_URL}authorize?`);
   redirectUrl.searchParams.append('client_id', env.GITLAB_CLIENT_ID);
   redirectUrl.searchParams.append('redirect_uri', env.GITLAB_REDIRECT_URI);
   redirectUrl.searchParams.append('response_type', 'code');
-  redirectUrl.searchParams.append('state', organisationId);
+  redirectUrl.searchParams.append('state', state);
   redirectUrl.searchParams.append('scope', "sudo read_user api read_api"); // Scopes are space-separated.
 
   // we redirect the user to the installation page of the SaaS application
