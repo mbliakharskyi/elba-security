@@ -37,6 +37,7 @@ export const getToken = async (code: string) => {
   return {
     accessToken: data.access_token,
     refreshToken: data.refresh_token,
+    // TODO: undo /60 when new refresh token flow is implemented 
     expiresIn: data.expires_in/60,
   };
 };
