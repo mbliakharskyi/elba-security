@@ -32,7 +32,7 @@ export const getUsers = async ({ token, page }: GetUsersParams) => {
 
   const url = new URL(`${env.GITLAB_API_BASE_URL}api/v4/users`);
   url.searchParams.append('pagination', 'keyset');
-  url.searchParams.append('per_page', '2');
+  url.searchParams.append('per_page', env.USERS_SYNC_BATCH_SIZE);
   url.searchParams.append('order_by', 'id');
   url.searchParams.append('sort', 'asc');
   if (page) {
