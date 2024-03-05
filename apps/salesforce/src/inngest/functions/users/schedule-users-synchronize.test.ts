@@ -12,7 +12,8 @@ export const organisations = Array.from({ length: 5 }, (_, i) => ({
   id: `b91f113b-bcf9-4a28-98c7-5b13fb671c1${i}`,
   region: 'us',
   accessToken: `some access-token${i}`,
-  refreshToken: `some refresh-token${i}`
+  refreshToken: `some refresh-token${i}`,
+  instanceURL: `some instanceURL${i}`
 }));
 
 describe('schedule-users-syncs', () => {
@@ -36,7 +37,7 @@ describe('schedule-users-syncs', () => {
 
     await expect(result).resolves.toStrictEqual({
       // eslint-disable-next-line @typescript-eslint/no-unused-vars -- convenience
-      organisations: organisations.map(({ accessToken, refreshToken, ...organisation }) => organisation),
+      organisations: organisations.map(({ accessToken, refreshToken, instanceURL, ...organisation }) => organisation),
     });
     expect(step.sendEvent).toBeCalledTimes(1);
     expect(step.sendEvent).toBeCalledWith(

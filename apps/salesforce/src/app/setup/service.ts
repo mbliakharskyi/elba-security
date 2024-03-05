@@ -1,26 +1,23 @@
 import { db } from '@/database/client';
 import { Organisation } from '@/database/schema';
-import { getToken } from '@/connectors/auth';
 import { inngest } from '@/inngest/client';
 
 type SetupOrganisationParams = {
+  accessToken: string;
+  refreshToken: string;
+  instanceURL: string;
   organisationId: string;
-  code: string;
   region: string;
 };
 
-export const setupOrganisation = async ({
-  organisationId,
-  code,
-  region,
-}: SetupOrganisationParams) => {
-  // retrieve token from SaaS API using the given code
-  const { accessToken } = await getToken(code);
+export const setupOrganisation = async ({ accessToken, refreshToken, instanceURL, organisationId, region }: SetupOrganisationParams) => {
 
-  await db.insert(Organisation).values({ id: organisationId, accessToken, region }).onConflictDoUpdate({
+  await db.insert(Organisation).values({ id: organisationId, accessToken, refreshToken, instanceURL, region }).onConflictDoUpdate({
     target: Organisation.id,
     set: {
       accessToken,
+      refreshToken,
+      instanceURL,
       region
     },
   });

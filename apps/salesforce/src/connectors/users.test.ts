@@ -18,7 +18,7 @@ import { SalesforceError } from './commons/error';
 const validToken = 'token-1234';
 const totalSize = 30;
 const nextRecordsUrl = '/services/data/v60.0/query/?next-records-url';
-
+const instanceURL = 'https://sky-ed-dev-ed.develop.my.salesforce.com'
 const validUsers: SalesforceUser[] = Array.from({ length: 3 }, (_, i) => ({
   Id: `id-${i}`,
   Name: `name-${i}`,
@@ -67,7 +67,7 @@ describe('users connector', () => {
       );
     });
     test('should return users and nextPage when the token is valid and their is another page', async () => {
-      await expect(getUsers({ token: validToken, nextRecordsUrl })).resolves.toStrictEqual({
+      await expect(getUsers({ token: validToken, instanceURL, nextRecordsUrl })).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
         nextPage: nextRecordsUrl,
@@ -75,7 +75,7 @@ describe('users connector', () => {
     });
 
     test('should return users and no nextPage when the token is valid and their is no other page', async () => {
-      await expect(getUsers({ token: validToken, nextRecordsUrl: null })).resolves.toStrictEqual({
+      await expect(getUsers({ token: validToken,instanceURL, nextRecordsUrl: null })).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
         nextPage: null,
@@ -83,7 +83,7 @@ describe('users connector', () => {
     });
 
     test('should throws when the token is invalid', async () => {
-      await expect(getUsers({ token: 'foo-bar' })).rejects.toBeInstanceOf(SalesforceError);
+      await expect(getUsers({ token: 'foo-bar' , instanceURL})).rejects.toBeInstanceOf(SalesforceError);
     });
   });
 });

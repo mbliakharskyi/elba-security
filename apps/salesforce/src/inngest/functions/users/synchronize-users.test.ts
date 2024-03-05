@@ -18,6 +18,8 @@ import { synchronizeUsers } from './synchronize-users';
 const organisation = {
   id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
   accessToken: 'test-access-token',
+  refreshToken: 'test-refresh-token',
+  instanceURL: 'test-instance-url',
   timeZone: 'us/eastern',
   region: 'us',
 };

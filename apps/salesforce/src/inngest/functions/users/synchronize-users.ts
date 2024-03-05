@@ -42,20 +42,23 @@ export const synchronizeUsers = inngest.createFunction(
       region,
     });
 
-    const token = await step.run('get-token', async () => {
+    const {token, instanceURL} = await step.run('get-token', async () => {
       const [organisation] = await db
-        .select({ token: Organisation.accessToken })
+        .select({ 
+          token: Organisation.accessToken,
+          instanceURL: Organisation.instanceURL
+         })
         .from(Organisation)
         .where(eq(Organisation.id, organisationId));
       if (!organisation) {
         throw new NonRetriableError(`Could not retrieve organisation with id=${organisationId}`);
       }
-      return organisation.token;
+      return {token: organisation.token, instanceURL: organisation.instanceURL};
     });
 
     console.log("token:", token)
     const nextPage = await step.run('list-users', async () => {
-      const result = await getUsers({ token, nextRecordsUrl: page });
+      const result = await getUsers({ token, instanceURL, nextRecordsUrl: page });
 
       const users = result.validUsers.map(formatElbaUser);
 

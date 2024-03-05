@@ -26,8 +26,8 @@ export function GET(request: NextRequest) {
   const redirectUrl = new URL(`${env.SALESFORCE_APP_INSTALL_URL}services/oauth2/authorize?`);
   redirectUrl.searchParams.append('client_id', env.SALESFORCE_CLIENT_ID);
   redirectUrl.searchParams.append('redirect_uri', env.SALESFORCE_REDIRECT_URI);
-  redirectUrl.searchParams.append('response_type', 'code');
-  redirectUrl.searchParams.append('code_challenge', "2i0WFA-0AerkjQm4X4oDEhqA17QIAKNjXpagHBXmO_U");
+  redirectUrl.searchParams.append('response_type', 'token');
+  // redirectUrl.searchParams.append('code_challenge', "2i0WFA-0AerkjQm4X4oDEhqA17QIAKNjXpagHBXmO_U");
 
   redirectUrl.searchParams.append('state', state);
   // redirectUrl.searchParams.append('scope', "read"); // Scopes are space-separated.

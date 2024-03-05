@@ -18,12 +18,13 @@ const salesforceResponseSchema = z.object({
 
 export type GetUsersParams = {
   token: string;
+  instanceURL: string;
   nextRecordsUrl?: string | null;
 };
 
-export const getUsers = async ({ token, nextRecordsUrl }: GetUsersParams) => {
+export const getUsers = async ({ token, instanceURL, nextRecordsUrl }: GetUsersParams) => {
 
-  const endpoint = `${process.env.SALESFORCE_API_BASE_URL}${nextRecordsUrl || '/services/data/v60.0/query/?q=SELECT+Id,+Name,+Email+FROM+User'}`;
+  const endpoint = `${instanceURL}${nextRecordsUrl || '/services/data/v60.0/query/?q=SELECT+Id,+Name,+Email+FROM+User'}`;
 
   const response = await fetch(
     endpoint,
