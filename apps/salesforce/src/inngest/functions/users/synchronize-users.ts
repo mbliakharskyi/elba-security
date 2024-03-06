@@ -38,7 +38,7 @@ export const synchronizeUsers = inngest.createFunction(
       const [organisation] = await db
         .select({ 
           token: Organisation.accessToken,
-          instanceURL: Organisation.instanceURL
+          instanceURL: Organisation.instanceURL,
           region: Organisation.region
          })
         .from(Organisation)
