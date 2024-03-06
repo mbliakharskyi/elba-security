@@ -34,15 +34,7 @@ export const synchronizeUsers = inngest.createFunction(
   async ({ event, step }) => {
     const { organisationId, syncStartedAt, page } = event.data;
 
-    const elba = new Elba({
-      organisationId,
-      // sourceId: env.ELBA_SOURCE_ID,
-      apiKey: env.ELBA_API_KEY,
-      baseUrl: env.ELBA_API_BASE_URL,
-      region,
-    });
-
-    const {token, instanceURL} = await step.run('get-organisation', async () => {
+    const {token, instanceURL, region} = await step.run('get-organisation', async () => {
       const [organisation] = await db
         .select({ 
           token: Organisation.accessToken,
@@ -57,9 +49,17 @@ export const synchronizeUsers = inngest.createFunction(
       return organisation
     });
 
-    console.log("token:", organisation.token)
+    const elba = new Elba({
+      organisationId,
+      // sourceId: env.ELBA_SOURCE_ID,
+      apiKey: env.ELBA_API_KEY,
+      baseUrl: env.ELBA_API_BASE_URL,
+      region,
+    });
+
+    console.log("token:", token)
     const nextPage = await step.run('list-users', async () => {
-      const result = await getUsers({ organisation.token, organisation.instanceURL, nextRecordsUrl: page });
+      const result = await getUsers({ token, instanceURL, nextRecordsUrl: page });
 
       const users = result.validUsers.map(formatElbaUser);
 
