@@ -34,7 +34,6 @@ const zEnvRetry = (defaultValue = '3') =>
 export const env = z
   .object({
     SALESFORCE_APP_INSTALL_URL: z.string().url(),
-    SALESFORCE_API_BASE_URL: z.string().url(),
     SALESFORCE_CLIENT_ID: z.string().min(1),
     SALESFORCE_CLIENT_SECRET: z.string().min(1),
     SALESFORCE_REDIRECT_URI: z.string().url(),
