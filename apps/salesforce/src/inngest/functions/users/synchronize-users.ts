@@ -47,6 +47,7 @@ export const synchronizeUsers = inngest.createFunction(
         .select({ 
           token: Organisation.accessToken,
           instanceURL: Organisation.instanceURL
+          region: Organisation.region
          })
         .from(Organisation)
         .where(eq(Organisation.id, organisationId));
