@@ -27,7 +27,6 @@ export const setupOrganisation = async ({ accessToken, refreshToken, instanceURL
       name: 'salesforce/users.sync.requested',
       data: {
         organisationId,
-        region,
         isFirstSync: true,
         syncStartedAt: Date.now(),
         page: null,
