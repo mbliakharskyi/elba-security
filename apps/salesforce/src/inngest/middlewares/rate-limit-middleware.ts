@@ -27,8 +27,38 @@ export const rateLimitMiddleware = new InngestMiddleware({
               result: { error, ...result },
               ...context
             } = ctx;
-            const retryAfter =
-              error instanceof SalesforceError && error.response?.headers.get('Retry-After');
+
+            if (!(error instanceof SalesforceError)) {
+              return;
+            }
+
+            const statusCode = error.response?.status;
+            let retryAfter : string | null | undefined;
+
+            // Check for HTTP 429 and use the 'Reset-After' header
+            if (statusCode === 429) {
+              retryAfter = error.response?.headers.get('Reset-After');
+            }
+
+            // Check for 'Sforce-Limit-Info' header and calculate reset time if necessary
+            const sforceLimitInfo = error.response?.headers.get('Sforce-Limit-Info');
+            if (sforceLimitInfo) {
+
+              // @ts-expect-error -- convenience
+
+              const [used, limit] = sforceLimitInfo.split('/')[0].split('=').pop().split('/');
+
+              if (used && limit && parseInt(used) >= parseInt(limit)) {
+                // Assuming reset at the start of the next day, calculate time until then
+                const now = new Date();
+                const tomorrow = new Date(now);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                tomorrow.setHours(0, 0, 0, 0);
+                const millisecondsToReset = tomorrow.getTime() - now.getTime();
+                // Convert milliseconds to seconds as 'Retry-After' is expected to be in seconds
+                retryAfter = (millisecondsToReset / 1000).toString();
+              }
+            }
 
             if (!retryAfter) {
               return;
@@ -39,7 +69,8 @@ export const rateLimitMiddleware = new InngestMiddleware({
               result: {
                 ...result,
                 error: new RetryAfterError(
-                  `Salesforce rate limit reached by '${fn.name}'`,
+                  `Salesforce rate limit reached by '${fn.name}'. Please retry after ${retryAfter} seconds.`,
+                  
                   retryAfter,
                   {
                     cause: error,

@@ -42,7 +42,7 @@ export const synchronizeUsers = inngest.createFunction(
       region,
     });
 
-    const {token, instanceURL} = await step.run('get-organisation', async () => {
+    const {token, instanceURL} = await step.run('get-token', async () => {
       const [organisation] = await db
         .select({ 
           token: Organisation.accessToken,
@@ -53,7 +53,7 @@ export const synchronizeUsers = inngest.createFunction(
       if (!organisation) {
         throw new NonRetriableError(`Could not retrieve organisation with id=${organisationId}`);
       }
-      return organisation
+      return {token: organisation.token, instanceURL: organisation.instanceURL};
     });
 
     console.log("token:", token)

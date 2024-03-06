@@ -7,8 +7,7 @@
  * Expanding upon these tests to fit the actual logic and behaviors of specific integrations is crucial.
  */
 import { expect, test, describe, vi, beforeAll, afterAll } from 'vitest';
-import { eq, or } from 'drizzle-orm';
-import * as authConnector from '@/connectors/auth';
+import { eq} from 'drizzle-orm';
 import { db } from '@/database/client';
 import { Organisation } from '@/database/schema';
 import { inngest } from '@/inngest/client';
