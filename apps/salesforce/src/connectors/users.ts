@@ -4,7 +4,7 @@ import { SalesforceError } from './commons/error';
 const salesforceUserSchema = z.object({
   Id: z.string(),
   Name: z.string(),
-  Email: z.string(),
+  Email: z.string().email(),
 });
 
 export type SalesforceUser = z.infer<typeof salesforceUserSchema>;
@@ -13,7 +13,7 @@ const salesforceResponseSchema = z.object({
   totalSize: z.number(),
   done: z.boolean(),
   nextRecordsUrl: z.string().optional(),
-  records: z.array(salesforceUserSchema),
+  records: z.array(z.unknown()),
 });
 
 export type GetUsersParams = {
@@ -23,19 +23,17 @@ export type GetUsersParams = {
 };
 
 export const getUsers = async ({ token, instanceURL, nextRecordsUrl }: GetUsersParams) => {
+  const endpoint = `${instanceURL}${
+    nextRecordsUrl || '/services/data/v60.0/query/?q=SELECT+Id,+Name,+Email+FROM+User'
+  }`;
 
-  const endpoint = `${instanceURL}${nextRecordsUrl || '/services/data/v60.0/query/?q=SELECT+Id,+Name,+Email+FROM+User'}`;
-
-  const response = await fetch(
-    endpoint,
-    {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  const response = await fetch(endpoint, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
   if (!response.ok) {
     throw new SalesforceError('Could not retrieve users', { response });

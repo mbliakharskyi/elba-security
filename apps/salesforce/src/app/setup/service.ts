@@ -4,23 +4,28 @@ import { inngest } from '@/inngest/client';
 
 type SetupOrganisationParams = {
   accessToken: string;
-  refreshToken: string;
   instanceURL: string;
   organisationId: string;
   region: string;
 };
 
-export const setupOrganisation = async ({ accessToken, refreshToken, instanceURL, organisationId, region }: SetupOrganisationParams) => {
-
-  await db.insert(Organisation).values({ id: organisationId, accessToken, refreshToken, instanceURL, region }).onConflictDoUpdate({
-    target: Organisation.id,
-    set: {
-      accessToken,
-      refreshToken,
-      instanceURL,
-      region
-    },
-  });
+export const setupOrganisation = async ({
+  accessToken,
+  instanceURL,
+  organisationId,
+  region,
+}: SetupOrganisationParams) => {
+  await db
+    .insert(Organisation)
+    .values({ id: organisationId, accessToken, instanceURL, region })
+    .onConflictDoUpdate({
+      target: Organisation.id,
+      set: {
+        accessToken,
+        instanceURL,
+        region,
+      },
+    });
 
   await inngest.send([
     {
@@ -40,6 +45,6 @@ export const setupOrganisation = async ({ accessToken, refreshToken, instanceURL
         organisationId,
         region,
       },
-    }
+    },
   ]);
 };
