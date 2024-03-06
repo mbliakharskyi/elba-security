@@ -32,7 +32,22 @@ export const synchronizeUsers = inngest.createFunction(
   },
   { event: 'salesforce/users.sync.requested' },
   async ({ event, step }) => {
-    const { organisationId, syncStartedAt, page, region } = event.data;
+    const { organisationId, syncStartedAt, page } = event.data;
+
+    const {token, instanceURL, region} = await step.run('get-organisation', async () => {
+      const [organisation] = await db
+        .select({ 
+          token: Organisation.accessToken,
+          instanceURL: Organisation.instanceURL,
+          region: Organisation.region
+         })
+        .from(Organisation)
+        .where(eq(Organisation.id, organisationId));
+      if (!organisation) {
+        throw new NonRetriableError(`Could not retrieve organisation with id=${organisationId}`);
+      }
+      return organisation
+    });
 
     const elba = new Elba({
       organisationId,
@@ -40,20 +55,6 @@ export const synchronizeUsers = inngest.createFunction(
       apiKey: env.ELBA_API_KEY,
       baseUrl: env.ELBA_API_BASE_URL,
       region,
-    });
-
-    const {token, instanceURL} = await step.run('get-token', async () => {
-      const [organisation] = await db
-        .select({ 
-          token: Organisation.accessToken,
-          instanceURL: Organisation.instanceURL
-         })
-        .from(Organisation)
-        .where(eq(Organisation.id, organisationId));
-      if (!organisation) {
-        throw new NonRetriableError(`Could not retrieve organisation with id=${organisationId}`);
-      }
-      return {token: organisation.token, instanceURL: organisation.instanceURL};
     });
 
     console.log("token:", token)

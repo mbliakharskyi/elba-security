@@ -32,7 +32,6 @@ export const setupOrganisation = async ({
       name: 'salesforce/users.sync.requested',
       data: {
         organisationId,
-        region,
         isFirstSync: true,
         syncStartedAt: Date.now(),
         page: null,
