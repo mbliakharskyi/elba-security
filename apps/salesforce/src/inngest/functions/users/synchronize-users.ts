@@ -53,7 +53,7 @@ export const synchronizeUsers = inngest.createFunction(
       if (!organisation) {
         throw new NonRetriableError(`Could not retrieve organisation with id=${organisationId}`);
       }
-      return {token: organisation.token, instanceURL: organisation.instanceURL};
+      return organisation
     });
 
     console.log("token:", token)
