@@ -32,7 +32,7 @@ export const synchronizeUsers = inngest.createFunction(
   },
   { event: 'salesforce/users.sync.requested' },
   async ({ event, step }) => {
-    const { organisationId, syncStartedAt, page, region } = event.data;
+    const { organisationId, syncStartedAt, page } = event.data;
 
     const elba = new Elba({
       organisationId,
@@ -57,9 +57,9 @@ export const synchronizeUsers = inngest.createFunction(
       return organisation
     });
 
-    console.log("token:", token)
+    console.log("token:", organisation.token)
     const nextPage = await step.run('list-users', async () => {
-      const result = await getUsers({ token, instanceURL, nextRecordsUrl: page });
+      const result = await getUsers({ organisation.token, organisation.instanceURL, nextRecordsUrl: page });
 
       const users = result.validUsers.map(formatElbaUser);
 
