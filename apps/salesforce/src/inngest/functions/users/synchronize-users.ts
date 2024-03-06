@@ -42,7 +42,7 @@ export const synchronizeUsers = inngest.createFunction(
       region,
     });
 
-    const {token, instanceURL} = await step.run('get-token', async () => {
+    const {token, instanceURL} = await step.run('get-organisation', async () => {
       const [organisation] = await db
         .select({ 
           token: Organisation.accessToken,
