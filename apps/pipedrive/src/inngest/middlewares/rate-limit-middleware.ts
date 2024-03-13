@@ -28,7 +28,7 @@ export const rateLimitMiddleware = new InngestMiddleware({
               ...context
             } = ctx;
             const retryAfter =
-              error instanceof PipedriveError && error.response?.headers.get('Retry-After');
+              error instanceof PipedriveError && error.response?.headers.get('x-rate-limit-reset');
 
             if (!retryAfter) {
               return;
