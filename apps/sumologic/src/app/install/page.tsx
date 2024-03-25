@@ -48,7 +48,7 @@ function InstructionItems({ heading, instructions, active }: { heading: string; 
           <span className={styles.instructionText}>
             {index === 0 && active === '1' ? (
               <span>
-                In  <a href="https://www.sumologic.com/sign-up/" target="_blank" rel="noopener noreferrer">Sumo Logic</a>{item}.
+                In  <a href="https://www.sumologic.com/sign-up/" rel="noopener noreferrer" target="_blank" >Sumo Logic</a>{item}.
               </span>
             ) : (
               item
