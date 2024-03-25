@@ -26,7 +26,7 @@ const validUsers: SumologicUser[] = Array.from({ length: 5 }, (_, i) => ({
 const getUsersData = {
   validUsers,
   invalidUsers: [],
-  next: null,
+  nextPage: null,
 };
 
 const organisation = {
