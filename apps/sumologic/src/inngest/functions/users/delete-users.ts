@@ -1,3 +1,4 @@
+import { eq } from 'drizzle-orm';
 import { NonRetriableError } from 'inngest';
 import { db } from '@/database/client';
 import { Organisation } from '@/database/schema';
@@ -9,7 +10,7 @@ export const deleteSourceUsers = inngest.createFunction(
   { id: 'delete-users' },
   { event: 'sumologic/users.delete.requested' },
   async ({ event }) => {
-    const { userId } = event.data;
+    const { userId, organisationId } = event.data;
 
     const [organisation] = await db
       .select({
@@ -17,7 +18,9 @@ export const deleteSourceUsers = inngest.createFunction(
         accessKey: Organisation.accessKey,
         sourceRegion: Organisation.sourceRegion,
       })
-      .from(Organisation);
+      .from(Organisation)
+      .where(eq(Organisation.id, organisationId));
+
     if (!organisation) {
       throw new NonRetriableError(`Could not retrieve ${userId}`);
     }
