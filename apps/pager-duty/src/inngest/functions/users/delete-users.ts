@@ -9,13 +9,15 @@ export const deleteSourceUsers = inngest.createFunction(
   { id: 'delete-users' },
   { event: 'pagerduty/users.delete.requested' },
   async ({ event }) => {
-    const { userId } = event.data;
+    const { userId, organisationId } = event.data;
 
     const [organisation] = await db
       .select({
         token: Organisation.accessToken,
       })
-      .from(Organisation);
+      .from(Organisation)
+      .where(eq(Organisation.id, organisationId));
+
     if (!organisation) {
       throw new NonRetriableError(`Could not retrieve ${userId}`);
     }

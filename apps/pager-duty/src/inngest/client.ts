@@ -34,6 +34,7 @@ export const inngest = new Inngest({
     };
     'pagerduty/users.delete.requested': {
       data: {
+        organisationId: string;
         userId: string;
       };
     };

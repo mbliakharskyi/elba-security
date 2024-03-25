@@ -4,7 +4,7 @@ import { deleteUsers } from './service';
 
 export async function POST(request: NextRequest) {
   const data: unknown = await request.json();
-  const { id: userId } = parseWebhookEventData(`users.delete_user_requested`, data);
+  const { id: userId, organisationId } = parseWebhookEventData(`users.delete_user_requested`, data);
 
-  await deleteUsers({ userId });
+  await deleteUsers({ userId, organisationId });
 }
