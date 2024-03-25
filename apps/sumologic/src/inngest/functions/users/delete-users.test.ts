@@ -11,11 +11,13 @@ const accessId = 'test-access-id';
 const accessKey = 'test-access-key';
 const region = 'us';
 const userId = '45a76301-f1dd-4a77-b12f-9d7d3fca3c91';
+const sourceRegion = 'EU';
 
 const organisation = {
   id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
   accessId: await encrypt(accessId),
   accessKey: await encrypt(accessKey),
+  sourceRegion,
   region,
 };
 
@@ -53,6 +55,7 @@ describe('deleteSourceUsers', () => {
       userId,
       accessId,
       accessKey,
+      sourceRegion,
     });
   });
 
@@ -65,6 +68,7 @@ describe('deleteSourceUsers', () => {
         userId,
         accessId,
         accessKey, // Assuming accessToken is the correct token for authentication
+        sourceRegion,
       })
     ).resolves.not.toThrow();
 
@@ -73,6 +77,7 @@ describe('deleteSourceUsers', () => {
       userId,
       accessId,
       accessKey,
+      sourceRegion,
     });
   });
 
@@ -85,6 +90,7 @@ describe('deleteSourceUsers', () => {
         userId,
         accessId,
         accessKey,
+        sourceRegion,
       })
     ).resolves.not.toThrow();
 
@@ -93,6 +99,7 @@ describe('deleteSourceUsers', () => {
       userId,
       accessId,
       accessKey,
+      sourceRegion,
     });
   });
 
@@ -106,6 +113,7 @@ describe('deleteSourceUsers', () => {
         userId,
         accessId: 'invalid-id',
         accessKey: 'invalid-key',
+        sourceRegion,
       })
     ).rejects.toThrow(errorMessage);
 
@@ -114,6 +122,7 @@ describe('deleteSourceUsers', () => {
       userId,
       accessId: 'invalid-id',
       accessKey: 'invalid-key',
+      sourceRegion,
     });
   });
 });

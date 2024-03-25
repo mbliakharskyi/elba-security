@@ -39,6 +39,7 @@ export const synchronizeUsers = inngest.createFunction(
       .select({
         accessId: Organisation.accessId,
         accessKey: Organisation.accessKey,
+        sourceRegion: Organisation.sourceRegion,
         region: Organisation.region,
       })
       .from(Organisation)
@@ -56,11 +57,13 @@ export const synchronizeUsers = inngest.createFunction(
 
     const accessId = await decrypt(organisation.accessId);
     const accessKey = await decrypt(organisation.accessKey);
+    const sourceRegion = organisation.sourceRegion;
 
     const nextPage = await step.run('list-users', async () => {
       const result = await getUsers({
         accessId,
         accessKey,
+        sourceRegion,
         afterToken: page,
       });
 

@@ -9,6 +9,7 @@ const formSchema = z.object({
   organisationId: z.string().uuid(),
   accessId: z.string().min(1),
   accessKey: z.string().min(1),
+  sourceRegion: z.enum(['AU', 'CA', 'DE', 'EU', 'FED', 'IN', 'JP', 'US1', 'US2']),
   region: z.string().min(1),
 });
 
@@ -17,6 +18,7 @@ export type FormState = {
   errors?: {
     accessId?: string[] | undefined;
     accessKey?: string[] | undefined;
+    sourceRegion?: string[] | undefined;
     // we are not handling organisationId and region errors in the client as fields are hidden
   };
 };
@@ -25,6 +27,7 @@ export const install = async (_: FormState, formData: FormData): Promise<FormSta
   const result = formSchema.safeParse({
     accessId: formData.get('accessId'),
     accessKey: formData.get('accessKey'),
+    sourceRegion: formData.get('sourceRegion'),
     organisationId: formData.get('organisationId'),
     region: formData.get('region'),
   });

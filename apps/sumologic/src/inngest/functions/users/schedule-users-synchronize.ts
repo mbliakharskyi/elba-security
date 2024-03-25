@@ -13,6 +13,7 @@ export const scheduleUsersSynchronize = inngest.createFunction(
         region: Organisation.region,
         accessId: Organisation.accessId,
         accessKey: Organisation.accessKey,
+        sourceRegion: Organisation.sourceRegion,
       })
       .from(Organisation);
 

@@ -83,7 +83,7 @@
   margin: 10px;
 }
 
-.formContainer input {
+.formContainer input select {
   width: 300px;
   margin-bottom: 10px;
   padding: 10px;

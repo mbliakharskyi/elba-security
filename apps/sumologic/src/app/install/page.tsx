@@ -38,17 +38,34 @@ function Step({
   );
 }
 
-function InstructionItems({ heading, instructions, active }: { heading: string; instructions: string[], active: string }) {
+function InstructionItems({
+  heading,
+  instructions,
+  active,
+}: {
+  heading: string;
+  instructions: string[];
+  active: string;
+}) {
   return (
     <div className={styles.instructions_container}>
       <h1>{heading}</h1>
       {instructions.map((item, index) => (
-        <div className={styles.instruction} key={item}> {/* Changed key to index for uniqueness */}
+        <div className={styles.instruction} key={item}>
+          {' '}
+          {/* Changed key to index for uniqueness */}
           <span className={styles.instructionNumber}>{index + 1}</span>
           <span className={styles.instructionText}>
             {index === 0 && active === '1' ? (
               <span>
-                In  <a href="https://www.sumologic.com/sign-up/" rel="noopener noreferrer" target="_blank" >Sumo Logic</a>{item}.
+                In{' '}
+                <a
+                  href="https://www.sumologic.com/sign-up/"
+                  rel="noopener noreferrer"
+                  target="_blank">
+                  Sumo Logic
+                </a>
+                {item}.
               </span>
             ) : (
               item
@@ -67,6 +84,19 @@ function InstructionsModal() {
   const region = searchParams.get('region');
 
   const [state, formAction] = useFormState<FormState, FormData>(install, {});
+  const [selectedDomain, setSelectedDomain] = useState('');
+
+  const domainOptions = {
+    AU: 'https://api.au.sumologic.com/api/',
+    CA: 'https://api.ca.sumologic.com/api/',
+    DE: 'https://api.de.sumologic.com/api/',
+    EU: 'https://api.eu.sumologic.com/api/',
+    FED: 'https://api.fed.sumologic.com/api/',
+    IN: 'https://api.in.sumologic.com/api/',
+    JP: 'https://api.jp.sumologic.com/api/',
+    US1: 'https://api.us1.sumologic.com/api/',
+    US2: 'https://api.us2.sumologic.com/api/',
+  };
 
   useEffect(() => {
     if (state.redirectUrl) {
@@ -99,7 +129,7 @@ function InstructionsModal() {
         </div>
         {active === '1' && (
           <InstructionItems
-            active = '1'
+            active="1"
             heading="Create API Key"
             instructions={[
               ', click your name in the left-nav and open the Preferences page.',
@@ -113,7 +143,7 @@ function InstructionsModal() {
         {active === '2' && (
           <>
             <InstructionItems
-              active = '2'
+              active="2"
               heading="Link Application"
               instructions={['Paste your Access ID and Access Key from your application below:']}
             />
@@ -128,7 +158,9 @@ function InstructionsModal() {
                     placeholder="Paste Your Access ID"
                     type="text"
                   />
-                  {state.errors?.accessId?.at(0) ? <span>{state.errors.accessId.at(0)}</span> : null}
+                  {state.errors?.accessId?.at(0) ? (
+                    <span>{state.errors.accessId.at(0)}</span>
+                  ) : null}
                 </div>
                 <div role="group">
                   <label htmlFor="accessKey">Access Key</label>
@@ -139,7 +171,25 @@ function InstructionsModal() {
                     placeholder="Paste Your Access Key"
                     type="text"
                   />
-                  {state.errors?.accessKey?.at(0) ? <span>{state.errors.accessKey.at(0)}</span> : null}
+                  {state.errors?.accessKey?.at(0) ? (
+                    <span>{state.errors.accessKey.at(0)}</span>
+                  ) : null}
+                </div>
+                <div role="group">
+                  <label htmlFor="sourceRegion">Deployment Region</label>
+                  <select
+                    id="sourceRegion"
+                    name="sourceRegion"
+                    onChange={(e) => {
+                      setSelectedDomain(e.target.value);
+                    }}
+                    value={selectedDomain}>
+                    {Object.entries(domainOptions).map(([key, value]) => (
+                      <option key={value} value={key}>
+                        {key}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

@@ -5,5 +5,6 @@ export const Organisation = pgTable('organisation', {
   region: text('region').notNull(),
   accessId: text('accessId').notNull(),
   accessKey: text('accessKey').notNull(),
+  sourceRegion: text('sourceRegion').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });

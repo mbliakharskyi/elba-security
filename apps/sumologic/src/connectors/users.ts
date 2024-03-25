@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { env } from '@/env';
 import { SumologicError } from './commons/error';
 
 const sumologicUserSchema = z.object({
@@ -21,6 +20,7 @@ const sumologicResponseSchema = z.object({
 export type GetUsersParams = {
   accessId: string;
   accessKey: string;
+  sourceRegion: string;
   afterToken?: string | null;
 };
 
@@ -28,12 +28,13 @@ export type DeleteUsersParams = {
   userId: string;
   accessId: string;
   accessKey: string;
+  sourceRegion: string;
 };
 
-export const getUsers = async ({ accessId, accessKey, afterToken }: GetUsersParams) => {
+export const getUsers = async ({ accessId, accessKey, afterToken, sourceRegion }: GetUsersParams) => {
   const encodedKey = Buffer.from(`${accessId}:${accessKey}`).toString('base64');
 
-  const url = new URL(`${env.SUMOLOGIC_API_BASE_URL}v1/users`);
+  const url = new URL(`https://api.${sourceRegion.toLowerCase()}.sumologic.com/api/v1/users`);
   if (afterToken) {
     url.searchParams.append('token', String(afterToken));
   }
@@ -71,8 +72,8 @@ export const getUsers = async ({ accessId, accessKey, afterToken }: GetUsersPara
   };
 };
 
-export const deleteUsers = async ({ userId, accessId, accessKey }: DeleteUsersParams) => {
-  const url = new URL(`${env.SUMOLOGIC_API_BASE_URL}v1/users/${userId}`);
+export const deleteUsers = async ({ userId, accessId, accessKey, sourceRegion }: DeleteUsersParams) => {
+  const url = new URL(`https://api.${sourceRegion.toLowerCase()}.sumologic.com/api/v1/users/${userId}`);
   const encodedKey = Buffer.from(`${accessId}:${accessKey}`).toString('base64');
 
   const response = await fetch(url.toString(), {

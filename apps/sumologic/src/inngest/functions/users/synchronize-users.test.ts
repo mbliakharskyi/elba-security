@@ -12,6 +12,7 @@ const organisation = {
   id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
   accessId: await encrypt('test-access-id'),
   accessKey: await encrypt('test-access-key'),
+  sourceRegion: 'EU',
   region: 'us',
 };
 
