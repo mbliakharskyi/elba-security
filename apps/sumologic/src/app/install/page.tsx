@@ -86,17 +86,17 @@ function InstructionsModal() {
   const [state, formAction] = useFormState<FormState, FormData>(install, {});
   const [selectedDomain, setSelectedDomain] = useState('');
 
-  const domainOptions = {
-    AU: 'https://api.au.sumologic.com/api/',
-    CA: 'https://api.ca.sumologic.com/api/',
-    DE: 'https://api.de.sumologic.com/api/',
-    EU: 'https://api.eu.sumologic.com/api/',
-    FED: 'https://api.fed.sumologic.com/api/',
-    IN: 'https://api.in.sumologic.com/api/',
-    JP: 'https://api.jp.sumologic.com/api/',
-    US1: 'https://api.us1.sumologic.com/api/',
-    US2: 'https://api.us2.sumologic.com/api/',
-  };
+export  const sourceRegions = [
+    'au',
+    'ca',
+    'de',
+    'eu',
+    'fed',
+    'in',
+    'jp',
+    'us1',
+    'us2'
+]
 
   useEffect(() => {
     if (state.redirectUrl) {
