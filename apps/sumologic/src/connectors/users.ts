@@ -73,7 +73,7 @@ export const getUsers = async ({ accessId, accessKey, afterToken, sourceRegion }
 };
 
 export const deleteUsers = async ({ userId, accessId, accessKey, sourceRegion }: DeleteUsersParams) => {
-  const url = new URL(`https://api.${sourceRegion.toLowerCase()}.sumologic.com/api/v1/users/${userId}`);
+  const url = new URL(`https://api.${sourceRegion}.sumologic.com/api/v1/users/${userId}`);
   const encodedKey = Buffer.from(`${accessId}:${accessKey}`).toString('base64');
 
   const response = await fetch(url.toString(), {
