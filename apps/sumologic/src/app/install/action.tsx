@@ -9,7 +9,7 @@ const formSchema = z.object({
   organisationId: z.string().uuid(),
   accessId: z.string().min(1),
   accessKey: z.string().min(1),
-  sourceRegion: z.enum(['AU', 'CA', 'DE', 'EU', 'FED', 'IN', 'JP', 'US1', 'US2']),
+  sourceRegion: z.enum(sourceRegions),
   region: z.string().min(1),
 });
 
