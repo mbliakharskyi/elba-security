@@ -184,9 +184,9 @@ export  const sourceRegions = [
                       setSelectedDomain(e.target.value);
                     }}
                     value={selectedDomain}>
-                    {Object.entries(domainOptions).map(([key, value]) => (
-                      <option key={value} value={key}>
-                        {key}
+                    {sourceRegions.map((sourceRegion) => (
+                      <option key={sourceRegion} value={sourceRegion}>
+                        {sourceRegion.toUpperCase()}
                       </option>
                     ))}
                   </select>
