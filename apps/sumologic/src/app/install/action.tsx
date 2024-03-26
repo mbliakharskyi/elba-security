@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { SumologicError } from '@/connectors/commons/error';
 import { env } from '@/env';
 import { registerOrganisation } from './service';
+import { sourceRegions } from './consts';
 
 const formSchema = z.object({
   organisationId: z.string().uuid(),
@@ -31,7 +32,7 @@ export const install = async (_: FormState, formData: FormData): Promise<FormSta
     organisationId: formData.get('organisationId'),
     region: formData.get('region'),
   });
-  
+
   if (!result.success) {
     const { fieldErrors } = result.error.flatten();
     if (fieldErrors.organisationId || fieldErrors.region) {

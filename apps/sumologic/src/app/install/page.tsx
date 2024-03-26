@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import styles from '../styles.module.css';
 import { install } from './action';
 import type { FormState } from './action';
+import { sourceRegions } from './consts';
 
 function Step({
   number,
@@ -84,19 +85,6 @@ function InstructionsModal() {
   const region = searchParams.get('region');
 
   const [state, formAction] = useFormState<FormState, FormData>(install, {});
-  const [selectedDomain, setSelectedDomain] = useState('');
-
-export  const sourceRegions = [
-    'au',
-    'ca',
-    'de',
-    'eu',
-    'fed',
-    'in',
-    'jp',
-    'us1',
-    'us2'
-]
 
   useEffect(() => {
     if (state.redirectUrl) {
@@ -177,10 +165,7 @@ export  const sourceRegions = [
                 </div>
                 <div role="group">
                   <label htmlFor="sourceRegion">Deployment Region</label>
-                  <select
-                    id="sourceRegion"
-                    name="sourceRegion"
-                    >
+                  <select id="sourceRegion" name="sourceRegion">
                     {sourceRegions.map((sourceRegion) => (
                       <option key={sourceRegion} value={sourceRegion}>
                         {sourceRegion.toUpperCase()}
