@@ -180,10 +180,7 @@ export  const sourceRegions = [
                   <select
                     id="sourceRegion"
                     name="sourceRegion"
-                    onChange={(e) => {
-                      setSelectedDomain(e.target.value);
-                    }}
-                    value={selectedDomain}>
+                    >
                     {sourceRegions.map((sourceRegion) => (
                       <option key={sourceRegion} value={sourceRegion}>
                         {sourceRegion.toUpperCase()}
