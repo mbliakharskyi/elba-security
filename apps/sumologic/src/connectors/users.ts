@@ -34,7 +34,7 @@ export type DeleteUsersParams = {
 export const getUsers = async ({ accessId, accessKey, afterToken, sourceRegion }: GetUsersParams) => {
   const encodedKey = Buffer.from(`${accessId}:${accessKey}`).toString('base64');
 
-  const url = new URL(`https://api.${sourceRegion.toLowerCase()}.sumologic.com/api/v1/users`);
+  const url = new URL(`https://api.${sourceRegion}.sumologic.com/api/v1/users`);
   if (afterToken) {
     url.searchParams.append('token', String(afterToken));
   }
