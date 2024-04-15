@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { env } from '@/env';
-import { getDopplerApiClient } from '@/common/apiclient';
+import { DopplerError } from './commons/error';
 
 const dopplerUserSchema = z.object({
   id: z.string(),
@@ -30,9 +30,19 @@ export const getUsers = async ({ apiKey, afterToken }: GetUsersParams) => {
     endpoint.searchParams.append('page', String(afterToken));
   }
 
-  const dopplerApiClient = getDopplerApiClient();
+  const response = await fetch(endpoint.toString(), {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+  });
 
-  const resData: unknown = await dopplerApiClient.get(endpoint.toString(), apiKey);
+  if (!response.ok) {
+    throw new DopplerError('API request failed', { response });
+  }
+
+  const resData: unknown = await response.json();
 
   const { workplace_users: users, page } = dopplerResponseSchema.parse(resData);
 
@@ -54,4 +64,3 @@ export const getUsers = async ({ apiKey, afterToken }: GetUsersParams) => {
     nextPage: users.length > 0 ? (page + 1).toString() : null,
   };
 };
-
