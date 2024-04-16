@@ -14,7 +14,7 @@ const formatElbaUser = (user: DopplerUser): User => ({
   id: user.id,
   displayName: user.user.name,
   email: user.user.email,
-  role: user.access === "owner" ? "admin" : "member",
+  role: user.access,
   additionalEmails: [],
 });
 

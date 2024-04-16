@@ -32,18 +32,12 @@ describe('users connector', () => {
 
         const url = new URL(request.url);
         const after = url.searchParams.get('page');
-        let returnData;
-        if (after) {
-          returnData = {
-            workplace_users: validUsers,
-            page,
-          };
-        } else {
-          returnData = {
-            workplace_users: [],
-            page,
-          };
-        }
+        
+        const returnData = {
+          workplace_users: after ? validUsers : [],
+          page,
+        };
+
         return Response.json(returnData);
       };
       server.use(http.get(`${env.DOPPLER_API_BASE_URL}workplace/users`, resolver));

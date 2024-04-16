@@ -25,6 +25,7 @@ const users: usersConnector.DopplerUser[] = Array.from({ length: 2 }, (_, i) => 
 }));
 
 const syncStartedAt = Date.now();
+const syncedBefore = Date.now();
 
 const setup = createInngestFunctionMock(synchronizeUsers, 'doppler/users.sync.requested');
 
@@ -75,14 +76,14 @@ describe('sync-users', () => {
           displayName: 'username-0',
           email: 'user-0@foo.bar',
           id: '0',
-          role: 'admin'
+          role: 'owner'
         },
         {
           additionalEmails: [],
           displayName: 'username-1',
           email: 'user-1@foo.bar',
           id: '1',
-          role: 'admin'
+          role: 'owner'
         },
       ],
     });
@@ -100,6 +101,8 @@ describe('sync-users', () => {
   });
 
   test('should finalize the sync when there is a no next page', async () => {
+    const elba = spyOnElba();
+
     await db.insert(Organisation).values(organisation);
     // mock the getUser function that returns SaaS users page, but this time the response does not indicate that their is a next page
     vi.spyOn(usersConnector, 'getUsers').mockResolvedValue({
@@ -116,6 +119,32 @@ describe('sync-users', () => {
     });
 
     await expect(result).resolves.toStrictEqual({ status: 'completed' });
+
+    const elbaInstance = elba.mock.results[0]?.value;
+    expect(elbaInstance?.users.update).toBeCalledTimes(1);
+    expect(elbaInstance?.users.update).toBeCalledWith({
+      users: [
+        {
+          additionalEmails: [],
+          displayName: 'username-0',
+          email: 'user-0@foo.bar',
+          id: '0',
+          role: 'owner'
+        },
+        {
+          additionalEmails: [],
+          displayName: 'username-1',
+          email: 'user-1@foo.bar',
+          id: '1',
+          role: 'owner'
+        },
+      ],
+    });
+    const syncBeforeAtISO = new Date(syncedBefore).toISOString();
+    expect(elbaInstance?.users.delete).toBeCalledTimes(1);
+    expect(elbaInstance?.users.delete).toBeCalledWith({
+      syncedBefore: syncBeforeAtISO,
+    });
 
     // the function should not send another event that continue the pagination
     expect(step.sendEvent).toBeCalledTimes(0);
