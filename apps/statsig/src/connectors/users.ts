@@ -15,16 +15,12 @@ const statsigResponseSchema = z.object({
   data: z.array(z.unknown()),
 });
 
-export type GetUsersParams = {
-  apiKey;
-  afterToken?: string | null;
+export type GetAllUsersParams = {
+  apiKey: string;
 };
 
-export const getUsers = async ({ apiKey, afterToken }: GetUsersParams) => {
+export const getAllUsers = async ({ apiKey }: GetAllUsersParams) => {
   const endpoint = new URL(`${env.STATSIG_API_BASE_URL}users`);
-  if (afterToken) {
-    endpoint.searchParams.append('offset', String(afterToken));
-  }
 
   const response = await fetch(endpoint.toString(), {
     method: 'GET',
@@ -53,15 +49,8 @@ export const getUsers = async ({ apiKey, afterToken }: GetUsersParams) => {
     }
   }
 
-  let nextPage: string | null = null;
-
-  if (data.length > 0) {
-    nextPage = '1';
-  }
-
   return {
     validUsers,
     invalidUsers,
-    nextPage,
   };
 };

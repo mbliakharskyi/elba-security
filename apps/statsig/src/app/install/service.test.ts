@@ -11,7 +11,7 @@ import { registerOrganisation } from './service';
 const apiKey = 'test-api-key';
 const region = 'us';
 const now = new Date();
-const getUsersData = {
+const getAllUsersData = {
   validUsers: [
     {
       email: `user@foo.bar`,
@@ -42,7 +42,7 @@ describe('registerOrganisation', () => {
   test('should setup organisation when the organisation id is valid and the organisation is not registered', async () => {
     // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
-    const getUsers = vi.spyOn(userConnector, 'getUsers').mockResolvedValue(getUsersData);
+    const getAllUsers = vi.spyOn(userConnector, 'getAllUsers').mockResolvedValue(getAllUsersData);
 
     await expect(
       registerOrganisation({
@@ -52,9 +52,9 @@ describe('registerOrganisation', () => {
       })
     ).resolves.toBeUndefined();
 
-    // check if getUsers was called correctly
-    expect(getUsers).toBeCalledTimes(1);
-    expect(getUsers).toBeCalledWith({ apiKey });
+    // check if getAllUsers was called correctly
+    expect(getAllUsers).toBeCalledTimes(1);
+    expect(getAllUsers).toBeCalledWith({ apiKey });
     // verify the organisation token is set in the database
     const [storedOrganisation] = await db
       .select()
@@ -74,7 +74,6 @@ describe('registerOrganisation', () => {
           isFirstSync: true,
           organisationId: organisation.id,
           syncStartedAt: now.getTime(),
-          page: null,
         },
       },
       {
@@ -90,8 +89,8 @@ describe('registerOrganisation', () => {
   test('should setup organisation when the organisation id is valid and the organisation is already registered', async () => {
     // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
-    // mocked the getUsers function
-    const getUsers = vi.spyOn(userConnector, 'getUsers').mockResolvedValue(getUsersData);
+    // mocked the getAllUsers function
+    const getAllUsers = vi.spyOn(userConnector, 'getAllUsers').mockResolvedValue(getAllUsersData);
     // pre-insert an organisation to simulate an existing entry
     await db.insert(Organisation).values(organisation);
 
@@ -102,8 +101,8 @@ describe('registerOrganisation', () => {
         apiKey,
       })
     ).resolves.toBeUndefined();
-    expect(getUsers).toBeCalledTimes(1);
-    expect(getUsers).toBeCalledWith({ apiKey });
+    expect(getAllUsers).toBeCalledTimes(1);
+    expect(getAllUsers).toBeCalledWith({ apiKey });
     // check if the token in the database is updated
     const [storedOrganisation] = await db
       .select()
@@ -124,7 +123,6 @@ describe('registerOrganisation', () => {
           isFirstSync: true,
           organisationId: organisation.id,
           syncStartedAt: now.getTime(),
-          page: null,
         },
       },
       {

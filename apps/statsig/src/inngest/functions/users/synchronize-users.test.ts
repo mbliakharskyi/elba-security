@@ -7,7 +7,6 @@ import { Organisation } from '@/database/schema';
 import { encrypt } from '@/common/crypto';
 import { synchronizeUsers } from './synchronize-users';
 
-const nextPage = '1';
 const organisation = {
   id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
   apiKey: await encrypt('test-api-key'),
@@ -19,7 +18,7 @@ const users: usersConnector.StatsigUser[] = Array.from({ length: 2 }, (_, i) => 
   email: `user-${i}@foo.bar`,
   firstName: `firstName-${i}`,
   lastName: `lastName-${i}`,
-  role: `owner`,
+  role: `Owner`,
 }));
 
 const syncStartedAt = Date.now();
@@ -34,7 +33,6 @@ describe('sync-users', () => {
       organisationId: organisation.id,
       isFirstSync: false,
       syncStartedAt: Date.now(),
-      page: null,
     });
 
     // assert the function throws a NonRetriableError that will inform inngest to definitly cancel the event (no further retries)
@@ -44,76 +42,20 @@ describe('sync-users', () => {
     expect(step.sendEvent).toBeCalledTimes(0);
   });
 
-  test('should continue the sync when the organization is registered', async () => {
-    const elba = spyOnElba();
-
-    // setup the test with an organisation
-    await db.insert(Organisation).values(organisation);
-
-    // mock the getUser function that returns SaaS users page
-    vi.spyOn(usersConnector, 'getUsers').mockResolvedValue({
-      validUsers: users,
-      invalidUsers: [],
-      nextPage,
-    });
-
-    const [result, { step }] = setup({
-      organisationId: organisation.id,
-      isFirstSync: false,
-      syncStartedAt,
-      page: nextPage,
-    });
-
-    await expect(result).resolves.toStrictEqual({ status: 'ongoing' });
-    const elbaInstance = elba.mock.results[0]?.value;
-    expect(elbaInstance?.users.update).toBeCalledTimes(1);
-    expect(elbaInstance?.users.update).toBeCalledWith({
-      users: [
-        {
-          additionalEmails: [],
-          displayName: 'firstName-0 lastName-0',
-          email: 'user-0@foo.bar',
-          id: 'user-0@foo.bar',
-          role: 'admin',
-        },
-        {
-          additionalEmails: [],
-          displayName: 'firstName-1 lastName-1',
-          email: 'user-1@foo.bar',
-          id: 'user-1@foo.bar',
-          role: 'admin',
-        },
-      ],
-    });
-    // check that the function deletes users that were synced before
-    expect(step.sendEvent).toBeCalledTimes(1);
-    expect(step.sendEvent).toBeCalledWith('synchronize-users', {
-      name: 'statsig/users.sync.requested',
-      data: {
-        organisationId: organisation.id,
-        isFirstSync: false,
-        syncStartedAt,
-        page: nextPage,
-      },
-    });
-  });
-
-  test('should finalize the sync when there is a no next page', async () => {
+  test('should finalize the sync when  the organization is registered', async () => {
     const elba = spyOnElba();
 
     await db.insert(Organisation).values(organisation);
     // mock the getUser function that returns SaaS users page, but this time the response does not indicate that their is a next page
-    vi.spyOn(usersConnector, 'getUsers').mockResolvedValue({
+    vi.spyOn(usersConnector, 'getAllUsers').mockResolvedValue({
       validUsers: users,
       invalidUsers: [],
-      nextPage: null,
     });
 
     const [result, { step }] = setup({
       organisationId: organisation.id,
       isFirstSync: false,
       syncStartedAt,
-      page: null,
     });
 
     await expect(result).resolves.toStrictEqual({ status: 'completed' });
@@ -127,14 +69,14 @@ describe('sync-users', () => {
           displayName: 'firstName-0 lastName-0',
           email: 'user-0@foo.bar',
           id: 'user-0@foo.bar',
-          role: 'admin',
+          role: 'Owner',
         },
         {
           additionalEmails: [],
           displayName: 'firstName-1 lastName-1',
           email: 'user-1@foo.bar',
           id: 'user-1@foo.bar',
-          role: 'admin',
+          role: 'Owner',
         },
       ],
     });

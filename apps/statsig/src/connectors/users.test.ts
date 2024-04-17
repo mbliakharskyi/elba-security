@@ -5,10 +5,9 @@ import { http } from 'msw';
 import { expect, test, describe, beforeEach } from 'vitest';
 import { env } from '@/env';
 import { server } from '../../vitest/setup-msw-handlers';
-import { type StatsigUser, getUsers } from './users';
+import { type StatsigUser, getAllUsers } from './users';
 import { StatsigError } from './commons/error';
 
-const nextCursor = '1';
 const apiKey = 'test-api-key';
 const validUsers: StatsigUser[] = Array.from({ length: 2 }, (_, i) => ({
   email: `user-${i}@foo.bar`,
@@ -20,7 +19,7 @@ const validUsers: StatsigUser[] = Array.from({ length: 2 }, (_, i) => ({
 const invalidUsers = [];
 
 describe('users connector', () => {
-  describe('getUsers', () => {
+  describe('getAllUsers', () => {
     beforeEach(() => {
       server.use(
         http.get(`${env.STATSIG_API_BASE_URL}users`, ({ request }) => {
@@ -28,10 +27,8 @@ describe('users connector', () => {
             return new Response(undefined, { status: 401 });
           }
 
-          const url = new URL(request.url);
-          const after = url.searchParams.get('offset');
           const returnData = {
-            data: after ? validUsers : [],
+            data: validUsers,
           };
 
           return Response.json(returnData);
@@ -39,27 +36,17 @@ describe('users connector', () => {
       );
     });
 
-    test('should return users and nextPage when the token is valid and their is another page', async () => {
-      await expect(getUsers({ apiKey, afterToken: nextCursor })).resolves.toStrictEqual({
+    test('should return users and nextPage when the token is valid', async () => {
+      await expect(getAllUsers({ apiKey })).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
-        nextPage: nextCursor,
-      });
-    });
-
-    test('should return users and no nextPage when the token is valid and their is no other page', async () => {
-      await expect(getUsers({ apiKey, afterToken: null })).resolves.toStrictEqual({
-        validUsers: [],
-        invalidUsers,
-        nextPage: null,
       });
     });
 
     test('should throws when the token is invalid', async () => {
       await expect(
-        getUsers({
+        getAllUsers({
           apiKey: 'foo-id',
-          afterToken: nextCursor,
         })
       ).rejects.toBeInstanceOf(StatsigError);
     });

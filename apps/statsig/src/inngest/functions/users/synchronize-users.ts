@@ -2,7 +2,7 @@ import type { User } from '@elba-security/sdk';
 import { eq } from 'drizzle-orm';
 import { NonRetriableError } from 'inngest';
 import { logger } from '@elba-security/logger';
-import { getUsers } from '@/connectors/users';
+import { getAllUsers } from '@/connectors/users';
 import { db } from '@/database/client';
 import { Organisation } from '@/database/schema';
 import { inngest } from '@/inngest/client';
@@ -21,7 +21,7 @@ const formatElbaUser = (user: StatsigUser): User => ({
   id: user.email,
   email: user.email,
   displayName: formatElbaUserDisplayName(user),
-  role: user.role === 'owner' ? 'admin' : 'member',
+  role: user.role,
   additionalEmails: [],
 });
 
@@ -37,7 +37,7 @@ export const synchronizeUsers = inngest.createFunction(
   },
   { event: 'statsig/users.sync.requested' },
   async ({ event, step }) => {
-    const { organisationId, syncStartedAt, page } = event.data;
+    const { organisationId, syncStartedAt } = event.data;
 
     const [organisation] = await db
       .select({
@@ -55,38 +55,19 @@ export const synchronizeUsers = inngest.createFunction(
     const elba = getElbaClient({ organisationId, region });
     const apiKey = await decrypt(organisation.apiKey);
 
-    const nextPage = await step.run('list-users', async () => {
-      const result = await getUsers({
-        apiKey,
-        afterToken: page,
-      });
-
-      const users = result.validUsers.map(formatElbaUser);
-
-      if (result.invalidUsers.length > 0) {
-        logger.warn('Retrieved users contains invalid data', {
-          organisationId,
-          invalidUsers: result.invalidUsers,
-        });
-      }
-      await elba.users.update({ users });
-
-      return result.nextPage;
+    const result = await getAllUsers({
+      apiKey,
     });
 
-    // if there is a next page enqueue a new sync user event
-    if (nextPage) {
-      await step.sendEvent('synchronize-users', {
-        name: 'statsig/users.sync.requested',
-        data: {
-          ...event.data,
-          page: nextPage,
-        },
+    const users = result.validUsers.map(formatElbaUser);
+
+    if (result.invalidUsers.length > 0) {
+      logger.warn('Retrieved users contains invalid data', {
+        organisationId,
+        invalidUsers: result.invalidUsers,
       });
-      return {
-        status: 'ongoing',
-      };
     }
+    await elba.users.update({ users });
 
     // delete the elba users that has been sent before this sync
     await step.run('finalize', () =>

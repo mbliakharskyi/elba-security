@@ -2,7 +2,7 @@ import { db } from '@/database/client';
 import { Organisation } from '@/database/schema';
 import { inngest } from '@/inngest/client';
 import { encrypt } from '@/common/crypto';
-import { getUsers } from '@/connectors/users';
+import { getAllUsers } from '@/connectors/users';
 
 type SetupOrganisationParams = {
   organisationId: string;
@@ -17,7 +17,7 @@ export const registerOrganisation = async ({
 }: SetupOrganisationParams) => {
   const encodedapiKey = await encrypt(apiKey);
 
-  await getUsers({ apiKey });
+  await getAllUsers({ apiKey });
 
   await db
     .insert(Organisation)
@@ -41,7 +41,6 @@ export const registerOrganisation = async ({
         organisationId,
         isFirstSync: true,
         syncStartedAt: Date.now(),
-        page: null,
       },
     },
     // this will cancel scheduled token refresh if it exists
