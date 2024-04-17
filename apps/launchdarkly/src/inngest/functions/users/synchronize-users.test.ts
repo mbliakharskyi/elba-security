@@ -11,22 +11,20 @@ const nextPage = '1';
 const organisation = {
   id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
   apiKey: await encrypt('test-personal-token'),
-  accountId: '00000',
   region: 'us',
 };
 
 const users: usersConnector.LaunchdarklyUser[] = Array.from({ length: 2 }, (_, i) => ({
-  user_id: `${i}`,
-  name: `name-${i}`,
-  role_assignments: {
-    organization: [{
-      role_id: 'organization-admin'
-    }]
-  },
+  _id: `${i}`,
+  firstName: `firstname-${i}`,
+  lastName: `lastname-${i}`,
   email: `user-${i}@foo.bar`,
+  role: 'owner',
+  mfa: 'disabled',
 }));
 
 const syncStartedAt = Date.now();
+const syncedBefore = Date.now();
 
 const setup = createInngestFunctionMock(synchronizeUsers, 'launchdarkly/users.sync.requested');
 
@@ -74,17 +72,17 @@ describe('sync-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'name-0',
+          displayName: 'firstname-0 lastname-0',
           email: 'user-0@foo.bar',
           id: '0',
-          role: 'organization-admin'
+          role: 'owner'
         },
         {
           additionalEmails: [],
-          displayName: 'name-1',
+          displayName: 'firstname-1 lastname-1',
           email: 'user-1@foo.bar',
           id: '1',
-          role: 'organization-admin'
+          role: 'owner'
         },
       ],
     });
@@ -102,6 +100,8 @@ describe('sync-users', () => {
   });
 
   test('should finalize the sync when there is a no next page', async () => {
+    const elba = spyOnElba();
+
     await db.insert(Organisation).values(organisation);
     // mock the getUser function that returns SaaS users page, but this time the response does not indicate that their is a next page
     vi.spyOn(usersConnector, 'getUsers').mockResolvedValue({
@@ -118,6 +118,31 @@ describe('sync-users', () => {
     });
 
     await expect(result).resolves.toStrictEqual({ status: 'completed' });
+    const elbaInstance = elba.mock.results[0]?.value;
+    expect(elbaInstance?.users.update).toBeCalledTimes(1);
+    expect(elbaInstance?.users.update).toBeCalledWith({
+      users: [
+        {
+          additionalEmails: [],
+          displayName: 'firstname-0 lastname-0',
+          email: 'user-0@foo.bar',
+          id: '0',
+          role: 'owner'
+        },
+        {
+          additionalEmails: [],
+          displayName: 'firstname-1 lastname-1',
+          email: 'user-1@foo.bar',
+          id: '1',
+          role: 'owner'
+        },
+      ],
+    });
+    const syncBeforeAtISO = new Date(syncedBefore).toISOString();
+    expect(elbaInstance?.users.delete).toBeCalledTimes(1);
+    expect(elbaInstance?.users.delete).toBeCalledWith({
+      syncedBefore: syncBeforeAtISO,
+    });
 
     // the function should not send another event that continue the pagination
     expect(step.sendEvent).toBeCalledTimes(0);

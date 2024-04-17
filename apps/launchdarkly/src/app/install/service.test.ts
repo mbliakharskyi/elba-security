@@ -4,6 +4,7 @@ import { db } from '@/database/client';
 import { Organisation } from '@/database/schema';
 import { inngest } from '@/inngest/client';
 import * as userConnector from '@/connectors/users';
+import { type LaunchdarklyUser } from '@/connectors/users';
 import { decrypt } from '@/common/crypto';
 import { LaunchdarklyError } from '@/connectors/commons/error';
 import { registerOrganisation } from './service';
@@ -18,10 +19,19 @@ const organisation = {
   region,
 };
 
+const validUsers: LaunchdarklyUser[] = Array.from({ length: 2 }, (_, i) => ({
+  _id: `${i}`,
+  firstName: `firstname-${i}`,
+  lastName: `lastname-${i}`,
+  email: `user-${i}@foo.bar`,
+  role: 'owner',
+  mfa: 'disabled',
+}));
+
 const getUsersData = {
   validUsers,
-  invalidUsers,
-  nextPage,
+  invalidUsers: [],
+  nextPage: null,
 };
 
 describe('registerOrganisation', () => {

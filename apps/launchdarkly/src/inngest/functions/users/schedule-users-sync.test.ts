@@ -3,7 +3,7 @@ import { createInngestFunctionMock } from '@elba-security/test-utils';
 import { db } from '@/database/client';
 import { Organisation } from '@/database/schema';
 import { encrypt } from '@/common/crypto';
-import { scheduleUsersSynchronize } from './schedule-users-synchronize';
+import { scheduleUsersSynchronize } from './schedule-users-sync';
 
 const now = Date.now();
 
@@ -15,7 +15,6 @@ export const organisations = Array.from({ length: 2 }, (_, i) => ({
   id: `b91f113b-bcf9-4a28-98c7-5b13fb671c1${i}`,
   region: 'us',
   apiKey: encodedPersonalToken,
-  accountId: `${i}`,
 }));
 
 describe('schedule-users-syncs', () => {

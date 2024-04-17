@@ -74,7 +74,7 @@ export const getUsers = async ({ apiKey, nextLink }: GetUsersParams) => {
 };
 
 export const deleteUser = async ({ userId, apiKey }: DeleteUsersParams) => {
-  const url = `${env.LAUNCHDARKLY_API_BASE_URL}members/${userId}`;
+  const url = `${env.LAUNCHDARKLY_API_BASE_URL}/api/v2/members/${userId}`;
 
   const response = await fetch(url, {
     method: 'DELETE',

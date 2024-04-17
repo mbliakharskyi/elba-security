@@ -8,13 +8,11 @@ import { deleteSourceUsers } from './delete-users';
 
 const userId = '45a76301-f1dd-4a77-b12f-9d7d3fca3c90';
 const apiKey = 'test-access-token';
-const accountId = 'test-account-id';
 
 // Mock data for organisation and user
 const organisation = {
   id: userId,
   apiKey: await encrypt(apiKey),
-  accountId,
   region: 'us',
 };
 
@@ -40,7 +38,6 @@ describe('deleteSourceUsers', () => {
     expect(usersConnector.deleteUser).toBeCalledWith({
       userId,
       apiKey,
-      accountId,
     });
   });
 });

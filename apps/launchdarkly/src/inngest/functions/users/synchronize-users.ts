@@ -10,9 +10,16 @@ import { type LaunchdarklyUser } from '@/connectors/users';
 import { decrypt } from '@/common/crypto';
 import { getElbaClient } from '@/connectors/elba/client';
 
+const formatElbaUserDisplayName = (user: LaunchdarklyUser) => {
+  if (user.firstName && user.lastName) {
+    return `${user.firstName} ${user.lastName}`;
+  }
+  return  user.email;
+};
+
 const formatElbaUser = (user: LaunchdarklyUser): User => ({
   id: user._id,
-  displayName: user.firstName ? `${user.lastName}` : `${user.email}`,
+  displayName: formatElbaUserDisplayName(user),
   email: user.email,
   role: user.role,
   additionalEmails: [],
