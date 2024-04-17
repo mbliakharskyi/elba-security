@@ -32,7 +32,7 @@ describe('users connector', () => {
 
         const url = new URL(request.url);
         const after = url.searchParams.get('page');
-        
+
         const returnData = {
           workplace_users: after ? validUsers : [],
           page,
@@ -44,7 +44,7 @@ describe('users connector', () => {
     });
 
     test('should return users and nextPage when the token is valid and their is another page', async () => {
-      await expect(getUsers({ apiKey, afterToken: nextCursor })).resolves.toStrictEqual({
+      await expect(getUsers({ apiKey, page: nextCursor })).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
         nextPage: (page + 1).toString(),
@@ -52,7 +52,7 @@ describe('users connector', () => {
     });
 
     test('should return users and no nextPage when the token is valid and their is no other page', async () => {
-      await expect(getUsers({ apiKey, afterToken: null })).resolves.toStrictEqual({
+      await expect(getUsers({ apiKey, page: null })).resolves.toStrictEqual({
         validUsers: [],
         invalidUsers,
         nextPage: null,
@@ -63,7 +63,7 @@ describe('users connector', () => {
       await expect(
         getUsers({
           apiKey: 'foo-id',
-          afterToken: nextCursor,
+          page: nextCursor,
         })
       ).rejects.toBeInstanceOf(DopplerError);
     });

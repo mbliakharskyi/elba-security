@@ -20,14 +20,14 @@ const dopplerResponseSchema = z.object({
 
 export type GetUsersParams = {
   apiKey: string;
-  afterToken?: string | null;
+  page?: string | null;
 };
 
-export const getUsers = async ({ apiKey, afterToken }: GetUsersParams) => {
+export const getUsers = async ({ apiKey, page }: GetUsersParams) => {
   const endpoint = new URL(`${env.DOPPLER_API_BASE_URL}workplace/users`);
 
-  if (afterToken) {
-    endpoint.searchParams.append('page', String(afterToken));
+  if (page) {
+    endpoint.searchParams.append('page', String(page));
   }
 
   const response = await fetch(endpoint.toString(), {

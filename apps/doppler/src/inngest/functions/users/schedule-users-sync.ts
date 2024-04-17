@@ -4,7 +4,7 @@ import { Organisation } from '@/database/schema';
 import { inngest } from '../../client';
 
 export const scheduleUsersSynchronize = inngest.createFunction(
-  { id: 'schedule-users-syncs' },
+  { id: 'doppler-schedule-users-sync' },
   { cron: env.USERS_SYNC_CRON },
   async ({ step }) => {
     const organisations = await db
@@ -17,7 +17,7 @@ export const scheduleUsersSynchronize = inngest.createFunction(
 
     if (organisations.length > 0) {
       await step.sendEvent(
-        'synchronize-users',
+        'dopper-synchronize-users',
         organisations.map(({ id }) => ({
           name: 'doppler/users.sync.requested',
           data: {

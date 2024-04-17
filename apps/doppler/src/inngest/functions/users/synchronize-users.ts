@@ -20,7 +20,7 @@ const formatElbaUser = (user: DopplerUser): User => ({
 
 export const synchronizeUsers = inngest.createFunction(
   {
-    id: 'synchronize-users',
+    id: 'dopper-synchronize-users',
     priority: {
       run: 'event.data.isFirstSync ? 600 : -600',
     },
@@ -52,7 +52,7 @@ export const synchronizeUsers = inngest.createFunction(
     const nextPage = await step.run('list-users', async () => {
       const result = await getUsers({
         apiKey,
-        afterToken: page,
+        page,
       });
 
       const users = result.validUsers.map(formatElbaUser);
@@ -70,7 +70,7 @@ export const synchronizeUsers = inngest.createFunction(
 
     // if there is a next page enqueue a new sync user event
     if (nextPage) {
-      await step.sendEvent('synchronize-users', {
+      await step.sendEvent('dopper-synchronize-users', {
         name: 'doppler/users.sync.requested',
         data: {
           ...event.data,

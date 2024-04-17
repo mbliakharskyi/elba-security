@@ -17,7 +17,7 @@ export const organisations = Array.from({ length: 2 }, (_, i) => ({
   apiKey: encodedPersonalToken,
 }));
 
-describe('schedule-users-syncs', () => {
+describe('doppler-schedule-users-sync', () => {
   beforeAll(() => {
     vi.setSystemTime(now);
   });
@@ -41,7 +41,7 @@ describe('schedule-users-syncs', () => {
     });
     expect(step.sendEvent).toBeCalledTimes(1);
     expect(step.sendEvent).toBeCalledWith(
-      'synchronize-users',
+      'dopper-synchronize-users',
       organisations.map(({ id }) => ({
         name: 'doppler/users.sync.requested',
         data: {
