@@ -44,7 +44,7 @@ export const getUsers = async ({ apiKey, page }: GetUsersParams) => {
 
   const resData: unknown = await response.json();
 
-  const { workplace_users: users, page } = dopplerResponseSchema.parse(resData);
+  const { workplace_users: users, page: nextPage } = dopplerResponseSchema.parse(resData);
 
   const validUsers: DopplerUser[] = [];
   const invalidUsers: unknown[] = [];
@@ -61,6 +61,6 @@ export const getUsers = async ({ apiKey, page }: GetUsersParams) => {
   return {
     validUsers,
     invalidUsers,
-    nextPage: users.length > 0 ? (page + 1).toString() : null,
+    nextPage: users.length > 0 ? (nextPage + 1).toString() : null,
   };
 };
