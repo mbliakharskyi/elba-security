@@ -84,7 +84,7 @@ export const deleteUser = async ({ userId, apiKey }: DeleteUsersParams) => {
     },
   });
 
-  if (!response.ok) {
+  if (!response.ok && response.status !== 404) {
     throw new LaunchdarklyError(`Could not delete user with Id: ${userId}`, { response });
   }
 };

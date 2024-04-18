@@ -79,11 +79,14 @@ describe('users connector', () => {
       server.use(
         http.delete<{ userId: string; accountId: string }>(
           `${env.LAUNCHDARKLY_API_BASE_URL}/api/v2/members/:userId`,
-          ({ request }) => {
+          ({ request, params }) => {
             if (request.headers.get('Authorization') !== `${apiKey}`) {
               return new Response(undefined, { status: 401 });
             }
 
+            if (params.userId !== userId) {
+              return new Response(undefined, { status: 404 });
+            }
             return new Response(undefined, { status: 200 });
           }
         )
