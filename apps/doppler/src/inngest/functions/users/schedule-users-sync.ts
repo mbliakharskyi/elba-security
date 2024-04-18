@@ -17,7 +17,7 @@ export const scheduleUsersSynchronize = inngest.createFunction(
 
     if (organisations.length > 0) {
       await step.sendEvent(
-        'dopper-synchronize-users',
+        'synchronize-users',
         organisations.map(({ id }) => ({
           name: 'doppler/users.sync.requested',
           data: {

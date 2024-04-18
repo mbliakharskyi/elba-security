@@ -89,7 +89,7 @@ describe('sync-users', () => {
     });
     // check that the function deletes users that were synced before
     expect(step.sendEvent).toBeCalledTimes(1);
-    expect(step.sendEvent).toBeCalledWith('dopper-synchronize-users', {
+    expect(step.sendEvent).toBeCalledWith('synchronize-users', {
       name: 'doppler/users.sync.requested',
       data: {
         organisationId: organisation.id,

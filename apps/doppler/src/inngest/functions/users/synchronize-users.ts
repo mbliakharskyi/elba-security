@@ -70,7 +70,7 @@ export const synchronizeUsers = inngest.createFunction(
 
     // if there is a next page enqueue a new sync user event
     if (nextPage) {
-      await step.sendEvent('dopper-synchronize-users', {
+      await step.sendEvent('synchronize-users', {
         name: 'doppler/users.sync.requested',
         data: {
           ...event.data,
