@@ -20,7 +20,7 @@ const formatElbaUser = (user: DopplerUser): User => ({
 
 export const synchronizeUsers = inngest.createFunction(
   {
-    id: 'dopper-synchronize-users',
+    id: 'doppler-synchronize-users',
     priority: {
       run: 'event.data.isFirstSync ? 600 : -600',
     },
@@ -28,7 +28,7 @@ export const synchronizeUsers = inngest.createFunction(
       key: 'event.data.organisationId',
       limit: 1,
     },
-    retries: 3,
+    retries: 5,
   },
   { event: 'doppler/users.sync.requested' },
   async ({ event, step }) => {

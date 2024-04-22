@@ -41,7 +41,7 @@ describe('doppler-schedule-users-sync', () => {
     });
     expect(step.sendEvent).toBeCalledTimes(1);
     expect(step.sendEvent).toBeCalledWith(
-      'dopper-synchronize-users',
+      'doppler-synchronize-users',
       organisations.map(({ id }) => ({
         name: 'doppler/users.sync.requested',
         data: {
