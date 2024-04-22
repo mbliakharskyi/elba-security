@@ -3,9 +3,9 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { inngest } from '@/inngest/client';
-import * as userConnector from '@/connectors/users';
+import * as accountConnector from '@/connectors/elastic/account';
 import { decrypt } from '@/common/crypto';
-import { ElasticError } from '@/connectors/commons/error';
+import { ElasticError } from '@/connectors/elastic/common/error';
 import { registerOrganisation } from './service';
 
 const apiKey = 'test-personal-token';
@@ -36,7 +36,7 @@ describe('registerOrganisation', () => {
     // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
     const getAccountId = vi
-      .spyOn(userConnector, 'getAccountId')
+      .spyOn(accountConnector, 'getAccountId')
       .mockResolvedValue(getAccountIdData);
 
     await expect(
@@ -85,11 +85,8 @@ describe('registerOrganisation', () => {
   test('should setup organisation when the organisation id is valid and the organisation is already registered', async () => {
     // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
-    // mocked the getUsers function
-    // @ts-expect-error -- this is a mock
-    vi.spyOn(userConnector, 'getUsers').mockResolvedValue(undefined);
     const getAccountId = vi
-      .spyOn(userConnector, 'getAccountId')
+      .spyOn(accountConnector, 'getAccountId')
       .mockResolvedValue(getAccountIdData);
     // pre-insert an organisation to simulate an existing entry
     await db.insert(organisationsTable).values(organisation);

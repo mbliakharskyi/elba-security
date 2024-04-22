@@ -1,29 +1,19 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call -- test conveniency */
 /* eslint-disable @typescript-eslint/no-unsafe-return -- test conveniency */
-import type { ResponseResolver } from 'msw';
 import { http } from 'msw';
 import { expect, test, describe, beforeEach } from 'vitest';
 import { server } from '@elba-security/test-utils';
-import { env } from '@/env';
-import { type ElasticUser, getUsers, getAccountId, deleteUser } from './users';
-import { ElasticError } from './commons/error';
+import { ElasticError } from './common/error';
+import { type ElasticUser, getUsers, deleteUser } from './users';
 
 const nextCursor = '1';
 const userId = 'test-id';
 const from = 1;
 const apiKey = 'test-api-key';
 const accountId = '2370721950';
-const accounts = [{ id: accountId }];
 const validUsers: ElasticUser[] = Array.from({ length: 2 }, (_, i) => ({
   user_id: `${i}`,
   name: `name-${i}`,
-  role_assignments: {
-    organization: [
-      {
-        role_id: 'organization-admin',
-      },
-    ],
-  },
   email: `user-${i}@foo.bar`,
 }));
 
@@ -32,28 +22,34 @@ const invalidUsers = [];
 describe('users connector', () => {
   describe('getUsers', () => {
     beforeEach(() => {
-      const resolver: ResponseResolver = ({ request }) => {
-        if (request.headers.get('Authorization') !== `ApiKey ${apiKey}`) {
-          return new Response(undefined, { status: 401 });
-        }
-
-        const url = new URL(request.url);
-        const after = url.searchParams.get('from');
-        let returnData;
-        if (after) {
-          returnData = {
-            members: validUsers,
-            from: 1,
-          };
-        } else {
-          returnData = {
-            members: validUsers,
-          };
-        }
-        return Response.json(returnData);
-      };
       server.use(
-        http.get(`${env.ELASTIC_API_BASE_URL}organizations/${accountId}/members`, resolver)
+        http.get<{ accountId: string }>(
+          `https://api.elastic-cloud.com/api/v1/organizations/:accountId/members`,
+          ({ request, params }) => {
+            if (request.headers.get('Authorization') !== `ApiKey ${apiKey}`) {
+              return new Response(undefined, { status: 401 });
+            }
+
+            if (params.accountId !== accountId) {
+              return new Response(undefined, { status: 404 });
+            }
+
+            const url = new URL(request.url);
+            const after = url.searchParams.get('from');
+            let returnData;
+            if (after) {
+              returnData = {
+                members: validUsers,
+                from: 1,
+              };
+            } else {
+              returnData = {
+                members: validUsers,
+              };
+            }
+            return Response.json(returnData);
+          }
+        )
       );
     });
 
@@ -82,30 +78,13 @@ describe('users connector', () => {
         })
       ).rejects.toBeInstanceOf(ElasticError);
     });
-  });
 
-  describe('getAccountId', () => {
-    beforeEach(() => {
-      const resolver: ResponseResolver = ({ request }) => {
-        if (request.headers.get('Authorization') !== `ApiKey ${apiKey}`) {
-          return new Response(undefined, { status: 401 });
-        }
-
-        return Response.json({ organizations: accounts });
-      };
-      server.use(http.get(`${env.ELASTIC_API_BASE_URL}organizations`, resolver));
-    });
-
-    test('should return accounts when the apiKey is valid', async () => {
-      await expect(getAccountId({ apiKey })).resolves.toStrictEqual({
-        accountId,
-      });
-    });
-
-    test('should throws when the apiKey is invalid', async () => {
+    test('should throws when the given account does not exist', async () => {
       await expect(
-        getAccountId({
+        getUsers({
           apiKey: 'foo-id',
+          accountId: 'fake account id',
+          afterToken: nextCursor,
         })
       ).rejects.toBeInstanceOf(ElasticError);
     });
@@ -115,16 +94,15 @@ describe('users connector', () => {
     beforeEach(() => {
       server.use(
         http.delete<{ userId: string; accountId: string }>(
-          `${env.ELASTIC_API_BASE_URL}organizations/:accountId/members/:userId`,
+          `https://api.elastic-cloud.com/api/v1/organizations/:accountId/members/:userId`,
           ({ request, params }) => {
             if (request.headers.get('Authorization') !== `ApiKey ${apiKey}`) {
               return new Response(undefined, { status: 401 });
             }
             if (params.accountId !== accountId) {
-              return new Response(undefined, { status: 401 });
+              return new Response(undefined, { status: 404 });
             }
             if (params.userId !== userId) {
-              // Return a JSON response with an appropriate error structure
               return new Response(
                 JSON.stringify({
                   errors: [

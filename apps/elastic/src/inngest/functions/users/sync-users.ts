@@ -2,22 +2,32 @@ import type { User } from '@elba-security/sdk';
 import { eq } from 'drizzle-orm';
 import { NonRetriableError } from 'inngest';
 import { logger } from '@elba-security/logger';
-import { getUsers } from '@/connectors/users';
+import { getUsers } from '@/connectors/elastic/users';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { inngest } from '@/inngest/client';
-import { type ElasticUser } from '@/connectors/users';
+import { type ElasticUser } from '@/connectors/elastic/users';
 import { decrypt } from '@/common/crypto';
 import { getElbaClient } from '@/connectors/elba/client';
 
+const formatElbaUserRole = (role: ElasticUser['role_assignments']): string => {
+  // Even if the role properties are arrays, only one role is assigned to each user.
+  const organisationRole = role?.organization?.at(0);
+  if (organisationRole) {
+    return organisationRole.role_id.replaceAll('-', ' ');
+  }
+  const deploymentRole = role?.deployment?.at(0);
+  if (deploymentRole) {
+    return deploymentRole.role_id.replaceAll('-', ' ');
+  }
+  return 'member';
+};
+
 const formatElbaUser = (user: ElasticUser): User => ({
   id: user.user_id,
-  displayName: user.name ? `${user.name}` : `${user.email}`,
+  displayName: user.name || user.email,
   email: user.email,
-  role:
-    user.role_assignments.organization && user.role_assignments.organization.length > 0
-      ? 'organization-admin'
-      : 'deployment-admin',
+  role: formatElbaUserRole(user.role_assignments),
   additionalEmails: [],
 });
 
@@ -31,7 +41,17 @@ export const synchronizeUsers = inngest.createFunction(
       key: 'event.data.organisationId',
       limit: 1,
     },
-    retries: 3,
+    cancelOn: [
+      {
+        event: 'elastic/app.uninstalled',
+        match: 'data.organisationId',
+      },
+      {
+        event: 'elastic/app.installed',
+        match: 'data.organisationId',
+      },
+    ],
+    retries: 5,
   },
   { event: 'elastic/users.sync.requested' },
   async ({ event, step }) => {
@@ -45,19 +65,18 @@ export const synchronizeUsers = inngest.createFunction(
       })
       .from(organisationsTable)
       .where(eq(organisationsTable.id, organisationId));
+
     if (!organisation) {
       throw new NonRetriableError(`Could not retrieve organisation with id=${organisationId}`);
     }
 
     const elba = getElbaClient({ organisationId, region: organisation.region });
 
-    const apiKey = await decrypt(organisation.apiKey);
-    const accountId = organisation.accountId;
-
     const nextPage = await step.run('list-users', async () => {
+      const apiKey = await decrypt(organisation.apiKey);
       const result = await getUsers({
         apiKey,
-        accountId,
+        accountId: organisation.accountId,
         afterToken: page,
       });
 

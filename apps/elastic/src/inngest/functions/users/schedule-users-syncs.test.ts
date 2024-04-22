@@ -3,7 +3,7 @@ import { createInngestFunctionMock } from '@elba-security/test-utils';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { encrypt } from '@/common/crypto';
-import { scheduleUsersSynchronize } from './schedule-users-synchronize';
+import { scheduleUsersSynchronize } from './schedule-users-syncs';
 
 const now = Date.now();
 

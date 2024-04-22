@@ -1,5 +1,5 @@
 {
-  "name": "next-elba-template",
+  "name": "@elba-security/elastic",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@elba-security/config": "workspace:*",
+    "@elba-security/design-system": "workspace:*",
     "@elba-security/inngest": "workspace:*",
     "@elba-security/logger": "workspace:*",
     "@elba-security/nextjs": "workspace:*",

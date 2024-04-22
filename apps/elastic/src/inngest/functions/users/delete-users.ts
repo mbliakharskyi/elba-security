@@ -3,7 +3,7 @@ import { NonRetriableError } from 'inngest';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { inngest } from '@/inngest/client';
-import { deleteUser } from '@/connectors/users';
+import { deleteUser } from '@/connectors/elastic/users';
 import { decrypt } from '@/common/crypto';
 
 export const deleteSourceUsers = inngest.createFunction(
@@ -11,8 +11,18 @@ export const deleteSourceUsers = inngest.createFunction(
     id: 'delete-users',
     concurrency: {
       key: 'event.data.organisationId',
-      limit: 1,
+      limit: 5,
     },
+    cancelOn: [
+      {
+        event: 'elastic/app.uninstalled',
+        match: 'data.organisationId',
+      },
+      {
+        event: 'elastic/app.installed',
+        match: 'data.organisationId',
+      },
+    ],
     retries: 5,
   },
   { event: 'elastic/users.delete.requested' },

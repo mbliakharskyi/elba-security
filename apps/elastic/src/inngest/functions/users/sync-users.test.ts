@@ -1,11 +1,11 @@
 import { expect, test, describe, vi } from 'vitest';
 import { createInngestFunctionMock, spyOnElba } from '@elba-security/test-utils';
 import { NonRetriableError } from 'inngest';
-import * as usersConnector from '@/connectors/users';
+import * as usersConnector from '@/connectors/elastic/users';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { encrypt } from '@/common/crypto';
-import { synchronizeUsers } from './synchronize-users';
+import { synchronizeUsers } from './sync-users';
 
 const nextPage = '1';
 const organisation = {
@@ -15,17 +15,14 @@ const organisation = {
   region: 'us',
 };
 
-const users: usersConnector.ElasticUser[] = Array.from({ length: 2 }, (_, i) => ({
+const users: usersConnector.ElasticUser[] = Array.from({ length: 3 }, (_, i) => ({
   user_id: `${i}`,
   name: `name-${i}`,
-  role_assignments: {
-    organization: [
-      {
-        role_id: 'organization-admin',
-      },
-    ],
-  },
   email: `user-${i}@foo.bar`,
+  role_assignments: {
+    organization: i === 0 ? [{ role_id: 'foo-bar' }] : undefined,
+    deployment: i === 1 ? [{ role_id: 'baz-bar' }] : undefined,
+  },
 }));
 
 const syncStartedAt = Date.now();
@@ -78,15 +75,22 @@ describe('sync-users', () => {
           additionalEmails: [],
           displayName: 'name-0',
           email: 'user-0@foo.bar',
+          role: 'foo bar',
           id: '0',
-          role: 'organization-admin',
         },
         {
           additionalEmails: [],
           displayName: 'name-1',
           email: 'user-1@foo.bar',
+          role: 'baz bar',
           id: '1',
-          role: 'organization-admin',
+        },
+        {
+          additionalEmails: [],
+          displayName: 'name-2',
+          email: 'user-2@foo.bar',
+          role: 'member',
+          id: '2',
         },
       ],
     });
@@ -104,6 +108,8 @@ describe('sync-users', () => {
   });
 
   test('should finalize the sync when there is a no next page', async () => {
+    const elba = spyOnElba();
+
     await db.insert(organisationsTable).values(organisation);
     // mock the getUser function that returns SaaS users page, but this time the response does not indicate that their is a next page
     vi.spyOn(usersConnector, 'getUsers').mockResolvedValue({
@@ -120,6 +126,37 @@ describe('sync-users', () => {
     });
 
     await expect(result).resolves.toStrictEqual({ status: 'completed' });
+    const elbaInstance = elba.mock.results[0]?.value;
+    expect(elbaInstance?.users.update).toBeCalledTimes(1);
+    expect(elbaInstance?.users.update).toBeCalledWith({
+      users: [
+        {
+          additionalEmails: [],
+          displayName: 'name-0',
+          email: 'user-0@foo.bar',
+          role: 'foo bar',
+          id: '0',
+        },
+        {
+          additionalEmails: [],
+          displayName: 'name-1',
+          email: 'user-1@foo.bar',
+          role: 'baz bar',
+          id: '1',
+        },
+        {
+          additionalEmails: [],
+          displayName: 'name-2',
+          email: 'user-2@foo.bar',
+          role: 'member',
+          id: '2',
+        },
+      ],
+    });
+    expect(elbaInstance?.users.delete).toBeCalledTimes(1);
+    expect(elbaInstance?.users.delete).toBeCalledWith({
+      syncedBefore: new Date(syncStartedAt).toISOString(),
+    });
 
     // the function should not send another event that continue the pagination
     expect(step.sendEvent).toBeCalledTimes(0);

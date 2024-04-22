@@ -8,10 +8,9 @@ export const env = z
     ELBA_SOURCE_ID: z.string().uuid(),
     ELBA_WEBHOOK_SECRET: z.string().min(1),
     ENCRYPTION_KEY: z.string().min(1),
-    ELASTIC_API_BASE_URL: z.string().min(1),
     DATABASE_URL: z.string().min(1),
     DATABASE_PROXY_PORT: z.coerce.number().int().positive(),
     VERCEL_ENV: z.string().min(1).optional(),
-    USERS_SYNC_CRON: z.string(),
+    USERS_SYNC_CRON: z.string().default('0 0 * * *'),
   })
   .parse(process.env);
