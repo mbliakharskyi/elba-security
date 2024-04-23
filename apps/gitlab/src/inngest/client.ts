@@ -6,7 +6,7 @@ import { rateLimitMiddleware } from './middlewares/rate-limit-middleware';
 export const inngest = new Inngest({
   id: 'gitlab',
   schemas: new EventSchemas().fromRecord<{
-    'gitlab/users.page_sync.requested': {
+    'gitlab/users.sync.requested': {
       data: {
         organisationId: string;
         isFirstSync: boolean;

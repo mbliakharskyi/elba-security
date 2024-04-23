@@ -35,7 +35,7 @@ export const synchronizeUsers = inngest.createFunction(
     ],
     retries: 5,
   },
-  { event: 'gitlab/users.page_sync.requested' },
+  { event: 'gitlab/users.sync.requested' },
   async ({ event, step }) => {
     const { organisationId, syncStartedAt, page } = event.data;
 
@@ -73,7 +73,7 @@ export const synchronizeUsers = inngest.createFunction(
     // if there is a next page enqueue a new sync user event
     if (nextPage) {
       await step.sendEvent('synchronize-users', {
-        name: 'gitlab/users.page_sync.requested',
+        name: 'gitlab/users.sync.requested',
         data: {
           ...event.data,
           page: nextPage.toString(),

@@ -40,7 +40,7 @@ export const setupOrganisation = async ({
 
   await inngest.send([
     {
-      name: 'gitlab/users.page_sync.requested',
+      name: 'gitlab/users.sync.requested',
       data: {
         organisationId,
         isFirstSync: true,

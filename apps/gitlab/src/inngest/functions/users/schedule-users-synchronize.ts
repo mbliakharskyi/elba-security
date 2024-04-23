@@ -29,7 +29,7 @@ export const scheduleUsersSynchronize = inngest.createFunction(
       await step.sendEvent(
         'synchronize-users',
         organisations.map(({ id }) => ({
-          name: 'gitlab/users.page_sync.requested',
+          name: 'gitlab/users.sync.requested',
           data: {
             isFirstSync: false,
             organisationId: id,

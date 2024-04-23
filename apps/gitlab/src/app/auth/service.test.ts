@@ -71,7 +71,7 @@ describe('setupOrganisation', () => {
     expect(send).toBeCalledTimes(1);
     expect(send).toBeCalledWith([
       {
-        name: 'gitlab/users.page_sync.requested',
+        name: 'gitlab/users.sync.requested',
         data: {
           isFirstSync: true,
           organisationId: organisation.id,
@@ -133,7 +133,7 @@ describe('setupOrganisation', () => {
     expect(send).toBeCalledTimes(1);
     expect(send).toBeCalledWith([
       {
-        name: 'gitlab/users.page_sync.requested',
+        name: 'gitlab/users.sync.requested',
         data: {
           isFirstSync: true,
           organisationId: organisation.id,

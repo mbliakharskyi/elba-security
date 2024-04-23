@@ -23,7 +23,7 @@ const users: usersConnector.GitlabUser[] = Array.from({ length: 2 }, (_, i) => (
   email: `user-${i}@foo.bar`,
 }));
 
-const setup = createInngestFunctionMock(synchronizeUsers, 'gitlab/users.page_sync.requested');
+const setup = createInngestFunctionMock(synchronizeUsers, 'gitlab/users.sync.requested');
 
 describe('synchronize-users', () => {
   test('should abort sync when organisation is not registered', async () => {
@@ -73,7 +73,7 @@ describe('synchronize-users', () => {
     // check that the function continue the pagination process
     expect(step.sendEvent).toBeCalledTimes(1);
     expect(step.sendEvent).toBeCalledWith('synchronize-users', {
-      name: 'gitlab/users.page_sync.requested',
+      name: 'gitlab/users.sync.requested',
       data: {
         organisationId: organisation.id,
         isFirstSync: false,
