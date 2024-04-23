@@ -11,7 +11,7 @@ export const deleteSourceUsers = inngest.createFunction(
     id: 'gitlab-delete-users',
     concurrency: {
       key: 'event.data.organisationId',
-      limit: 5,
+      limit: env.GITLAB_DELETE_USER_CONCURRENCY,
     },
     cancelOn: [
       {
