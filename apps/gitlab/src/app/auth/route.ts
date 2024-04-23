@@ -21,8 +21,16 @@ export async function GET(request: NextRequest) {
       error: 'unauthorized',
     });
   }
-
+try {
   await setupOrganisation({ organisationId, code, region });
-
+} catch (error) {
+  // log it
+    return new ElbaInstallRedirectResponse({
+      region,
+      sourceId: env.ELBA_SOURCE_ID,
+      baseUrl: env.ELBA_REDIRECT_URL,
+      error: 'internal_error',
+    });
+}
   redirect(env.ELBA_REDIRECT_URL, RedirectType.replace);
 }
