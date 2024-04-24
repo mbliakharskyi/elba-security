@@ -24,14 +24,13 @@ export const rateLimitMiddleware = new InngestMiddleware({
               if (retryAfterHeader) {
                 retryAfter = parseInt(retryAfterHeader, 10);
               }
-
               return {
                 ...context,
                 result: {
                   ...result,
                   error: new RetryAfterError(
                     `API rate limit reached by '${fn.name}', retry after ${retryAfter} seconds.`,
-                    retryAfter.toString(),
+                    Number(retryAfter) * 1000,
                     {
                       cause: error,
                     }

@@ -5,6 +5,7 @@ import { organisationsTable } from '@/database/schema';
 import { inngest } from '@/inngest/client';
 import { deleteUser } from '@/connectors/users';
 import { decrypt } from '@/common/crypto';
+import { env } from '@/env';  
 
 export const deleteSourceUsers = inngest.createFunction(
   {

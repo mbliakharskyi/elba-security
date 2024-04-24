@@ -7,6 +7,7 @@ export const env = z
     GITLAB_CLIENT_ID: z.string().min(1),
     GITLAB_CLIENT_SECRET: z.string().min(1),
     GITLAB_REDIRECT_URI: z.string().url(),
+    GITLAB_DELETE_USER_CONCURRENCY: z.coerce.number().int().positive().default(5),
     ELBA_API_KEY: z.string().min(1),
     ELBA_API_BASE_URL: z.string().url(),
     ELBA_REDIRECT_URL: z.string().url(),
