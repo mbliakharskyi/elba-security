@@ -31,7 +31,6 @@ export const registerOrganisation = async ({
       target: organisationsTable.id,
       set: {
         accountId,
-        region,
         apiKey: encodedapiKey,
       },
     });

@@ -5,13 +5,14 @@ import { organisationsTable } from '@/database/schema';
 import { inngest } from '@/inngest/client';
 import { deleteUser } from '@/connectors/elastic/users';
 import { decrypt } from '@/common/crypto';
+import { env } from '@/env';
 
 export const deleteSourceUsers = inngest.createFunction(
   {
     id: 'delete-users',
     concurrency: {
       key: 'event.data.organisationId',
-      limit: 5,
+      limit: env.ELASTIC_DELETE_USER_CONCURRENCY,
     },
     cancelOn: [
       {

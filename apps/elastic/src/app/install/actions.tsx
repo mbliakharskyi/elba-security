@@ -23,18 +23,39 @@ export type FormState = {
 export const install = async (_: FormState, formData: FormData): Promise<FormState> => {
   const region = formData.get('region');
   try {
-    const result = formSchema.parse({
+    const result = formSchema.safeParse({
       apiKey: formData.get('apiKey'),
       organisationId: formData.get('organisationId'),
       region,
     });
 
-    await registerOrganisation(result);
+    if (!result.success) {
+      const { fieldErrors } = result.error.flatten();
+      //  elba should had given us a valid organisationId and region, so we let elba handle this error case
+      if (fieldErrors.organisationId || fieldErrors.region) {
+        redirect(
+          getRedirectUrl({
+            sourceId: env.ELBA_SOURCE_ID,
+            baseUrl: env.ELBA_REDIRECT_URL,
+            region: region as string,
+            error: 'internal_error',
+          }),
+          RedirectType.replace
+        );
+      }
+
+      return {
+        errors: fieldErrors,
+      };
+    }
+
+    await registerOrganisation(result.data);
+
     redirect(
       getRedirectUrl({
         sourceId: env.ELBA_SOURCE_ID,
         baseUrl: env.ELBA_REDIRECT_URL,
-        region: result.region,
+        region: result.data.region,
       }),
       RedirectType.replace
     );
@@ -42,7 +63,9 @@ export const install = async (_: FormState, formData: FormData): Promise<FormSta
     if (isRedirectError(error)) {
       throw error;
     }
+
     logger.warn('Could not register organisation', { error });
+
     if (error instanceof ElasticError && error.response?.status === 401) {
       return {
         errors: {
@@ -50,11 +73,13 @@ export const install = async (_: FormState, formData: FormData): Promise<FormSta
         },
       };
     }
+
     redirect(
       getRedirectUrl({
         sourceId: env.ELBA_SOURCE_ID,
         baseUrl: env.ELBA_REDIRECT_URL,
         region: region as string,
+        error: 'internal_error',
       }),
       RedirectType.replace
     );

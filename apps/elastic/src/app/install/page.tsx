@@ -36,8 +36,8 @@ export default function InstallPage() {
           </p>
           <p>
             In the Create API Key page, you can configure your new key by adding a name, set a large
-            expiration date (you will have to reconnect the integration after expiration) and{' '}
-            <strong>assign Organization</strong> owner role.
+            expiration date (you will have to reconnect the integration after expiration) and assign{' '}
+            <strong>Organization owner</strong> role.
           </p>
           <p>
             Click <strong>Create API key</strong>, copy the generated API key, and paste it in the

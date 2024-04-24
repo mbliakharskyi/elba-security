@@ -5,14 +5,11 @@ import { inngest } from '../../client';
 
 export const scheduleUsersSynchronize = inngest.createFunction(
   { id: 'schedule-users-syncs', retries: 5 },
-  { cron: env.USERS_SYNC_CRON },
+  { cron: env.ELASTIC_USERS_SYNC_CRON },
   async ({ step }) => {
     const organisations = await db
       .select({
         id: organisationsTable.id,
-        accountId: organisationsTable.accountId,
-        region: organisationsTable.region,
-        apiKey: organisationsTable.apiKey,
       })
       .from(organisationsTable);
 
