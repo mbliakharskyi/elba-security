@@ -76,7 +76,6 @@ describe('registerOrganisation', () => {
         name: 'elastic/app.installed',
         data: {
           organisationId: organisation.id,
-          region,
         },
       },
     ]);
@@ -129,7 +128,6 @@ describe('registerOrganisation', () => {
         name: 'elastic/app.installed',
         data: {
           organisationId: organisation.id,
-          region,
         },
       },
     ]);

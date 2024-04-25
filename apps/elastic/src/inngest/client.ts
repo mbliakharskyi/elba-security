@@ -2,6 +2,7 @@ import { EventSchemas, Inngest } from 'inngest';
 import { sentryMiddleware } from '@elba-security/inngest';
 import { logger } from '@elba-security/logger';
 import { rateLimitMiddleware } from './middlewares/rate-limit-middleware';
+import { unauthorizedMiddleware } from './middlewares/unauthorized-middleware';
 
 export const inngest = new Inngest({
   id: 'elastic',
@@ -17,13 +18,11 @@ export const inngest = new Inngest({
     'elastic/app.installed': {
       data: {
         organisationId: string;
-        region: string;
       };
     };
     'elastic/app.uninstalled': {
       data: {
         organisationId: string;
-        region: string;
       };
     };
     'elastic/users.delete.requested': {
@@ -33,6 +32,6 @@ export const inngest = new Inngest({
       };
     };
   }>(),
-  middleware: [rateLimitMiddleware, sentryMiddleware],
+  middleware: [rateLimitMiddleware, unauthorizedMiddleware, sentryMiddleware],
   logger,
 });

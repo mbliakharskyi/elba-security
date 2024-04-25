@@ -50,7 +50,6 @@ export const registerOrganisation = async ({
       name: 'elastic/app.installed',
       data: {
         organisationId,
-        region,
       },
     },
   ]);
