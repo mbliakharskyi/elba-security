@@ -4,7 +4,7 @@ import * as usersConnector from '@/connectors/elastic/users';
 import { organisationsTable } from '@/database/schema';
 import { encrypt } from '@/common/crypto';
 import { db } from '@/database/client';
-import { deleteSourceUsers } from './delete-users';
+import { deleteUser } from './delete-user';
 
 const userId = '45a76301-f1dd-4a77-b12f-9d7d3fca3c90';
 const apiKey = 'test-access-token';
@@ -19,9 +19,9 @@ const organisation = {
 };
 
 // Setup function mock for Inngest
-const setup = createInngestFunctionMock(deleteSourceUsers, 'elastic/users.delete.requested');
+const setup = createInngestFunctionMock(deleteUser, 'elastic/users.delete.requested');
 
-describe('deleteSourceUsers', () => {
+describe('deleteUser', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });

@@ -10,7 +10,9 @@ import { registerOrganisation } from './service';
 
 const formSchema = z.object({
   organisationId: z.string().uuid(),
-  apiKey: z.string().min(1),
+  apiKey: z.string().min(1, {
+    message: 'API Key is required',
+  }),
   region: z.string().min(1),
 });
 

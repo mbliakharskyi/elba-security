@@ -1,5 +1,5 @@
-import { synchronizeUsers } from './users/sync-users';
-import { scheduleUsersSynchronize } from './users/schedule-users-syncs';
-import { deleteSourceUsers } from './users/delete-users';
+import { syncUsers } from './users/sync-users';
+import { scheduleUsersSyncs } from './users/schedule-users-syncs';
+import { deleteUser } from './users/delete-user';
 
-export const inngestFunctions = [synchronizeUsers, scheduleUsersSynchronize, deleteSourceUsers];
+export const inngestFunctions = [syncUsers, scheduleUsersSyncs, deleteUser];

@@ -31,9 +31,9 @@ const formatElbaUser = (user: ElasticUser): User => ({
   additionalEmails: [],
 });
 
-export const synchronizeUsers = inngest.createFunction(
+export const syncUsers = inngest.createFunction(
   {
-    id: 'synchronize-users',
+    id: 'elastic-sync-users',
     priority: {
       run: 'event.data.isFirstSync ? 600 : -600',
     },

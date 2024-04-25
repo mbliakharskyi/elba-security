@@ -2,7 +2,7 @@ import { InngestMiddleware, RetryAfterError } from 'inngest';
 import { ElasticError } from '@/connectors/elastic/common/error';
 
 export const rateLimitMiddleware = new InngestMiddleware({
-  name: 'rate-limit',
+  name: 'elastic-rate-limit',
   init: () => {
     return {
       onFunctionRun: ({ fn }) => {

@@ -5,7 +5,7 @@ import * as usersConnector from '@/connectors/elastic/users';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { encrypt } from '@/common/crypto';
-import { synchronizeUsers } from './sync-users';
+import { syncUsers } from './sync-users';
 
 const nextPage = '1';
 const organisation = {
@@ -27,7 +27,7 @@ const users: usersConnector.ElasticUser[] = Array.from({ length: 3 }, (_, i) => 
 
 const syncStartedAt = Date.now();
 
-const setup = createInngestFunctionMock(synchronizeUsers, 'elastic/users.sync.requested');
+const setup = createInngestFunctionMock(syncUsers, 'elastic/users.sync.requested');
 
 describe('sync-users', () => {
   test('should abort sync when organisation is not registered', async () => {

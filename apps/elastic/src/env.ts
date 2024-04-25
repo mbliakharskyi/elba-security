@@ -12,6 +12,6 @@ export const env = z
     DATABASE_PROXY_PORT: z.coerce.number().int().positive(),
     VERCEL_ENV: z.string().min(1).optional(),
     ELASTIC_USERS_SYNC_CRON: z.string().default('0 0 * * *'),
-    ELASTIC_DELETE_USER_CONCURRENCY: z.coerce.number().int().positive(),
+    ELASTIC_DELETE_USER_CONCURRENCY: z.coerce.number().int().positive().default(5),
   })
   .parse(process.env);
