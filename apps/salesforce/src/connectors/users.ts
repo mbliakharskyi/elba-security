@@ -76,7 +76,7 @@ export const deleteUser = async ({ accessToken, instanceUrl, userId }: DeleteUse
     },
   });
 
-  if (!response.ok) {
+  if (!response.ok && response.status !== 404) {
     throw new SalesforceError(`Could not delete user with Id: ${userId}`, { response });
   }
 };
