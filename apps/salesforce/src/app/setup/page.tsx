@@ -1,27 +1,25 @@
 'use client';
 
 import { useEffect } from 'react';
-import { create } from './action';
-
-function getCookieValue(name) {
-  const matches = RegExp((`(^|;)\\s*${  name  }\\s*=\\s*([^;]+)`)).exec(document.cookie);
-  return matches ? matches.pop() : null;
-}
+import { FullScreenSpinner } from '@elba-security/design-system';
+import { create } from './actions';
 
 export default function Setup() {
   useEffect(() => {
     async function initiateSetup() {
       const hashString = window.location.hash.substring(1);
-      const organisationId = getCookieValue('organisation_id');
-      const region = getCookieValue('region');
 
-      if (hashString && organisationId && region) {
-        await create({ hashString, organisationId, region });
+      if (hashString ) {
+        await create({ hashString });
       }
     }
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- we don't want effect retrigger & don't expect searchParams to changes
     initiateSetup();
   }, []);
 
-  return <>processing</>;
+  return (
+    <FullScreenSpinner>
+      <p>Waiting for Microsoft confirmation...</p>
+    </FullScreenSpinner>
+  );
 }
