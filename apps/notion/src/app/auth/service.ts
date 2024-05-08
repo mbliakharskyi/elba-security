@@ -15,7 +15,7 @@ export const setupOrganisation = async ({
   code,
   region,
 }: SetupOrganisationParams) => {
-  const { accessToken, workspaceId } = await getToken(code);
+  const { accessToken } = await getToken(code);
 
   const encodedAccessToken = await encrypt(accessToken);
 
@@ -24,14 +24,12 @@ export const setupOrganisation = async ({
     .values({
       id: organisationId,
       accessToken: encodedAccessToken,
-      workspaceId,
       region,
     })
     .onConflictDoUpdate({
       target: organisationsTable.id,
       set: {
         accessToken: encodedAccessToken,
-        workspaceId,
         region,
       },
     });

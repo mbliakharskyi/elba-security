@@ -5,7 +5,6 @@ import { NotionError } from '../common/error';
 
 const tokenResponseSchema = z.object({
   access_token: z.string(),
-  workspace_id: z.string(),
 });
 
 export const getToken = async (code: string) => {
@@ -39,6 +38,5 @@ export const getToken = async (code: string) => {
 
   return {
     accessToken: result.data.access_token,
-    workspaceId: result.data.workspace_id,
   };
 };

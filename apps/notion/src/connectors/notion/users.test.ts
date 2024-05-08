@@ -6,19 +6,18 @@ import { server } from '@elba-security/test-utils';
 import { env } from '@/common/env';
 import { NotionError } from '../common/error';
 import type { NotionUser } from './users';
-import { getUsers, deleteUser } from './users';
+import { getUsers } from './users';
 
 const validToken = 'token-1234';
 const endPage = '2';
 const nextPage = '1';
-const userId = 'test-id';
 
 const validUsers: NotionUser[] = Array.from({ length: 5 }, (_, i) => ({
   id: `id-${i}`,
-  first_name: `first_name-${i}`,
-  last_name: `last_name-${i}`,
-  display_name: `display_name-${i}`,
-  email: `user-${i}@foo.bar`,
+  object: 'user',
+  type: 'person',
+  name: `name-${i}`,
+  person: { email: `user-${i}@foo.bar` },
 }));
 
 const invalidUsers = [];
@@ -28,16 +27,16 @@ describe('users connector', () => {
     // mock token API endpoint using msw
     beforeEach(() => {
       server.use(
-        http.get(`${env.NOTION_API_BASE_URL}/users`, ({ request }) => {
+        http.get(`${env.NOTION_API_BASE_URL}/v1/users`, ({ request }) => {
           if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
             return new Response(undefined, { status: 401 });
           }
 
           const url = new URL(request.url);
-          const after = url.searchParams.get('next_page_token');
+          const after = url.searchParams.get('start_cursor');
           return Response.json({
-            users: validUsers,
-            next_page_token: after === endPage ? null : after,
+            results: validUsers,
+            next_cursor: after === endPage ? null : after,
           });
         })
       );
@@ -61,36 +60,6 @@ describe('users connector', () => {
 
     test('should throws when the token is invalid', async () => {
       await expect(getUsers({ accessToken: 'foo-bar' })).rejects.toBeInstanceOf(NotionError);
-    });
-  });
-
-  describe('deleteUser', () => {
-    beforeEach(() => {
-      server.use(
-        http.delete<{ userId: string }>(
-          `${env.NOTION_API_BASE_URL}/users/${userId}`,
-          ({ request }) => {
-            if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
-              return new Response(undefined, { status: 401 });
-            }
-            return new Response(undefined, { status: 200 });
-          }
-        )
-      );
-    });
-
-    test('should delete user successfully when token is valid', async () => {
-      await expect(deleteUser({ accessToken: validToken, userId })).resolves.not.toThrow();
-    });
-
-    test('should not throw when the user is not found', async () => {
-      await expect(deleteUser({ accessToken: validToken, userId })).resolves.toBeUndefined();
-    });
-
-    test('should throw NotionError when token is invalid', async () => {
-      await expect(deleteUser({ accessToken: 'invalidToken', userId })).rejects.toBeInstanceOf(
-        NotionError
-      );
     });
   });
 });

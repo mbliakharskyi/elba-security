@@ -18,10 +18,10 @@ const syncedBefore = Date.now();
 const nextPage = '1';
 const users: usersConnector.NotionUser[] = Array.from({ length: 2 }, (_, i) => ({
   id: `id-${i}`,
-  first_name: `first_name-${i}`,
-  last_name: `last_name-${i}`,
-  display_name: `display_name-${i}`,
-  email: `user-${i}@foo.bar`,
+  object: 'user',
+  type: 'person',
+  name: `name-${i}`,
+  person: { email: `user-${i}@foo.bar` },
 }));
 
 const setup = createInngestFunctionMock(syncUsers, 'notion/users.sync.requested');
@@ -84,13 +84,13 @@ describe('synchronize-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'display_name-0',
+          displayName: 'name-0',
           email: 'user-0@foo.bar',
           id: 'id-0',
         },
         {
           additionalEmails: [],
-          displayName: 'display_name-1',
+          displayName: 'name-1',
           email: 'user-1@foo.bar',
           id: 'id-1',
         },
@@ -122,13 +122,13 @@ describe('synchronize-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'display_name-0',
+          displayName: 'name-0',
           email: 'user-0@foo.bar',
           id: 'id-0',
         },
         {
           additionalEmails: [],
-          displayName: 'display_name-1',
+          displayName: 'name-1',
           email: 'user-1@foo.bar',
           id: 'id-1',
         },

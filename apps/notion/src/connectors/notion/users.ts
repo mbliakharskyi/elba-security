@@ -3,7 +3,7 @@ import { env } from '@/common/env';
 import { NotionError } from '../common/error';
 
 const notionUserSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(),
   name: z.string(),
   type: z.string(),
   object: z.string(),

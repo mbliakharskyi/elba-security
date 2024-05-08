@@ -10,20 +10,15 @@ import { setupOrganisation } from './service';
 
 const code = 'some-code';
 const accessToken = 'some token';
-const refreshToken = 'some refresh token';
-const expiresIn = 60;
 const region = 'us';
 const now = new Date();
 const getTokenData = {
   accessToken,
-  refreshToken,
-  expiresIn,
 };
 
 const organisation = {
   id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
   accessToken,
-  refreshToken,
   region,
 };
 

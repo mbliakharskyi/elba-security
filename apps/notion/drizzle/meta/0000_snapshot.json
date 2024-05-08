@@ -1,5 +1,5 @@
 {
-  "id": "accdb557-bee9-4627-8932-92b71eac8ea3",
+  "id": "331a7003-c008-4ae1-a205-60152e4a231e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "5",
   "dialect": "pg",
@@ -29,12 +29,6 @@
         },
         "access_token": {
           "name": "access_token",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "refresh_token": {
-          "name": "refresh_token",
           "type": "text",
           "primaryKey": false,
           "notNull": true
