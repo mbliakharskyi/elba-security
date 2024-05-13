@@ -13,13 +13,13 @@ export const env = z
     DATABASE_URL: z.string().min(1),
     DATABASE_PROXY_PORT: zEnvInt().optional(),
     VERCEL_ENV: z.string().min(1).optional(),
-    JIRA_APP_INSTALL_URL: z.string().url().default('https://auth.atlassian.com/'),
-    JIRA_API_BASE_URL: z.string().url().default('https://api.atlassian.com/'),
+    JIRA_APP_INSTALL_URL: z.string().url().default('https://auth.atlassian.com'),
+    JIRA_API_BASE_URL: z.string().url().default('https://api.atlassian.com'),
     JIRA_CLIENT_ID: z.string().min(1),
     JIRA_CLIENT_SECRET: z.string().min(1),
     JIRA_REDIRECT_URI: z.string().url(),
     JIRA_DELETE_USER_CONCURRENCY: zEnvInt().default(5),
     JIRA_USERS_SYNC_CRON: z.string().default('0 0 * * *'),
-    JIRA_USERS_SYNC_BATCH_SIZE: zEnvInt().default(2),
+    JIRA_USERS_SYNC_BATCH_SIZE: zEnvInt().default(400),
   })
   .parse(process.env);

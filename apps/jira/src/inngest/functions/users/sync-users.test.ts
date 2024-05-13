@@ -21,6 +21,7 @@ const users: usersConnector.JiraUser[] = Array.from({ length: 2 }, (_, i) => ({
   accountId: `id-${i}`,
   displayName: `displayName-${i}`,
   emailAddress: `user-${i}@foo.bar`,
+  accountType: 'atlassian',
 }));
 
 const setup = createInngestFunctionMock(syncUsers, 'jira/users.sync.requested');
@@ -37,7 +38,7 @@ describe('synchronize-users', () => {
       organisationId: organisation.id,
       isFirstSync: false,
       syncStartedAt: Date.now(),
-      page: null,
+      page: 0,
     });
 
     await expect(result).rejects.toBeInstanceOf(NonRetriableError);
@@ -61,7 +62,7 @@ describe('synchronize-users', () => {
       organisationId: organisation.id,
       isFirstSync: false,
       syncStartedAt,
-      page: String(nextPage),
+      page: nextPage,
     });
 
     await expect(result).resolves.toStrictEqual({ status: 'ongoing' });
@@ -74,7 +75,7 @@ describe('synchronize-users', () => {
         organisationId: organisation.id,
         isFirstSync: false,
         syncStartedAt,
-        page: String(nextPage),
+        page: nextPage,
       },
     });
 
@@ -111,7 +112,7 @@ describe('synchronize-users', () => {
       organisationId: organisation.id,
       isFirstSync: false,
       syncStartedAt,
-      page: null,
+      page: 0,
     });
 
     await expect(result).resolves.toStrictEqual({ status: 'completed' });

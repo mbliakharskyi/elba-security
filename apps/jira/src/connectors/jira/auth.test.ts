@@ -19,7 +19,7 @@ describe('auth connector', () => {
   describe('getToken', () => {
     beforeEach(() => {
       server.use(
-        http.post(`${env.JIRA_APP_INSTALL_URL}oauth/token`, async ({ request }) => {
+        http.post(`${env.JIRA_APP_INSTALL_URL}/oauth/token`, async ({ request }) => {
           const body = await request.text();
           const searchParams = new URLSearchParams(body);
 
@@ -55,7 +55,7 @@ describe('auth connector', () => {
   describe('getRefreshToken', () => {
     beforeEach(() => {
       server.use(
-        http.post(`${env.JIRA_APP_INSTALL_URL}oauth/token`, async ({ request }) => {
+        http.post(`${env.JIRA_APP_INSTALL_URL}/oauth/token`, async ({ request }) => {
           const body = await request.text();
           const searchParams = new URLSearchParams(body);
 
@@ -90,7 +90,7 @@ describe('auth connector', () => {
   describe('getCloudId', () => {
     beforeEach(() => {
       server.use(
-        http.get(`${env.JIRA_API_BASE_URL}oauth/token/accessible-resources`, ({ request }) => {
+        http.get(`${env.JIRA_API_BASE_URL}/oauth/token/accessible-resources`, ({ request }) => {
           if (request.headers.get('Authorization') !== `Bearer ${accessToken}`) {
             return new Response(undefined, { status: 401 });
           }

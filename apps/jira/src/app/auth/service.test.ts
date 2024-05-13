@@ -22,11 +22,11 @@ const getTokenData = {
 };
 const getCloudIdData = { cloudId };
 const organisation = {
-  id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
+  id: '00000000-0000-0000-0000-000000000001',
   accessToken,
   refreshToken,
   region,
-  cloudId: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
+  cloudId: '00000000-0000-0000-0000-000000000005',
 };
 
 describe('setupOrganisation', () => {
@@ -39,14 +39,12 @@ describe('setupOrganisation', () => {
   });
 
   test('should setup organisation when the code is valid and the organisation is not registered', async () => {
-    // mock inngest client, only inngest.send should be used
     // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
     // mock the getToken function to return a predefined token
     const getToken = vi.spyOn(authConnector, 'getToken').mockResolvedValue(getTokenData);
     const getCloudId = vi.spyOn(authConnector, 'getCloudId').mockResolvedValue(getCloudIdData);
 
-    // assert the function resolves without returning a value
     await expect(
       setupOrganisation({
         organisationId: organisation.id,
@@ -81,7 +79,7 @@ describe('setupOrganisation', () => {
           isFirstSync: true,
           organisationId: organisation.id,
           syncStartedAt: now.getTime(),
-          page: null,
+          page: 0,
         },
       },
       {
@@ -143,7 +141,7 @@ describe('setupOrganisation', () => {
           isFirstSync: true,
           organisationId: organisation.id,
           syncStartedAt: now.getTime(),
-          page: null,
+          page: 0,
         },
       },
       {

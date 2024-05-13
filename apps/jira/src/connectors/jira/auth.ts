@@ -16,7 +16,7 @@ const cloudIdResponseSchema = z.array(
 );
 
 export const getToken = async (code: string) => {
-  const response = await fetch(`${env.JIRA_APP_INSTALL_URL}oauth/token`, {
+  const response = await fetch(`${env.JIRA_APP_INSTALL_URL}/oauth/token`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -43,6 +43,7 @@ export const getToken = async (code: string) => {
     throw new JiraError('Invalid Jira token response');
   }
 
+
   return {
     accessToken: result.data.access_token,
     refreshToken: result.data.refresh_token,
@@ -51,7 +52,7 @@ export const getToken = async (code: string) => {
 };
 
 export const getRefreshToken = async (refreshTokenInfo: string) => {
-  const response = await fetch(`${env.JIRA_APP_INSTALL_URL}oauth/token`, {
+  const response = await fetch(`${env.JIRA_APP_INSTALL_URL}/oauth/token`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -85,7 +86,7 @@ export const getRefreshToken = async (refreshTokenInfo: string) => {
 };
 
 export async function getCloudId(accessToken: string) {
-  const response = await fetch(`${env.JIRA_API_BASE_URL}oauth/token/accessible-resources`, {
+  const response = await fetch(`${env.JIRA_API_BASE_URL}/oauth/token/accessible-resources`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },

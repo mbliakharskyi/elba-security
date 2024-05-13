@@ -11,7 +11,7 @@
   "devDependencies": {
     "@elba-security/tsconfig": "workspace:*",
     "dotenv": "^16.3.1",
-    "drizzle-kit": "^0.20.6",
+    "drizzle-kit": "0.21.1",
     "eslint": "^8.53.0",
     "husky": "^8.0.3",
     "lint-staged": "^15.2.2",

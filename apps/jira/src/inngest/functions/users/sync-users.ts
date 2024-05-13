@@ -57,10 +57,9 @@ export const syncUsers = inngest.createFunction(
 
     const elba = createElbaClient({ organisationId, region: organisation.region });
     const token = await decrypt(organisation.token);
-    const cloudId = organisation.cloudId;
 
     const nextPage = await step.run('list-users', async () => {
-      const result = await getUsers({ accessToken: token, cloudId, page });
+      const result = await getUsers({ accessToken: token, cloudId: organisation.cloudId, page });
 
       const users = result.validUsers.map(formatElbaUser);
 
@@ -83,7 +82,7 @@ export const syncUsers = inngest.createFunction(
         name: 'jira/users.sync.requested',
         data: {
           ...event.data,
-          page: nextPage.toString(),
+          page: nextPage,
         },
       });
       return {
