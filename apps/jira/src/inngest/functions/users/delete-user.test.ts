@@ -1,50 +1,46 @@
-import { expect, test, describe, vi } from 'vitest';
+import { expect, test, describe, beforeEach, vi } from 'vitest';
 import { createInngestFunctionMock } from '@elba-security/test-utils';
-import { NonRetriableError } from 'inngest';
 import * as usersConnector from '@/connectors/jira/users';
-import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
-import * as crypto from '@/common/crypto';
+import { encrypt } from '@/common/crypto';
+import { db } from '@/database/client';
 import { deleteUser } from './delete-user';
 
-const organisation = {
-  id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
-  token: 'test-token',
-  region: 'us',
-};
 const userId = 'user-id';
+const apiToken = 'test-access-token';
+const domain = 'test-domain';
+const email = 'test@email';
+// Mock data for organisation and user
+const organisation = {
+  id: '00000000-0000-0000-0000-000000000001',
+  apiToken: await encrypt(apiToken),
+  region: 'us',
+  domain,
+  email,
+};
+
+// Setup function mock for Inngest
 const setup = createInngestFunctionMock(deleteUser, 'jira/users.delete.requested');
 
-describe('delete-user-request', () => {
-  test('should abort request when organisation is not registered', async () => {
-    // setup the test without organisation entries in the database, the function cannot retrieve a token
-    vi.spyOn(usersConnector, 'deleteUser').mockResolvedValue(undefined);
-    const [result, { step }] = setup({
-      id: userId,
-      organisationId: organisation.id,
-    });
-    // assert the function throws a NonRetriableError that will inform inngest to definitly cancel the event (no further retries)
-    await expect(result).rejects.toBeInstanceOf(NonRetriableError);
-    expect(usersConnector.deleteUser).toBeCalledTimes(0);
-    // check that the function is not sending other event
-    expect(step.sendEvent).toBeCalledTimes(0);
+describe('deleteUser', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
   });
 
-  test('should continue the request when the organization is registered', async () => {
-    // setup the test with an organisation
+  test('should delete user', async () => {
+    vi.spyOn(usersConnector, 'deleteUser').mockResolvedValueOnce();
     await db.insert(organisationsTable).values(organisation);
-    vi.spyOn(crypto, 'decrypt').mockResolvedValue(organisation.token);
-    vi.spyOn(usersConnector, 'deleteUser').mockResolvedValue(undefined);
-    const [result] = setup({
-      id: userId,
-      organisationId: organisation.id,
-    });
-    await expect(result).resolves.toBeUndefined();
 
-    expect(crypto.decrypt).toBeCalledTimes(1);
-    expect(crypto.decrypt).toBeCalledWith(organisation.token);
+    const [result] = setup({ userId, organisationId: organisation.id });
+
+    await expect(result).resolves.toStrictEqual(undefined);
 
     expect(usersConnector.deleteUser).toBeCalledTimes(1);
-    expect(usersConnector.deleteUser).toBeCalledWith(organisation.token, userId);
+    expect(usersConnector.deleteUser).toBeCalledWith({
+      userId,
+      apiToken,
+      domain,
+      email,
+    });
   });
 });

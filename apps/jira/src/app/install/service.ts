@@ -49,6 +49,7 @@ export const registerOrganisation = async ({
       name: 'jira/app.installed',
       data: {
         organisationId,
+        region,
       },
     },
   ]);

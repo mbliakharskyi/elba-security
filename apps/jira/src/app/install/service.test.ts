@@ -14,34 +14,21 @@ const region = 'us';
 const now = new Date();
 
 const organisation = {
-  id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c99',
+  id: '00000000-0000-0000-0000-000000000001',
   apiToken,
   domain,
   email,
   region,
 };
 
-const mockUserData = {
-  users: [
-    {
-      id: '1',
-      attributes: {
-        role: 'admin',
-        first_name: 'John',
-        last_name: 'Doe',
-        email: 'john@example.com',
-      },
-    },
-  ],
-  pagination: {
-    current_page: 1,
-    previous_page: null,
-    next_page: null,
-    record_count: 1,
-    page_count: 1,
-    items_per_page: 10,
+const getUsersData = [
+  {
+    accountId: '1',
+    displayName: 'admin',
+    active: true,
+    emailAddress: 'john@example.com',
   },
-};
+];
 
 describe('registerOrganisation', () => {
   beforeAll(() => {
@@ -56,7 +43,7 @@ describe('registerOrganisation', () => {
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
     // mocked the getUsers function
     // @ts-expect-error -- this is a mock
-    const getUsers = vi.spyOn(userConnector, 'getUsers').mockResolvedValue(mockUserData);
+    const getUsers = vi.spyOn(userConnector, 'getUsers').mockResolvedValue(getUsersData);
     vi.spyOn(crypto, 'encrypt').mockResolvedValue(apiToken);
     await expect(
       registerOrganisation({
@@ -67,27 +54,39 @@ describe('registerOrganisation', () => {
         region,
       })
     ).resolves.toBeUndefined();
+    expect(getUsers).toBeCalledTimes(1);
+    expect(getUsers).toBeCalledWith({ apiToken, domain, email, page: null });
+
     await expect(
       db.select().from(organisationsTable).where(eq(organisationsTable.id, organisation.id))
     ).resolves.toMatchObject([
       {
         apiToken,
+        domain,
+        email,
         region,
       },
     ]);
     expect(send).toBeCalledTimes(1);
-    expect(send).toBeCalledWith({
-      name: 'jira/users.sync.requested',
-      data: {
-        isFirstSync: true,
-        organisationId: organisation.id,
-        syncStartedAt: now.getTime(),
-        region,
-        page: null,
+    expect(send).toBeCalledWith([
+      {
+        name: 'jira/users.sync.requested',
+        data: {
+          isFirstSync: true,
+          organisationId: organisation.id,
+          syncStartedAt: now.getTime(),
+          page: null,
+        },
       },
-    });
+      {
+        name: 'jira/app.installed',
+        data: {
+          organisationId: organisation.id,
+          region,
+        },
+      },
+    ]);
     expect(crypto.encrypt).toBeCalledTimes(1);
-    expect(getUsers).toBeCalledWith(apiToken, null);
   });
 
   test('should setup organisation when the organisation id is valid and the organisation is already registered', async () => {
@@ -95,7 +94,7 @@ describe('registerOrganisation', () => {
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
     // mocked the getUsers function
     // @ts-expect-error -- this is a mock
-    const getUsers = vi.spyOn(userConnector, 'getUsers').mockResolvedValue(mockUserData);
+    const getUsers = vi.spyOn(userConnector, 'getUsers').mockResolvedValue(getUsersData);
     // pre-insert an organisation to simulate an existing entry
     await db.insert(organisationsTable).values(organisation);
     await expect(
@@ -107,6 +106,10 @@ describe('registerOrganisation', () => {
         region,
       })
     ).resolves.toBeUndefined();
+
+    expect(getUsers).toBeCalledTimes(1);
+    expect(getUsers).toBeCalledWith({ apiToken, domain, email, page: null });
+
     // check if the apiToken in the database is updated
     await expect(
       db
@@ -122,17 +125,24 @@ describe('registerOrganisation', () => {
     ]);
     // verify that the user/sync event is sent
     expect(send).toBeCalledTimes(1);
-    expect(send).toBeCalledWith({
-      name: 'jira/users.sync.requested',
-      data: {
-        isFirstSync: true,
-        organisationId: organisation.id,
-        syncStartedAt: now.getTime(),
-        region,
-        page: null,
+    expect(send).toBeCalledWith([
+      {
+        name: 'jira/users.sync.requested',
+        data: {
+          isFirstSync: true,
+          organisationId: organisation.id,
+          syncStartedAt: now.getTime(),
+          page: null,
+        },
       },
-    });
-    expect(getUsers).toBeCalledWith(apiToken, null);
+      {
+        name: 'jira/app.installed',
+        data: {
+          organisationId: organisation.id,
+          region,
+        },
+      },
+    ]);
   });
 
   test('should not setup the organisation when the organisation id is invalid', async () => {
@@ -140,7 +150,7 @@ describe('registerOrganisation', () => {
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
     // mocked the getUsers function
     // @ts-expect-error -- this is a mock
-    vi.spyOn(userConnector, 'getUsers').mockResolvedValue(mockUserData);
+    vi.spyOn(userConnector, 'getUsers').mockResolvedValue(getUsersData);
     const wrongId = 'xfdhg-dsf';
     const error = new Error(`invalid input syntax for type uuid: "${wrongId}"`);
 

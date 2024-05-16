@@ -1,6 +1,6 @@
 import { InngestMiddleware, NonRetriableError } from 'inngest';
 import { z } from 'zod';
-import { JiraError } from '@/connectors/commons/error';
+import { JiraError } from '@/connectors/common/error';
 
 const requiredDataSchema = z.object({
   organisationId: z.string().uuid(),

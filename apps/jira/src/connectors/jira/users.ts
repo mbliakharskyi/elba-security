@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { env } from '@/common/env';
-import { JiraError } from '../commons/error';
+import { JiraError } from '../common/error';
 
 const jiraUserSchema = z.object({
   accountId: z.string(),

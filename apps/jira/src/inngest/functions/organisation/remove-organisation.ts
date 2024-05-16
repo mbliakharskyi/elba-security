@@ -8,17 +8,19 @@ import { inngest } from '../../client';
 export const removeOrganisation = inngest.createFunction(
   {
     id: 'jira-remove-organisation',
-    priority: {
-      run: '600',
-    },
     retries: 5,
+    cancelOn: [
+      {
+        event: 'jira/app.installed',
+        match: 'data.organisationId',
+      },
+    ],
   },
   {
     event: 'jira/app.uninstalled',
   },
   async ({ event }) => {
     const { organisationId } = event.data;
-
     const [organisation] = await db
       .select({
         region: organisationsTable.region,

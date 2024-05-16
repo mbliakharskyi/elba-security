@@ -4,14 +4,20 @@ import { NonRetriableError } from 'inngest';
 import { eq } from 'drizzle-orm';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
+import { encrypt } from '@/common/crypto';
 import { env } from '@/common/env';
 import { removeOrganisation } from './remove-organisation';
 
+const apiToken = 'test-access-token';
+const domain = 'test-domain';
+const email = 'test@email';
+
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
-  token: 'test-token',
-  teamId: 'test-id',
+  apiToken: await encrypt(apiToken),
   region: 'us',
+  domain,
+  email,
 };
 const setup = createInngestFunctionMock(removeOrganisation, 'jira/app.uninstalled');
 

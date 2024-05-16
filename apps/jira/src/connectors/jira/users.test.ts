@@ -1,122 +1,110 @@
-import { describe, expect, test, beforeEach } from 'vitest';
+/* eslint-disable @typescript-eslint/no-unsafe-call -- test conveniency */
+/* eslint-disable @typescript-eslint/no-unsafe-return -- test conveniency */
 import { http } from 'msw';
+import { describe, expect, test, beforeEach } from 'vitest';
 import { server } from '@elba-security/test-utils';
 import { env } from '@/common/env';
-import type { JiraError } from '../commons/error';
-import { getUsers, deleteUser, type JiraUser } from './users';
+import { JiraError } from '../common/error';
+import type { JiraUser } from './users';
+import { getUsers, deleteUser } from './users';
 
-const data: JiraUser[] = [
-  {
-    id: 'user-id',
-    attributes: {
-      role: 'participant',
-      first_name: 'John',
-      last_name: 'Doe',
-      email: 'john@example.com',
-      pending_invite: false,
-    },
-  },
-];
-
-const validToken = 'test-token';
-
+const validApiToken = 'apiToken-1234';
+const endPage = '2';
+const nextPage = '1';
 const userId = 'test-id';
-describe('getUsers', () => {
-  beforeEach(() => {
-    server.use(
-      http.get(`${env.JIRA_API_BASE_URL}/users`, ({ request }) => {
-        const url = new URL(request.url);
-        if (request.headers.get('Authorization') !== validToken) {
-          return new Response(undefined, { status: 401 });
-        }
-        const page = parseInt(url.searchParams.get('page[number]') || '0');
-        const lastPage = 2;
-        const nextPage = 1;
-        const response = {
-          data,
-          meta: {
-            next_page: page === lastPage ? null : nextPage,
-          },
-        };
+const domain = 'test-domain';
+const email = 'test@email';
+const validEncodedKey = Buffer.from(`${email}:${validApiToken}`).toString('base64');
+const validUsers: JiraUser[] = Array.from({ length: 201 }, (_, i) => ({
+  accountId: `accountId-${i}`,
+  displayName: `displayName-${i}`,
+  emailAddress: `user-${i}@foo.bar`,
+  active: true,
+}));
+const endPageUsers: JiraUser[] = Array.from({ length: 1 }, (_, i) => ({
+  accountId: `accountId-${i}`,
+  displayName: `displayName-${i}`,
+  emailAddress: `user-${i}@foo.bar`,
+  active: true,
+}));
 
-        return new Response(JSON.stringify(response), {
-          status: 200,
-        });
-      })
-    );
-  });
+const invalidUsers = [];
 
-  test('should throw JiraError when the token is invalid', async () => {
-    try {
-      await getUsers('invalidToken', 0);
-    } catch (error) {
-      expect((error as JiraError).message).toEqual('Could not retrieve Jira users');
-    }
-  });
+describe('users connector', () => {
+  describe('getUsers', () => {
+    // mock token API endpoint using msw
+    beforeEach(() => {
+      server.use(
+        http.get(`https://${domain}.atlassian.net/rest/api/3/users/search`, ({ request }) => {
+          if (request.headers.get('Authorization') !== `Basic ${validEncodedKey}`) {
+            return new Response(undefined, { status: 401 });
+          }
+          const url = new URL(request.url);
+          const after = url.searchParams.get('startAt');
+          const responseData = after === endPage ? endPageUsers : validUsers;
+          return Response.json(responseData);
+        })
+      );
+    });
 
-  test('should fetch users when token is valid', async () => {
-    const result = await getUsers(validToken, 0);
-    expect(result).toEqual({
-      validUsers: [
-        {
-          attributes: {
-            email: 'john@example.com',
-            first_name: 'John',
-            last_name: 'Doe',
-            pending_invite: false,
-            role: 'participant',
-          },
-          id: 'user-id',
-        },
-      ],
-      invalidUsers: [],
-      invitedUsers: [],
-      nextPage: 1,
+    test('should return users and nextPage when the token is valid and their is another page', async () => {
+      await expect(
+        getUsers({ apiToken: validApiToken, domain, email, page: nextPage })
+      ).resolves.toStrictEqual({
+        validUsers,
+        invalidUsers,
+        nextPage: parseInt(nextPage, 10) + env.JIRA_USERS_SYNC_BATCH_SIZE,
+      });
+    });
+
+    test('should return users and no nextPage when the token is valid and their is no other page', async () => {
+      await expect(
+        getUsers({ apiToken: validApiToken, domain, email, page: endPage })
+      ).resolves.toStrictEqual({
+        validUsers: endPageUsers,
+        invalidUsers,
+        nextPage: null,
+      });
+    });
+
+    test('should throws when the token is invalid', async () => {
+      await expect(getUsers({ apiToken: 'foo-bar', domain, email })).rejects.toBeInstanceOf(
+        JiraError
+      );
     });
   });
 
-  test('should return no next Page when the end of list is reached', async () => {
-    await expect(getUsers(validToken, 2)).resolves.toStrictEqual({
-      validUsers: [
-        {
-          attributes: {
-            email: 'john@example.com',
-            first_name: 'John',
-            last_name: 'Doe',
-            pending_invite: false,
-            role: 'participant',
-          },
-          id: 'user-id',
-        },
-      ],
-      invalidUsers: [],
-      invitedUsers: [],
-      nextPage: null,
+  describe('deleteUser', () => {
+    beforeEach(() => {
+      server.use(
+        http.delete<{ userId: string }>(
+          `https://${domain}.atlassian.net/rest/api/3/user`,
+          ({ request }) => {
+            if (request.headers.get('Authorization') !== `Basic ${validEncodedKey}`) {
+              return new Response(undefined, { status: 401 });
+            }
+            return new Response(undefined, { status: 200 });
+          }
+        )
+      );
     });
-  });
-});
 
-describe('deleteUser', () => {
-  beforeEach(() => {
-    server.use(
-      http.delete(`${env.JIRA_API_BASE_URL}/users/${userId}`, ({ request }) => {
-        if (request.headers.get('Authorization') !== validToken) {
-          return new Response(undefined, { status: 401 });
-        }
-        return new Response(undefined, { status: 204 }); // Assuming a 204 No Content response for successful deletion
-      })
-    );
-  });
+    test('should delete user successfully when token is valid', async () => {
+      await expect(
+        deleteUser({ apiToken: validApiToken, domain, email, userId })
+      ).resolves.not.toThrow();
+    });
 
-  test('should delete user successfully when token is valid', async () => {
-    await expect(deleteUser(validToken, userId)).resolves.not.toThrow();
-  });
+    test('should not throw when the user is not found', async () => {
+      await expect(
+        deleteUser({ apiToken: validApiToken, domain, email, userId })
+      ).resolves.toBeUndefined();
+    });
 
-  test('should throw JiraError when token is invalid', async () => {
-    try {
-      await deleteUser('invalidToken', userId);
-    } catch (error) {
-      expect((error as JiraError).message).toEqual('Could not delete Jira user');
-    }
+    test('should throw JiraError when token is invalid', async () => {
+      await expect(
+        deleteUser({ apiToken: 'invalidApiToken', domain, email, userId })
+      ).rejects.toBeInstanceOf(JiraError);
+    });
   });
 });

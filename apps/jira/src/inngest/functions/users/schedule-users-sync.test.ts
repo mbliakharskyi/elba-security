@@ -2,15 +2,25 @@ import { expect, test, describe, beforeAll, vi, afterAll } from 'vitest';
 import { createInngestFunctionMock } from '@elba-security/test-utils';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
-import { organisations } from './__mocks__/integration';
 import { scheduleUsersSync } from './schedule-users-sync';
 
 const now = Date.now();
+
 const setup = createInngestFunctionMock(scheduleUsersSync);
+
+export const organisations = Array.from({ length: 5 }, (_, i) => ({
+  id: `00000000-0000-0000-0000-00000000000${i}`,
+  apiToken: `test-api-token${i}`,
+  region: `us`,
+  domain: 'test-domain',
+  email: 'test-email',
+}));
+
 describe('schedule-users-syncs', () => {
   beforeAll(() => {
     vi.setSystemTime(now);
   });
+
   afterAll(() => {
     vi.useRealTimers();
   });
@@ -30,7 +40,7 @@ describe('schedule-users-syncs', () => {
     });
     expect(step.sendEvent).toBeCalledTimes(1);
     expect(step.sendEvent).toBeCalledWith(
-      'sync-organisations-users',
+      'synchronize-users',
       organisations.map(({ id }) => ({
         name: 'jira/users.sync.requested',
         data: {

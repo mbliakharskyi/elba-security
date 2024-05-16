@@ -13,7 +13,6 @@ export const env = z
     DATABASE_PROXY_PORT: zEnvInt(),
     VERCEL_ENV: z.string().min(1).optional(),
     ENCRYPTION_KEY: z.string().length(64),
-    JIRA_API_BASE_URL: z.string().url(),
     JIRA_USERS_SYNC_CRON: z.string().default('0 0 * * *'),
     JIRA_USERS_SYNC_BATCH_SIZE: zEnvInt().default(200),
     JIRA_DELETE_USER_CONCURRENCY: zEnvInt().default(5),

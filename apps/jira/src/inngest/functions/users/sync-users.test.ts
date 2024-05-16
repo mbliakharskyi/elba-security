@@ -4,24 +4,39 @@ import { NonRetriableError } from 'inngest';
 import * as usersConnector from '@/connectors/jira/users';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
-import * as crypto from '@/common/crypto';
+import { encrypt } from '@/common/crypto';
 import { syncUsers } from './sync-users';
-import { elbaUsers, users } from './__mocks__/integration';
+
+const apiToken = 'test-access-token';
+const domain = 'test-domain';
+const email = 'test@email';
 
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
-  token: 'test-token',
-  teamId: 'test-team-id',
+  apiToken: await encrypt(apiToken),
   region: 'us',
+  domain,
+  email,
 };
-
 const syncStartedAt = Date.now();
+const syncedBefore = Date.now();
+const nextPage = 1;
+const users: usersConnector.JiraUser[] = Array.from({ length: 2 }, (_, i) => ({
+  accountId: `id-${i}`,
+  displayName: `displayName-${i}`,
+  emailAddress: `user-${i}@foo.bar`,
+}));
 
 const setup = createInngestFunctionMock(syncUsers, 'jira/users.sync.requested');
 
-describe('sync-users', () => {
+describe('synchronize-users', () => {
   test('should abort sync when organisation is not registered', async () => {
-    // Setup the test without organisation entries in the database
+    vi.spyOn(usersConnector, 'getUsers').mockResolvedValue({
+      validUsers: users,
+      invalidUsers: [],
+      nextPage: null,
+    });
+
     const [result, { step }] = setup({
       organisationId: organisation.id,
       isFirstSync: false,
@@ -31,34 +46,31 @@ describe('sync-users', () => {
 
     await expect(result).rejects.toBeInstanceOf(NonRetriableError);
 
+    expect(usersConnector.getUsers).toBeCalledTimes(0);
+
     expect(step.sendEvent).toBeCalledTimes(0);
   });
 
   test('should continue the sync when there is a next page', async () => {
-    await db.insert(organisationsTable).values(organisation);
-    // @ts-expect-error -- this is a mock
-    vi.spyOn(crypto, 'decrypt').mockResolvedValue(undefined);
+    const elba = spyOnElba();
 
+    await db.insert(organisationsTable).values(organisation);
     vi.spyOn(usersConnector, 'getUsers').mockResolvedValue({
-      invalidUsers: [],
-      invitedUsers: [],
       validUsers: users,
-      nextPage: 1,
+      invalidUsers: [],
+      nextPage,
     });
 
     const [result, { step }] = setup({
       organisationId: organisation.id,
       isFirstSync: false,
       syncStartedAt,
-      page: null,
+      page: String(nextPage),
     });
 
     await expect(result).resolves.toStrictEqual({ status: 'ongoing' });
 
-    expect(crypto.decrypt).toBeCalledTimes(1);
-    expect(crypto.decrypt).toBeCalledWith(organisation.token);
-
-    // Ensure the function continues the pagination process
+    const elbaInstance = elba.mock.results[0]?.value;
     expect(step.sendEvent).toBeCalledTimes(1);
     expect(step.sendEvent).toBeCalledWith('synchronize-users', {
       name: 'jira/users.sync.requested',
@@ -66,21 +78,36 @@ describe('sync-users', () => {
         organisationId: organisation.id,
         isFirstSync: false,
         syncStartedAt,
-        page: 1,
+        page: String(nextPage),
       },
     });
+
+    expect(elbaInstance?.users.update).toBeCalledTimes(1);
+    expect(elbaInstance?.users.update).toBeCalledWith({
+      users: [
+        {
+          additionalEmails: [],
+          displayName: 'displayName-0',
+          email: 'user-0@foo.bar',
+          id: 'id-0',
+        },
+        {
+          additionalEmails: [],
+          displayName: 'displayName-1',
+          email: 'user-1@foo.bar',
+          id: 'id-1',
+        },
+      ],
+    });
+    expect(elbaInstance?.users.delete).not.toBeCalled();
   });
 
-  test('should finalize the sync when there is no next page', async () => {
+  test('should finalize the sync when there is a no next page', async () => {
     const elba = spyOnElba();
     await db.insert(organisationsTable).values(organisation);
-    // @ts-expect-error -- this is a mock
-    vi.spyOn(crypto, 'decrypt').mockResolvedValue(undefined);
-
     vi.spyOn(usersConnector, 'getUsers').mockResolvedValue({
-      invalidUsers: [],
-      invitedUsers: [],
       validUsers: users,
+      invalidUsers: [],
       nextPage: null,
     });
 
@@ -92,27 +119,28 @@ describe('sync-users', () => {
     });
 
     await expect(result).resolves.toStrictEqual({ status: 'completed' });
-    expect(elba).toBeCalledTimes(1);
-    expect(elba).toBeCalledWith({
-      apiKey: 'elba-api-key',
-      baseUrl: 'https://elba.local/api',
-      organisationId: '00000000-0000-0000-0000-000000000001',
-      region: 'us',
-    });
-
-    expect(crypto.decrypt).toBeCalledTimes(1);
-    expect(crypto.decrypt).toBeCalledWith(organisation.token);
-
     const elbaInstance = elba.mock.results[0]?.value;
     expect(elbaInstance?.users.update).toBeCalledTimes(1);
-    expect(elbaInstance?.users.update).toBeCalledWith({ users: elbaUsers });
-
-    expect(elbaInstance?.users.delete).toBeCalledTimes(1);
-    expect(elbaInstance?.users.delete).toBeCalledWith({
-      syncedBefore: new Date(syncStartedAt).toISOString(),
+    expect(elbaInstance?.users.update).toBeCalledWith({
+      users: [
+        {
+          additionalEmails: [],
+          displayName: 'displayName-0',
+          email: 'user-0@foo.bar',
+          id: 'id-0',
+        },
+        {
+          additionalEmails: [],
+          displayName: 'displayName-1',
+          email: 'user-1@foo.bar',
+          id: 'id-1',
+        },
+      ],
     });
-
-    // Ensure the function does not send another event to continue pagination
+    const syncBeforeAtISO = new Date(syncedBefore).toISOString();
+    expect(elbaInstance?.users.delete).toBeCalledTimes(1);
+    expect(elbaInstance?.users.delete).toBeCalledWith({ syncedBefore: syncBeforeAtISO });
+    // the function should not send another event that continue the pagination
     expect(step.sendEvent).toBeCalledTimes(0);
   });
 });

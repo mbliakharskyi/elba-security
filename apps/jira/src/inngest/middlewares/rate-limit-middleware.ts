@@ -1,5 +1,5 @@
 import { InngestMiddleware, RetryAfterError } from 'inngest';
-import { JiraError } from '@/connectors/commons/error';
+import { JiraError } from '@/connectors/common/error';
 
 export const rateLimitMiddleware = new InngestMiddleware({
   name: 'rate-limit',
@@ -13,17 +13,23 @@ export const rateLimitMiddleware = new InngestMiddleware({
               ...context
             } = ctx;
 
-            if (error instanceof JiraError && error.response?.status === 429) {
-              const retryAfter = error.response.headers.get('Retry-After') || 60;
+            if (!(error instanceof JiraError)) {
+              return;
+            }
+
+            if (error.response?.status === 429) {
+              const retryAfter = error.response.headers.get('retry-after') || 60;
 
               return {
                 ...context,
                 result: {
                   ...result,
                   error: new RetryAfterError(
-                    `Jira rate limit reached by '${fn.name}'`,
+                    `API rate limit reached by '${fn.name}', retry after ${retryAfter} seconds.`,
                     `${retryAfter}s`,
-                    { cause: error }
+                    {
+                      cause: error,
+                    }
                   ),
                 },
               };

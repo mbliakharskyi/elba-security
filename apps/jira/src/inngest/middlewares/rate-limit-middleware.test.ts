@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { RetryAfterError } from 'inngest';
-import { JiraError } from '@/connectors/commons/error';
+import { JiraError } from '@/connectors/common/error';
 import { rateLimitMiddleware } from './rate-limit-middleware';
 
 describe('rate-limit middleware', () => {
@@ -16,7 +16,7 @@ describe('rate-limit middleware', () => {
     ).toBeUndefined();
   });
 
-  test('should not transform the output when the error is not about Jira rate limit', () => {
+  test('should not transform the output when the error is not about jira rate limit', () => {
     expect(
       rateLimitMiddleware
         .init()
@@ -30,15 +30,13 @@ describe('rate-limit middleware', () => {
     ).toBeUndefined();
   });
 
-  test('should transform the output error to RetryAfterError when the error is about Jira rate limit', () => {
-    const retryAfter = '1841055';
-
+  test('should transform the output error to RetryAfterError when the error is about jira rate limit', () => {
     const rateLimitError = new JiraError('foo bar', {
+      // @ts-expect-error this is a mock
       response: {
-        // @ts-expect-error -- this is a mock
-        headers: { 'RateLimit-Remaining': '0', 'Retry-After': retryAfter },
+        status: 429,
+        headers: new Headers({ 'Retry-After': '10' }),
       },
-      request: { method: 'GET', url: 'http://foo.bar', headers: {} },
     });
 
     const context = {
@@ -58,7 +56,7 @@ describe('rate-limit middleware', () => {
       .onFunctionRun({ fn: { name: 'foo' } })
       .transformOutput(context);
     expect(result?.result.error).toBeInstanceOf(RetryAfterError);
-    expect(result?.result.error.retryAfter).toStrictEqual(retryAfter);
+    expect(result?.result.error.retryAfter).toStrictEqual('10');
     expect(result).toMatchObject({
       foo: 'bar',
       baz: {

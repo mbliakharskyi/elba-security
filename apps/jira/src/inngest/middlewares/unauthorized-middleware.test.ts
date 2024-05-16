@@ -2,13 +2,20 @@ import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { NonRetriableError } from 'inngest';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
-import { JiraError } from '@/connectors/commons/error';
+import { encrypt } from '@/common/crypto';
+import { JiraError } from '@/connectors/common/error';
 import { unauthorizedMiddleware } from './unauthorized-middleware';
+
+const apiToken = 'test-access-token';
+const domain = 'test-domain';
+const email = 'test@email';
 
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
-  token: 'test-token',
-  region: 'fra1',
+  apiToken: await encrypt(apiToken),
+  region: 'us',
+  domain,
+  email,
 };
 
 describe('unauthorized middleware', () => {
