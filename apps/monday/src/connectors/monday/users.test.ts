@@ -6,46 +6,48 @@ import { server } from '@elba-security/test-utils';
 import { env } from '@/common/env';
 import { MondayError } from '../common/error';
 import type { MondayUser } from './users';
-import { getUsers, deleteUser } from './users';
+import { getUsers, deleteUsers } from './users';
 
+type RequestBody = {
+  query: string;
+}
 const validToken = 'token-1234';
-const endCursor = '2';
-const nextCursor = '1';
-const userId = 'test-id';
+const endPage = 3;
+const firstPage = 1;
+const nextCursor = 2;
+const userIds = ['test-user1-id', 'test-user2-id'];
+const workspaceId = '000000';
 
 const validUsers: MondayUser[] = Array.from({ length: 5 }, (_, i) => ({
   id: `id-${i}`,
   name: `first_name-${i}`,
-  username: `username-${i}`,
   email: `user-${i}@foo.bar`,
-  active: true,
 }));
 
 const invalidUsers = [];
 
 describe('users connector', () => {
   describe('getUsers', () => {
-    // mock token API endpoint using msw
     beforeEach(() => {
       server.use(
-        http.post(`${env.MONDAY_API_BASE_URL}/graphql`, async ({ request }) => {
+        http.post(`${env.MONDAY_API_BASE_URL}`, async ({ request }) => {
           if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
             return new Response(undefined, { status: 401 });
           }
 
-          // @ts-expect-error -- convenience
-          const data: { variables: { afterCursor: string } } = await request.json();
-          const { afterCursor } = data.variables;
+          const body = (await request.json()) as RequestBody;
+          const { query } = body;
+
+          // Extract the page parameter using a regular expression
+          const pageMatch = /page:\s*(?<pageNumber>\d+)/.exec(query);
+          const page =
+            pageMatch?.groups?.pageNumber
+              ? parseInt(pageMatch.groups.pageNumber, 10)
+              : undefined;
 
           return Response.json({
             data: {
-              users: {
-                nodes: [...validUsers, ...invalidUsers],
-                pageInfo: {
-                  hasNextPage: afterCursor !== endCursor,
-                  endCursor: afterCursor !== endCursor ? nextCursor : null,
-                },
-              },
+              users: page !== endPage ? validUsers : [],
             },
           });
         })
@@ -53,9 +55,7 @@ describe('users connector', () => {
     });
 
     test('should return users and nextPage when the token is valid and their is another page', async () => {
-      await expect(
-        getUsers({ accessToken: validToken, afterCursor: 'start' })
-      ).resolves.toStrictEqual({
+      await expect(getUsers({ accessToken: validToken, page: firstPage })).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
         nextPage: nextCursor,
@@ -63,10 +63,8 @@ describe('users connector', () => {
     });
 
     test('should return users and no nextPage when the token is valid and their is no other page', async () => {
-      await expect(
-        getUsers({ accessToken: validToken, afterCursor: endCursor })
-      ).resolves.toStrictEqual({
-        validUsers,
+      await expect(getUsers({ accessToken: validToken, page: endPage })).resolves.toStrictEqual({
+        validUsers: [],
         invalidUsers,
         nextPage: null,
       });
@@ -80,7 +78,7 @@ describe('users connector', () => {
   describe('deleteUser', () => {
     beforeEach(() => {
       server.use(
-        http.post<{ userId: string }>(`${env.MONDAY_API_BASE_URL}/graphql`, ({ request }) => {
+        http.post<{ userIds: string[] }>(`${env.MONDAY_API_BASE_URL}`, ({ request }) => {
           if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
             return new Response(undefined, { status: 401 });
           }
@@ -90,17 +88,21 @@ describe('users connector', () => {
     });
 
     test('should delete user successfully when token is valid', async () => {
-      await expect(deleteUser({ accessToken: validToken, userId })).resolves.not.toThrow();
+      await expect(
+        deleteUsers({ accessToken: validToken, workspaceId, userIds })
+      ).resolves.not.toThrow();
     });
 
     test('should not throw when the user is not found', async () => {
-      await expect(deleteUser({ accessToken: validToken, userId })).resolves.toBeUndefined();
+      await expect(
+        deleteUsers({ accessToken: validToken, workspaceId, userIds })
+      ).resolves.toBeUndefined();
     });
 
     test('should throw MondayError when token is invalid', async () => {
-      await expect(deleteUser({ accessToken: 'invalidToken', userId })).rejects.toBeInstanceOf(
-        MondayError
-      );
+      await expect(
+        deleteUsers({ accessToken: 'invalidToken', workspaceId, userIds })
+      ).rejects.toBeInstanceOf(MondayError);
     });
   });
 });

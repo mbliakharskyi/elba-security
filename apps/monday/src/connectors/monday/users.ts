@@ -92,7 +92,7 @@ export const deleteUsers = async ({ userIds, workspaceId, accessToken }: DeleteU
     }
   }`;
 
-  const response = await fetch('https://api.monday.com/v2', {
+  const response = await fetch(`${env.MONDAY_API_BASE_URL}`, {
     method: 'post',
     headers: {
       'Content-Type': 'application/json',
@@ -102,6 +102,6 @@ export const deleteUsers = async ({ userIds, workspaceId, accessToken }: DeleteU
   });
 
   if (!response.ok) {
-    throw new MondayError(`Could not suspend userIds with Id: ${userIdsString}`, { response });
+    throw new MondayError(`Could not suspend users with Id: ${userIdsString}`, { response });
   }
 };

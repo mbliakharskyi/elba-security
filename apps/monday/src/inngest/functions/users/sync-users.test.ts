@@ -14,13 +14,11 @@ const organisation = {
 };
 const syncStartedAt = Date.now();
 const syncedBefore = Date.now();
-const nextPage = '1';
+const nextPage = 1;
 const users: usersConnector.MondayUser[] = Array.from({ length: 2 }, (_, i) => ({
   id: `id-${i}`,
   name: `name-${i}`,
-  username: `username-${i}`,
   email: `user-${i}@foo.bar`,
-  active: true,
 }));
 
 const setup = createInngestFunctionMock(syncUsers, 'monday/users.sync.requested');

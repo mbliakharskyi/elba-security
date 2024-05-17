@@ -8,7 +8,7 @@ import { decrypt } from '@/common/crypto';
 import { env } from '@/common/env';
 import { getWorkspaceIds } from '@/connectors/monday/auth';
 
-export const deleteUser = inngest.createFunction(
+export const deleteUsers = inngest.createFunction(
   {
     id: 'monday-delete-users',
     concurrency: {
