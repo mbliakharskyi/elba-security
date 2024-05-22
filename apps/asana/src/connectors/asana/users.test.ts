@@ -8,13 +8,9 @@ import { AsanaError } from '../common/error';
 import type { AsanaUser } from './users';
 import { getUsers, deleteUser } from './users';
 
-type RequestBody = {
-  query: string;
-};
 const validToken = 'token-1234';
 const endPage = '3';
-const firstPage = '1';
-const nextCursor = '2';
+const nextPage = '2';
 const userId = 'test-user-id';
 const workspaceId = '000000';
 
@@ -28,40 +24,36 @@ const invalidUsers = [];
 
 describe('users connector', () => {
   describe('getUsers', () => {
+    // mock token API endpoint using msw
     beforeEach(() => {
       server.use(
-        http.post(`${env.ASANA_API_BASE_URL}`, async ({ request }) => {
+        http.get(`${env.ASANA_API_BASE_URL}/users`, ({ request }) => {
           if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
             return new Response(undefined, { status: 401 });
           }
 
-          const body = (await request.json()) as RequestBody;
-          const { query } = body;
-
-          // Extract the page parameter using a regular expression
-          const pageMatch = /page:\s*(?<pageNumber>\d+)/.exec(query);
-          const page = pageMatch?.groups?.pageNumber ? pageMatch.groups.pageNumber : undefined;
-
-          return Response.json({
-            data: {
-              users: page === endPage ? validUsers : [],
-            },
-          });
+          const url = new URL(request.url);
+          const offset = url.searchParams.get('offset');
+          const responseData =
+            offset === endPage
+              ? { data: validUsers }
+              : { data: validUsers, next_page: { offset: nextPage } };
+          return Response.json(responseData);
         })
       );
     });
 
     test('should return users and nextPage when the token is valid and their is another page', async () => {
-      await expect(getUsers({ accessToken: validToken, page: firstPage })).resolves.toStrictEqual({
+      await expect(getUsers({ accessToken: validToken, page: nextPage })).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
-        nextPage: nextCursor,
+        nextPage,
       });
     });
 
     test('should return users and no nextPage when the token is valid and their is no other page', async () => {
       await expect(getUsers({ accessToken: validToken, page: endPage })).resolves.toStrictEqual({
-        validUsers: [],
+        validUsers,
         invalidUsers,
         nextPage: null,
       });
@@ -75,12 +67,15 @@ describe('users connector', () => {
   describe('deleteUser', () => {
     beforeEach(() => {
       server.use(
-        http.post<{ userId: string }>(`${env.ASANA_API_BASE_URL}`, ({ request }) => {
-          if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
-            return new Response(undefined, { status: 401 });
+        http.post<{ userId: string }>(
+          `${env.ASANA_API_BASE_URL}/workspaces/:workspaceId/removeUser`,
+          ({ request }) => {
+            if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
+              return new Response(undefined, { status: 401 });
+            }
+            return new Response(undefined, { status: 200 });
           }
-          return new Response(undefined, { status: 200 });
-        })
+        )
       );
     });
 
