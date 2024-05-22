@@ -34,3 +34,4 @@ yarn-error.log*
 
 # vercel
 .vercel
+apps/asana-service/node_modules
