@@ -10,20 +10,15 @@ import { setupOrganisation } from './service';
 
 const code = 'some-code';
 const accessToken = 'some token';
-const refreshToken = 'some refresh token';
-const expiresIn = 60;
 const region = 'us';
 const now = new Date();
 const getTokenData = {
   accessToken,
-  refreshToken,
-  expiresIn,
 };
 
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   accessToken,
-  refreshToken,
   region,
 };
 
@@ -37,6 +32,7 @@ describe('setupOrganisation', () => {
   });
 
   test('should setup organisation when the code is valid and the organisation is not registered', async () => {
+    // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
     const getToken = vi.spyOn(authConnector, 'getToken').mockResolvedValue(getTokenData);
 
@@ -83,6 +79,7 @@ describe('setupOrganisation', () => {
 
   test('should setup organisation when the code is valid and the organisation is already registered', async () => {
     // mock inngest client, only inngest.send should be used
+    // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
     // pre-insert an organisation to simulate an existing entry
     await db.insert(organisationsTable).values(organisation);
@@ -136,6 +133,7 @@ describe('setupOrganisation', () => {
 
   test('should not setup the organisation when the code is invalid', async () => {
     // mock inngest client
+    // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
     const error = new Error('invalid code');
     // mock getToken to reject with a dumb error for an invalid code

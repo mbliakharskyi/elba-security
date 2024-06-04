@@ -6,40 +6,47 @@ import { server } from '@elba-security/test-utils';
 import { env } from '@/common/env';
 import { IntercomError } from '../common/error';
 import type { IntercomUser } from './users';
-import { getUsers, deleteUser } from './users';
+import { getUsers } from './users';
 
 const validToken = 'token-1234';
 const endPage = '3';
-const nextPage = '2';
-const userId = 'test-user-id';
-const workspaceId = '000000';
+const nextPage = 'next-page';
 
 const validUsers: IntercomUser[] = Array.from({ length: 5 }, (_, i) => ({
-  gid: `gid-${i}`,
-  name: `first_name-${i}`,
+  id: `id-${i}`,
+  name: `name-${i}`,
   email: `user-${i}@foo.bar`,
-  is_active: true,
-  resource_type: 'user',
 }));
 
 const invalidUsers = [];
 
 describe('users connector', () => {
   describe('getUsers', () => {
-    // mock token API endpoint using msw
     beforeEach(() => {
       server.use(
-        http.get(`${env.INTERCOM_API_BASE_URL}/users`, ({ request }) => {
+        http.get(`${env.INTERCOM_API_BASE_URL}/admins`, ({ request }) => {
           if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
             return new Response(undefined, { status: 401 });
           }
 
           const url = new URL(request.url);
-          const offset = url.searchParams.get('offset');
+          const startingAfter = url.searchParams.get('starting_after');
           const responseData =
-            offset === endPage
-              ? { data: validUsers }
-              : { data: validUsers, next_page: { offset: nextPage } };
+            startingAfter !== endPage
+              ? {
+                  admins: validUsers,
+                  pages: {
+                    page: 3,
+                    per_page: 20,
+                    next: {
+                      starting_after: nextPage,
+                    },
+                  },
+                }
+              : {
+                  admins: validUsers,
+                };
+
           return Response.json(responseData);
         })
       );
@@ -63,40 +70,6 @@ describe('users connector', () => {
 
     test('should throws when the token is invalid', async () => {
       await expect(getUsers({ accessToken: 'foo-bar' })).rejects.toBeInstanceOf(IntercomError);
-    });
-  });
-
-  describe('deleteUser', () => {
-    beforeEach(() => {
-      server.use(
-        http.post<{ userId: string }>(
-          `${env.INTERCOM_API_BASE_URL}/workspaces/:workspaceId/removeUser`,
-          ({ request }) => {
-            if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
-              return new Response(undefined, { status: 401 });
-            }
-            return new Response(undefined, { status: 200 });
-          }
-        )
-      );
-    });
-
-    test('should delete user successfully when token is valid', async () => {
-      await expect(
-        deleteUser({ accessToken: validToken, workspaceId, userId })
-      ).resolves.not.toThrow();
-    });
-
-    test('should not throw when the user is not found', async () => {
-      await expect(
-        deleteUser({ accessToken: validToken, workspaceId, userId })
-      ).resolves.toBeUndefined();
-    });
-
-    test('should throw IntercomError when token is invalid', async () => {
-      await expect(
-        deleteUser({ accessToken: 'invalidToken', workspaceId, userId })
-      ).rejects.toBeInstanceOf(IntercomError);
     });
   });
 });

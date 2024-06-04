@@ -3,6 +3,7 @@ import { RetryAfterError } from 'inngest';
 import { IntercomError } from '@/connectors/common/error';
 import { rateLimitMiddleware } from './rate-limit-middleware';
 
+const rateLimitReset = '1487332520';
 describe('rate-limit middleware', () => {
   test('should not transform the output when their is no error', () => {
     expect(
@@ -16,7 +17,7 @@ describe('rate-limit middleware', () => {
     ).toBeUndefined();
   });
 
-  test('should not transform the output when the error is not about Doppler rate limit', () => {
+  test('should not transform the output when the error is not about Intercom rate limit', () => {
     expect(
       rateLimitMiddleware
         .init()
@@ -30,12 +31,16 @@ describe('rate-limit middleware', () => {
     ).toBeUndefined();
   });
 
-  test('should transform the output error to RetryAfterError when the error is about Doppler rate limit', () => {
+  test('should transform the output error to RetryAfterError when the error is about Intercom rate limit', () => {
     const rateLimitError = new IntercomError('foo bar', {
       // @ts-expect-error this is a mock
       response: {
         status: 429,
-        headers: new Headers({ 'retry-after': '10' }),
+        headers: new Headers({
+          'X-RateLimit-Limit': '100',
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': rateLimitReset,
+        }),
       },
     });
 
@@ -56,7 +61,9 @@ describe('rate-limit middleware', () => {
       .onFunctionRun({ fn: { name: 'foo' } })
       .transformOutput(context);
     expect(result?.result.error).toBeInstanceOf(RetryAfterError);
-    expect(result?.result.error.retryAfter).toStrictEqual('10');
+    expect(result?.result.error.retryAfter).toStrictEqual(
+      String(Number(rateLimitReset) - Math.floor(Date.now() / 1000))
+    );
     expect(result).toMatchObject({
       foo: 'bar',
       baz: {

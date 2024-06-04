@@ -10,18 +10,15 @@ import { syncUsers } from './sync-users';
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   accessToken: await encrypt('test-access-token'),
-  refreshToken: await encrypt('test-refresh-token'),
   region: 'us',
 };
 const syncStartedAt = Date.now();
 const syncedBefore = Date.now();
 const nextPage = '1';
 const users: usersConnector.IntercomUser[] = Array.from({ length: 2 }, (_, i) => ({
-  gid: `id-${i}`,
+  id: `id-${i}`,
   name: `name-${i}`,
   email: `user-${i}@foo.bar`,
-  resource_type: 'user',
-  is_active: true,
 }));
 
 const setup = createInngestFunctionMock(syncUsers, 'intercom/users.sync.requested');
