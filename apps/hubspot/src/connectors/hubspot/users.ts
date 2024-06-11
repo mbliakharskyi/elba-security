@@ -86,7 +86,7 @@ export const deleteUser = async ({ accessToken, userId }: DeleteUsersParams) => 
   const response = await fetch(url.toString(), {
     method: 'DELETE',
     headers: {
-      Bearer: accessToken,
+      Authorization: `Bearer ${accessToken}`,
     },
   });
 

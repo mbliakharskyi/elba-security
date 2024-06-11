@@ -18,14 +18,14 @@ describe('deleteUsers', () => {
           organisationId,
           userId: userId1,
         },
-        name: 'datadog/users.delete.requested',
+        name: 'hubspot/users.delete.requested',
       },
       {
         data: {
           organisationId,
           userId: userId2,
         },
-        name: 'datadog/users.delete.requested',
+        name: 'hubspot/users.delete.requested',
       },
     ]);
   });
