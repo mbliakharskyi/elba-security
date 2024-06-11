@@ -18,6 +18,7 @@ const validUsers: HubspotUser[] = Array.from({ length: 5 }, (_, i) => ({
   firstName: `firstName-${i}`,
   lastName: `lastName-${i}`,
   email: `user-${i}@foo.bar`,
+  superAdmin: true,
 }));
 
 const invalidUsers = [];

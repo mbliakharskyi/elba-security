@@ -20,6 +20,7 @@ const formatElbaUser = (user: HubspotUser): User => ({
   id: user.id,
   displayName: formatElbaUserDisplayName(user),
   email: user.email,
+  role: user.superAdmin ? 'admin' : 'user',
   additionalEmails: [],
 });
 
