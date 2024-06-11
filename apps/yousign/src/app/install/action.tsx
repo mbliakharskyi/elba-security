@@ -1,58 +1,85 @@
 'use server';
 import { logger } from '@elba-security/logger';
 import { z } from 'zod';
-import { YousignError } from '@/connectors/commons/error';
-import { env } from '@/env';
+import { RedirectType, redirect } from 'next/navigation';
+import { getRedirectUrl } from '@elba-security/sdk';
+import { isRedirectError } from 'next/dist/client/components/redirect';
+import { YousignError } from '@/connectors/common/error';
+import { env } from '@/common/env';
 import { registerOrganisation } from './service';
 
 const formSchema = z.object({
   organisationId: z.string().uuid(),
-  token: z.string().min(1),
+  apiKey: z.string().min(1, { message: 'The apiKey is required' }),
   region: z.string().min(1),
 });
 
 export type FormState = {
-  redirectUrl?: string;
   errors?: {
-    token?: string[] | undefined;
-    // we are not handling organisationId and region errors in the client as fields are hidden
+    apiKey?: string[] | undefined;
   };
 };
 
 export const install = async (_: FormState, formData: FormData): Promise<FormState> => {
-  const result = formSchema.safeParse({
-    token: formData.get('token'),
-    organisationId: formData.get('organisationId'),
-    region: formData.get('region'),
-  });
-  
-  if (!result.success) {
-    const { fieldErrors } = result.error.flatten();
-    if (fieldErrors.organisationId || fieldErrors.region) {
+  const region = formData.get('region');
+  try {
+    const result = formSchema.safeParse({
+      apiKey: formData.get('apiKey'),
+      organisationId: formData.get('organisationId'),
+      region: formData.get('region'),
+    });
+
+    if (!result.success) {
+      const { fieldErrors } = result.error.flatten();
+      if (fieldErrors.organisationId || fieldErrors.region) {
+        redirect(
+          getRedirectUrl({
+            sourceId: env.ELBA_SOURCE_ID,
+            baseUrl: env.ELBA_REDIRECT_URL,
+            region: region as string,
+            error: 'internal_error',
+          }),
+          RedirectType.replace
+        );
+      }
       return {
-        redirectUrl: `${env.ELBA_REDIRECT_URL}?source_id=${env.ELBA_SOURCE_ID}&error=internal_error`,
+        errors: fieldErrors,
       };
     }
 
-    return {
-      errors: fieldErrors,
-    };
-  }
-
-  try {
     await registerOrganisation(result.data);
-    return {
-      redirectUrl: `${env.ELBA_REDIRECT_URL}?source_id=${env.ELBA_SOURCE_ID}&success=true`,
-    };
+
+    redirect(
+      getRedirectUrl({
+        sourceId: env.ELBA_SOURCE_ID,
+        baseUrl: env.ELBA_REDIRECT_URL,
+        region: result.data.region,
+      }),
+      RedirectType.replace
+    );
   } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
     logger.warn('Could not register organisation', { error });
+
     if (error instanceof YousignError && error.response?.status === 401) {
       return {
-        redirectUrl: `${env.ELBA_REDIRECT_URL}?source_id=${env.ELBA_SOURCE_ID}&error=unauthorized`,
+        errors: {
+          apiKey: ['The given API token seems to be invalid'],
+        },
       };
     }
-    return {
-      redirectUrl: `${env.ELBA_REDIRECT_URL}?source_id=${env.ELBA_SOURCE_ID}&error=internal_error`,
-    };
+
+    redirect(
+      getRedirectUrl({
+        sourceId: env.ELBA_SOURCE_ID,
+        baseUrl: env.ELBA_REDIRECT_URL,
+        region: region as string,
+        error: 'internal_error',
+      }),
+      RedirectType.replace
+    );
   }
 };
