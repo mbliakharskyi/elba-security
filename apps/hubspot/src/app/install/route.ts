@@ -30,7 +30,10 @@ export function GET(request: NextRequest) {
   redirectUrl.searchParams.append('client_id', env.HUBSPOT_CLIENT_ID);
   redirectUrl.searchParams.append('redirect_uri', env.HUBSPOT_REDIRECT_URI);
   redirectUrl.searchParams.append('state', state);
-  redirectUrl.searchParams.append('scope', 'crm.objects.owners.read oauth');
+  redirectUrl.searchParams.append(
+    'scope',
+    'crm.objects.users.read crm.objects.users.write oauth settings.users.read settings.users.write'
+  );
 
   redirect(redirectUrl.toString());
 }

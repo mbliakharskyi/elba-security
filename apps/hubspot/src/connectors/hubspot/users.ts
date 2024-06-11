@@ -32,11 +32,10 @@ export type GetUsersParams = {
 export type DeleteUsersParams = {
   accessToken: string;
   userId: string;
-  workspaceId: string;
 };
 
 export const getUsers = async ({ accessToken, page }: GetUsersParams) => {
-  const url = new URL(`${env.HUBSPOT_API_BASE_URL}/crm/v3/owners/`);
+  const url = new URL(`${env.HUBSPOT_API_BASE_URL}/settings/v3/users/`);
 
   url.searchParams.append('idProperty', 'userId');
   url.searchParams.append('archived', 'false');
@@ -78,4 +77,20 @@ export const getUsers = async ({ accessToken, page }: GetUsersParams) => {
     invalidUsers,
     nextPage: result.paging?.next?.after ?? null,
   };
+};
+
+export const deleteUser = async ({ accessToken, userId }: DeleteUsersParams) => {
+  const url = new URL(`${env.HUBSPOT_API_BASE_URL}/settings/v3/users/${userId}`);
+  url.searchParams.append('idProperty', 'USER_ID');
+
+  const response = await fetch(url.toString(), {
+    method: 'DELETE',
+    headers: {
+      Bearer: accessToken,
+    },
+  });
+
+  if (!response.ok && response.status !== 404) {
+    throw new HubspotError(`Could not delete user with Id: ${userId}`, { response });
+  }
 };
