@@ -36,7 +36,7 @@ export type DeleteUsersParams = {
 };
 
 export const getUsers = async ({ accessToken, page }: GetUsersParams) => {
-  const url = new URL(`${env.HUBSPOT_API_BASE_URL}/settings/v3/users/`);
+  const url = new URL(`${env.HUBSPOT_API_BASE_URL}/settings/v3/users`);
 
   url.searchParams.append('limit', String(`${env.HUBSPOT_USERS_SYNC_BATCH_SIZE}`));
 
