@@ -1,4 +1,4 @@
-import { env } from '@/env';
+import { env } from '@/common/env';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { inngest } from '../../client';
@@ -6,22 +6,13 @@ import { inngest } from '../../client';
 export const scheduleUsersSynchronize = inngest.createFunction(
   {
     id: 'salesforce-schedule-users-syncs',
-    cancelOn: [
-      {
-        event: 'salesforce/app.installed',
-        match: 'data.organisationId',
-      },
-    ],
     retries: 5,
   },
-  { cron: env.USERS_SYNC_CRON },
+  { cron: env.SALESFORCE_USERS_SYNC_CRON },
   async ({ step }) => {
     const organisations = await db
       .select({
         id: organisationsTable.id,
-        region: organisationsTable.region,
-        accessToken: organisationsTable.accessToken,
-        instanceUrl: organisationsTable.instanceUrl,
       })
       .from(organisationsTable);
 

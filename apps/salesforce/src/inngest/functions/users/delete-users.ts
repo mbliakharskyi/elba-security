@@ -3,11 +3,11 @@ import { NonRetriableError } from 'inngest';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { inngest } from '@/inngest/client';
-import { deleteUser } from '@/connectors/users';
+import { deleteUser as deleteSalesforceUser } from '@/connectors/salesforce/users';
 import { decrypt } from '@/common/crypto';
-import { env } from '@/env';
+import { env } from '@/common/env';
 
-export const deleteSourceUsers = inngest.createFunction(
+export const deleteUser = inngest.createFunction(
   {
     id: 'salesforce-delete-users',
     concurrency: {
@@ -40,7 +40,7 @@ export const deleteSourceUsers = inngest.createFunction(
     const accessToken = await decrypt(organisation.accessToken);
     const instanceUrl = organisation.instanceUrl;
 
-    await deleteUser({
+    await deleteSalesforceUser({
       userId,
       accessToken,
       instanceUrl,

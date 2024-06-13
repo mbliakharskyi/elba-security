@@ -1,6 +1,6 @@
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
-import { getUsers } from '@/connectors/users';
+import { getUsers } from '@/connectors/salesforce/users';
 import { inngest } from '@/inngest/client';
 import { encrypt } from '@/common/crypto';
 
@@ -20,7 +20,6 @@ export const setupOrganisation = async ({
   await getUsers({ accessToken, instanceUrl });
 
   const encodedAccessToken = await encrypt(accessToken);
-
   await db
     .insert(organisationsTable)
     .values({
@@ -48,12 +47,10 @@ export const setupOrganisation = async ({
         page: null,
       },
     },
-    // this will cancel scheduled token refresh if it exists
     {
       name: 'salesforce/app.installed',
       data: {
         organisationId,
-        region,
       },
     },
   ]);

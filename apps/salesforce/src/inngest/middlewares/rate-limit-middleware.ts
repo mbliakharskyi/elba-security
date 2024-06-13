@@ -1,5 +1,5 @@
 import { InngestMiddleware, RetryAfterError } from 'inngest';
-import { SalesforceError } from '@/connectors/commons/error';
+import { SalesforceError } from '@/connectors/common/error';
 
 export const rateLimitMiddleware = new InngestMiddleware({
   name: 'rate-limit',
@@ -13,11 +13,7 @@ export const rateLimitMiddleware = new InngestMiddleware({
               ...context
             } = ctx;
 
-            if (!(error instanceof SalesforceError)) {
-              return;
-            }
-
-            if (error.response?.status === 429) {
+            if (error instanceof SalesforceError && error.response?.status === 429) {
               let retryAfter = 60;
               const retryAfterHeader = error.response.headers.get('Reset-After');
               if (retryAfterHeader) {
@@ -28,8 +24,8 @@ export const rateLimitMiddleware = new InngestMiddleware({
                 result: {
                   ...result,
                   error: new RetryAfterError(
-                    `API rate limit reached by '${fn.name}', retry after ${retryAfter} seconds.`,
-                    Number(retryAfter) * 1000,
+                    `Rate limit exceeded for '${fn.name}'. Retry after ${retryAfter} seconds.`,
+                    `${retryAfter}s`,
                     {
                       cause: error,
                     }

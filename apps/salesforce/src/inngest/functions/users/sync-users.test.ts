@@ -1,11 +1,11 @@
 import { expect, test, describe, vi } from 'vitest';
 import { createInngestFunctionMock, spyOnElba } from '@elba-security/test-utils';
 import { NonRetriableError } from 'inngest';
-import * as usersConnector from '@/connectors/users';
+import * as usersConnector from '@/connectors/salesforce/users';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { encrypt } from '@/common/crypto';
-import { synchronizeUsers } from './synchronize-users';
+import { syncUsers } from './sync-users';
 
 const organisation = {
   id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
@@ -22,9 +22,9 @@ const users: usersConnector.SalesforceUser[] = Array.from({ length: 2 }, (_, i) 
   Email: `user-${i}@foo.bar`,
 }));
 
-const setup = createInngestFunctionMock(synchronizeUsers, 'salesforce/users.sync.requested');
+const setup = createInngestFunctionMock(syncUsers, 'salesforce/users.sync.requested');
 
-describe('synchronize-users', () => {
+describe('sync-users', () => {
   test('should abort sync when organisation is not registered', async () => {
     vi.spyOn(usersConnector, 'getUsers').mockResolvedValue({
       validUsers: users,

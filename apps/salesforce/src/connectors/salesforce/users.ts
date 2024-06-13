@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SalesforceError } from './commons/error';
+import { SalesforceError } from '../common/error';
 
 const salesforceUserSchema = z.object({
   Id: z.string(),

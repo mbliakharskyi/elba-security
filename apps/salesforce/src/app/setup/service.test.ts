@@ -1,11 +1,11 @@
 import { expect, test, describe, vi, beforeAll, afterAll } from 'vitest';
 import { eq } from 'drizzle-orm';
-import * as userConnector from '@/connectors/users';
-import type { SalesforceUser } from '@/connectors/users';
+import * as userConnector from '@/connectors/salesforce/users';
+import type { SalesforceUser } from '@/connectors/salesforce/users';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { inngest } from '@/inngest/client';
-import { SalesforceError } from '@/connectors/commons/error';
+import { SalesforceError } from '@/connectors/common/error';
 import { decrypt } from '@/common/crypto';
 import { setupOrganisation } from './service';
 
@@ -89,7 +89,6 @@ describe('setupOrganisation', () => {
         name: 'salesforce/app.installed',
         data: {
           organisationId: organisation.id,
-          region,
         },
       },
     ]);
@@ -145,7 +144,6 @@ describe('setupOrganisation', () => {
         name: 'salesforce/app.installed',
         data: {
           organisationId: organisation.id,
-          region,
         },
       },
     ]);

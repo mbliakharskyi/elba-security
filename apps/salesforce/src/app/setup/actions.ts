@@ -2,7 +2,7 @@
 
 import { redirect, RedirectType } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { env } from '@/env';
+import { env } from '@/common/env';
 import { setupOrganisation } from './service';
 
 type RequestParams = {
@@ -16,7 +16,6 @@ type ClientParams = {
 };
 
 export const create = async ({ hashString }: ClientParams) => {
-
   const organisationId = cookies().get('organisation_id')?.value;
   const region = cookies().get('region')?.value;
 

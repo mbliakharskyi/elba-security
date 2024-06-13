@@ -3,33 +3,38 @@ import { eq } from 'drizzle-orm';
 import { logger } from '@elba-security/logger';
 import { NonRetriableError } from 'inngest';
 import { inngest } from '@/inngest/client';
-import { getUsers } from '@/connectors/users';
+import { getUsers } from '@/connectors/salesforce/users';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { decrypt } from '@/common/crypto';
-import { type SalesforceUser } from '@/connectors/users';
-import { getElbaClient } from '@/connectors/elba/client';
+import { type SalesforceUser } from '@/connectors/salesforce/users';
+import { createElbaClient } from '@/connectors/elba/client';
+import { env } from '@/common/env';
 
 const formatElbaUser = (user: SalesforceUser): User => ({
   id: user.Id,
   displayName: user.Name,
-  email: user.Email || '',
+  email: user.Email,
   additionalEmails: [],
 });
 
-export const synchronizeUsers = inngest.createFunction(
+export const syncUsers = inngest.createFunction(
   {
-    id: 'salesforce-sync-users-page',
+    id: 'salesforce-sync-users',
     priority: {
       run: 'event.data.isFirstSync ? 600 : 0',
     },
     concurrency: {
       key: 'event.data.organisationId',
-      limit: 1,
+      limit: env.SALESFORCE_USERS_SYNC_CONCURRENCY,
     },
     cancelOn: [
       {
         event: 'salesforce/app.installed',
+        match: 'data.organisationId',
+      },
+      {
+        event: 'salesforce/app.uninstalled',
         match: 'data.organisationId',
       },
     ],
@@ -47,11 +52,12 @@ export const synchronizeUsers = inngest.createFunction(
       })
       .from(organisationsTable)
       .where(eq(organisationsTable.id, organisationId));
+
     if (!organisation) {
       throw new NonRetriableError(`Could not retrieve organisation with id=${organisationId}`);
     }
 
-    const elba = getElbaClient({ organisationId, region: organisation.region });
+    const elba = createElbaClient({ organisationId, region: organisation.region });
     const token = await decrypt(organisation.accessToken);
     const instanceUrl = organisation.instanceUrl;
 
@@ -72,7 +78,6 @@ export const synchronizeUsers = inngest.createFunction(
       return result.nextPage;
     });
 
-    // if there is a next page enqueue a new sync user event
     if (nextPage) {
       await step.sendEvent('synchronize-users', {
         name: 'salesforce/users.sync.requested',
@@ -86,7 +91,6 @@ export const synchronizeUsers = inngest.createFunction(
       };
     }
 
-    // delete the elba users that has been sent before this sync
     await step.run('finalize', () =>
       elba.users.delete({ syncedBefore: new Date(syncStartedAt).toISOString() })
     );
