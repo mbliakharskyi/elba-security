@@ -8,12 +8,10 @@ import { env } from '@/common/env';
 import { removeOrganisation } from './remove-organisation';
 import { encrypt } from '@/common/crypto';
 
-
-
 const organisation = {
-  id: 'test-user-id',
+  id: '00000000-0000-0000-0000-000000000001',
   accessToken: await encrypt('test-token'),
-  instanceUrl:'some-url',
+  instanceUrl: 'some-url',
   region: 'us',
 };
 const setup = createInngestFunctionMock(removeOrganisation, 'salesforce/app.uninstalled');

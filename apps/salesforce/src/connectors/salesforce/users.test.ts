@@ -5,7 +5,7 @@ import { describe, expect, test, beforeEach } from 'vitest';
 import { server } from '@elba-security/test-utils';
 import type { SalesforceUser } from './users';
 import { getUsers, deleteUser } from './users';
-import { SalesforceError } from './commons/error';
+import { SalesforceError } from '../common/error';
 
 const validToken = 'token-1234';
 const nextRecordsUrl = '/services/data/v60.0/query/?next-records-url';
@@ -21,32 +21,26 @@ const invalidUsers = [];
 
 describe('users connector', () => {
   describe('getUsers', () => {
-    // mock token API endpoint using msw
     beforeEach(() => {
       server.use(
         http.get(`${instanceUrl}/services/data/v60.0/query/`, ({ request }) => {
-          // briefly implement API endpoint behaviour
           if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
             return new Response(undefined, { status: 401 });
           }
 
           const url = new URL(request.url);
           const query = url.searchParams.get('q');
-          let returnData;
-
-          // there is no next page
-          if (query !== null && query.includes('SELECT Id, Name, Email FROM User')) {
-            returnData = {
-              done: true,
-              records: validUsers,
-            };
-          } else {
-            returnData = {
-              done: false,
-              nextRecordsUrl,
-              records: validUsers,
-            };
-          }
+          const returnData =
+            query !== null && query.includes('SELECT Id, Name, Email FROM User')
+              ? {
+                  done: true,
+                  records: validUsers,
+                }
+              : {
+                  done: false,
+                  nextRecordsUrl,
+                  records: validUsers,
+                };
 
           return Response.json(returnData);
         })

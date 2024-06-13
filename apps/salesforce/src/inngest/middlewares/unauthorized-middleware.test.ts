@@ -7,9 +7,10 @@ import { SalesforceError } from '@/connectors/common/error';
 import { unauthorizedMiddleware } from './unauthorized-middleware';
 
 const organisation = {
-  id: '00000000-0000-0000-0000-000000000001',
-  apiToken: 'api-token',
-  region: 'fra1',
+  id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
+  accessToken: 'some-access-token',
+  instanceUrl: 'some url',
+  region: 'us',
 };
 
 describe('unauthorized middleware', () => {

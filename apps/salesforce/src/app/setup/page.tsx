@@ -19,7 +19,7 @@ export default function Setup() {
 
   return (
     <FullScreenSpinner>
-      <p>Waiting for Microsoft confirmation...</p>
+      <p>Waiting for response...</p>
     </FullScreenSpinner>
   );
 }
