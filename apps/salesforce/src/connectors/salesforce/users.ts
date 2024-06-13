@@ -5,7 +5,7 @@ import { SalesforceError } from '../common/error';
 const salesforceUserSchema = z.object({
   Id: z.string(),
   Name: z.string(),
-  Email: z.string().email(),
+  Email: z.string(),
   IsActive: z.boolean(),
 });
 

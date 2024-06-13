@@ -2,6 +2,7 @@ import type { User } from '@elba-security/sdk';
 import { eq } from 'drizzle-orm';
 import { logger } from '@elba-security/logger';
 import { NonRetriableError } from 'inngest';
+import { z } from 'zod';
 import { inngest } from '@/inngest/client';
 import { getUsers } from '@/connectors/salesforce/users';
 import { db } from '@/database/client';
@@ -11,10 +12,16 @@ import { type SalesforceUser } from '@/connectors/salesforce/users';
 import { createElbaClient } from '@/connectors/elba/client';
 import { env } from '@/common/env';
 
+const formatElbaUserEmail = (user: SalesforceUser): string | undefined => {
+  const emailSchema = z.string().email();
+  if (user.Email && emailSchema.safeParse(user.Email).success) {
+    return user.Email;
+  }
+};
 const formatElbaUser = (user: SalesforceUser): User => ({
   id: user.Id,
   displayName: user.Name,
-  email: user.Email,
+  email: formatElbaUserEmail(user),
   additionalEmails: [],
 });
 
