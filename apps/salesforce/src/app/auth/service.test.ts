@@ -18,6 +18,7 @@ const validUsers: SalesforceUser[] = Array.from({ length: 5 }, (_, i) => ({
   Id: `id-${i}`,
   Name: `name-${i}`,
   Email: `user-${i}@foo.bar`,
+  IsActive: true,
 }));
 
 const getUsersData = {

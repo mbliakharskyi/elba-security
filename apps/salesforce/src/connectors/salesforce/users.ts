@@ -6,6 +6,7 @@ const salesforceUserSchema = z.object({
   Id: z.string(),
   Name: z.string(),
   Email: z.string().email(),
+  IsActive: z.boolean(),
 });
 
 export type SalesforceUser = z.infer<typeof salesforceUserSchema>;
@@ -30,7 +31,7 @@ export type DeleteUsersParams = {
 const limit = env.SALESFORCE_USERS_SYNC_BATCH_SIZE;
 
 export const getUsers = async ({ accessToken, instanceUrl, offset }: GetUsersParams) => {
-  const endpoint = `${instanceUrl}/services/data/v60.0/query/?q=SELECT+Id,+Name,+Email+FROM+User+limit+${limit}+offset+${offset}`;
+  const endpoint = `${instanceUrl}/services/data/v60.0/query/?q=SELECT+Id,+Name,+Email,+IsActive+FROM+User+limit+${limit}+offset+${offset}`;
 
   const response = await fetch(endpoint, {
     method: 'GET',
@@ -69,11 +70,14 @@ export const deleteUser = async ({ accessToken, instanceUrl, userId }: DeleteUse
   const url = `${instanceUrl}/services/data/v60.0/sobjects/User/${userId}`;
 
   const response = await fetch(url, {
-    method: 'DELETE',
+    method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${accessToken}`,
     },
+    body: JSON.stringify({
+      IsActive: false,
+    }),
   });
 
   if (!response.ok && response.status !== 404) {

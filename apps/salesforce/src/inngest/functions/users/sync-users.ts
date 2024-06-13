@@ -64,7 +64,7 @@ export const syncUsers = inngest.createFunction(
     const nextPage = await step.run('list-users', async () => {
       const result = await getUsers({ accessToken: token, instanceUrl, offset: page });
 
-      const users = result.validUsers.map(formatElbaUser);
+      const users = result.validUsers.filter(({ IsActive }) => IsActive).map(formatElbaUser);
 
       if (result.invalidUsers.length > 0) {
         logger.warn('Retrieved users contains invalid data', {
@@ -79,7 +79,7 @@ export const syncUsers = inngest.createFunction(
     });
 
     if (nextPage) {
-      await step.sendEvent('synchronize-users', {
+      await step.sendEvent('sync-users', {
         name: 'salesforce/users.sync.requested',
         data: {
           ...event.data,

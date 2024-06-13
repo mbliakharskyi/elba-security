@@ -20,6 +20,7 @@ const users: usersConnector.SalesforceUser[] = Array.from({ length: 2 }, (_, i) 
   Id: `id-${i}`,
   Name: `name-${i}`,
   Email: `user-${i}@foo.bar`,
+  IsActive: true,
 }));
 
 const setup = createInngestFunctionMock(syncUsers, 'salesforce/users.sync.requested');
@@ -71,7 +72,7 @@ describe('sync-users', () => {
     const elbaInstance = elba.mock.results[0]?.value;
     // check that the function continue the pagination process
     expect(step.sendEvent).toBeCalledTimes(1);
-    expect(step.sendEvent).toBeCalledWith('synchronize-users', {
+    expect(step.sendEvent).toBeCalledWith('sync-users', {
       name: 'salesforce/users.sync.requested',
       data: {
         organisationId: organisation.id,

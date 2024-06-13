@@ -1,5 +1,3 @@
- 
- 
 import { http } from 'msw';
 import { describe, expect, test, beforeEach } from 'vitest';
 import { server } from '@elba-security/test-utils';
@@ -19,6 +17,7 @@ const validUsers: SalesforceUser[] = Array.from({ length: 5 }, (_, i) => ({
   Id: `id-${i}`,
   Name: `name-${i}`,
   Email: `user-${i}@foo.bar`,
+  IsActive: true,
 }));
 
 const invalidUsers = [];
@@ -34,7 +33,7 @@ describe('users connector', () => {
 
           const url = new URL(request.url);
           const query = url.searchParams.get('q');
-          const offsetMatch = query ? (/offset\s+(?<offset>\d+)/i.exec(query)) : null;
+          const offsetMatch = query ? /offset\s+(?<offset>\d+)/i.exec(query) : null;
           const offsetValue = offsetMatch ? offsetMatch[1] : null;
 
           if (!offsetValue) {
@@ -81,7 +80,7 @@ describe('users connector', () => {
   describe('deleteUser', () => {
     beforeEach(() => {
       server.use(
-        http.delete<{ userId: string }>(
+        http.patch<{ userId: string }>(
           `${instanceUrl}/services/data/v60.0/sobjects/User/${userId}`,
           ({ request }) => {
             if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
