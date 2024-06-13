@@ -15,7 +15,7 @@ export const rateLimitMiddleware = new InngestMiddleware({
 
             if (error instanceof SalesforceError && error.response?.status === 429) {
               let retryAfter = 60;
-              const retryAfterHeader = error.response.headers.get('Reset-After');
+              const retryAfterHeader = error.response.headers.get('Retry-After');
               if (retryAfterHeader) {
                 retryAfter = parseInt(retryAfterHeader, 10);
               }

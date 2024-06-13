@@ -15,7 +15,7 @@ const organisation = {
 };
 const syncStartedAt = Date.now();
 const syncedBefore = Date.now();
-const nextPage = '1';
+const nextPage = 1;
 const users: usersConnector.SalesforceUser[] = Array.from({ length: 2 }, (_, i) => ({
   Id: `id-${i}`,
   Name: `name-${i}`,
@@ -37,7 +37,7 @@ describe('sync-users', () => {
       organisationId: organisation.id,
       isFirstSync: false,
       syncStartedAt: Date.now(),
-      page: null,
+      page: 0,
     });
 
     // assert the function throws a NonRetriableError that will inform inngest to definitly cancel the event (no further retries)
@@ -115,7 +115,7 @@ describe('sync-users', () => {
       organisationId: organisation.id,
       isFirstSync: false,
       syncStartedAt,
-      page: null,
+      page: 0,
     });
 
     await expect(result).resolves.toStrictEqual({ status: 'completed' });

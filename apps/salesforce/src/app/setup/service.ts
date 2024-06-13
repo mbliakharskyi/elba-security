@@ -17,7 +17,7 @@ export const setupOrganisation = async ({
   organisationId,
   region,
 }: SetupOrganisationParams) => {
-  await getUsers({ accessToken, instanceUrl });
+  await getUsers({ accessToken, instanceUrl, offset: 0 });
 
   const encodedAccessToken = await encrypt(accessToken);
   await db
@@ -44,7 +44,7 @@ export const setupOrganisation = async ({
         organisationId,
         isFirstSync: true,
         syncStartedAt: Date.now(),
-        page: null,
+        page: 0,
       },
     },
     {

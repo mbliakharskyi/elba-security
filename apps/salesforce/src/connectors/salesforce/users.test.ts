@@ -1,15 +1,19 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call -- test conveniency */
-/* eslint-disable @typescript-eslint/no-unsafe-return -- test conveniency */
+ 
+ 
 import { http } from 'msw';
 import { describe, expect, test, beforeEach } from 'vitest';
 import { server } from '@elba-security/test-utils';
+import { env } from '@/common/env';
+import { SalesforceError } from '../common/error';
 import type { SalesforceUser } from './users';
 import { getUsers, deleteUser } from './users';
-import { SalesforceError } from '../common/error';
 
 const validToken = 'token-1234';
-const nextRecordsUrl = '/services/data/v60.0/query/?next-records-url';
 const userId = 'test-id';
+const offset = 0;
+const limit = env.SALESFORCE_USERS_SYNC_BATCH_SIZE;
+const lastOffset = 40;
+const total = 25;
 const instanceUrl = 'https://some-url';
 const validUsers: SalesforceUser[] = Array.from({ length: 5 }, (_, i) => ({
   Id: `id-${i}`,
@@ -30,17 +34,17 @@ describe('users connector', () => {
 
           const url = new URL(request.url);
           const query = url.searchParams.get('q');
-          const returnData =
-            query !== null && query.includes('SELECT Id, Name, Email FROM User')
-              ? {
-                  done: true,
-                  records: validUsers,
-                }
-              : {
-                  done: false,
-                  nextRecordsUrl,
-                  records: validUsers,
-                };
+          const offsetMatch = query ? (/offset\s+(?<offset>\d+)/i.exec(query)) : null;
+          const offsetValue = offsetMatch ? offsetMatch[1] : null;
+
+          if (!offsetValue) {
+            return new Response(undefined, { status: 401 });
+          }
+
+          const returnData = {
+            totalSize: total > limit + parseInt(offsetValue) ? limit : 0,
+            records: validUsers,
+          };
 
           return Response.json(returnData);
         })
@@ -49,16 +53,18 @@ describe('users connector', () => {
 
     test('should return users and nextPage when the token is valid and their is another page', async () => {
       await expect(
-        getUsers({ accessToken: validToken, instanceUrl, nextRecordsUrl })
+        getUsers({ accessToken: validToken, instanceUrl, offset })
       ).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
-        nextPage: nextRecordsUrl,
+        nextPage: offset + limit,
       });
     });
 
     test('should return users and no nextPage when the token is valid and their is no other page', async () => {
-      await expect(getUsers({ accessToken: validToken, instanceUrl })).resolves.toStrictEqual({
+      await expect(
+        getUsers({ accessToken: validToken, instanceUrl, offset: lastOffset })
+      ).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
         nextPage: null,
@@ -66,9 +72,9 @@ describe('users connector', () => {
     });
 
     test('should throws when the token is invalid', async () => {
-      await expect(getUsers({ accessToken: 'foo-bar', instanceUrl })).rejects.toBeInstanceOf(
-        SalesforceError
-      );
+      await expect(
+        getUsers({ accessToken: 'foo-bar', instanceUrl, offset })
+      ).rejects.toBeInstanceOf(SalesforceError);
     });
   });
 

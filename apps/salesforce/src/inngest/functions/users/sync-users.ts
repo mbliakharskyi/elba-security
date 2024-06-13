@@ -62,7 +62,7 @@ export const syncUsers = inngest.createFunction(
     const instanceUrl = organisation.instanceUrl;
 
     const nextPage = await step.run('list-users', async () => {
-      const result = await getUsers({ accessToken: token, instanceUrl, nextRecordsUrl: page });
+      const result = await getUsers({ accessToken: token, instanceUrl, offset: page });
 
       const users = result.validUsers.map(formatElbaUser);
 
@@ -83,7 +83,7 @@ export const syncUsers = inngest.createFunction(
         name: 'salesforce/users.sync.requested',
         data: {
           ...event.data,
-          page: nextPage.toString(),
+          page: nextPage,
         },
       });
       return {

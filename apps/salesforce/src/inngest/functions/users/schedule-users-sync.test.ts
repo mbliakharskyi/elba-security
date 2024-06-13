@@ -35,9 +35,7 @@ describe('schedule-users-syncs', () => {
     const [result, { step }] = setup();
 
     await expect(result).resolves.toStrictEqual({
-      organisations: organisations.map(
-        ({ ...organisation }) => organisation
-      ),
+      organisations: organisations.map(({ ...organisation }) => organisation),
     });
     expect(step.sendEvent).toBeCalledTimes(1);
     expect(step.sendEvent).toBeCalledWith(
@@ -48,7 +46,7 @@ describe('schedule-users-syncs', () => {
           organisationId: id,
           syncStartedAt: now,
           isFirstSync: false,
-          page: null,
+          page: 0,
         },
       }))
     );

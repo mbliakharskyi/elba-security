@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { env } from '@/common/env';
 import { SalesforceError } from '../common/error';
 
 const salesforceUserSchema = z.object({
@@ -10,15 +11,14 @@ const salesforceUserSchema = z.object({
 export type SalesforceUser = z.infer<typeof salesforceUserSchema>;
 
 const salesforceResponseSchema = z.object({
-  done: z.boolean(),
-  nextRecordsUrl: z.string().optional(),
+  totalSize: z.number(),
   records: z.array(z.unknown()),
 });
 
 export type GetUsersParams = {
   accessToken: string;
   instanceUrl: string;
-  nextRecordsUrl?: string | null;
+  offset: number;
 };
 
 export type DeleteUsersParams = {
@@ -27,10 +27,10 @@ export type DeleteUsersParams = {
   instanceUrl: string;
 };
 
-export const getUsers = async ({ accessToken, instanceUrl, nextRecordsUrl }: GetUsersParams) => {
-  const endpoint = `${instanceUrl}${
-    nextRecordsUrl || '/services/data/v60.0/query/?q=SELECT+Id,+Name,+Email+FROM+User'
-  }`;
+const limit = env.SALESFORCE_USERS_SYNC_BATCH_SIZE;
+
+export const getUsers = async ({ accessToken, instanceUrl, offset }: GetUsersParams) => {
+  const endpoint = `${instanceUrl}/services/data/v60.0/query/?q=SELECT+Id,+Name,+Email+FROM+User+limit+${limit}+offset+${offset}`;
 
   const response = await fetch(endpoint, {
     method: 'GET',
@@ -45,7 +45,7 @@ export const getUsers = async ({ accessToken, instanceUrl, nextRecordsUrl }: Get
   }
 
   const data: unknown = await response.json();
-  const { nextRecordsUrl: nextPage, done, records } = salesforceResponseSchema.parse(data);
+  const { records, totalSize } = salesforceResponseSchema.parse(data);
   const validUsers: SalesforceUser[] = [];
   const invalidUsers: unknown[] = [];
 
@@ -61,7 +61,7 @@ export const getUsers = async ({ accessToken, instanceUrl, nextRecordsUrl }: Get
   return {
     validUsers,
     invalidUsers,
-    nextPage: done ? null : nextPage,
+    nextPage: totalSize < limit ? null : limit + offset,
   };
 };
 
