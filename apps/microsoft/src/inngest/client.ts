@@ -2,7 +2,7 @@ import { EventSchemas, Inngest } from 'inngest';
 import { sentryMiddleware } from '@elba-security/inngest';
 import { logger } from '@elba-security/logger';
 import { rateLimitMiddleware } from './middlewares/rate-limit-middleware';
-import { unauthorizedMiddleware } from './middlewares/unauthorized-middleware';
+// import { unauthorizedMiddleware } from './middlewares/unauthorized-middleware';
 
 export const inngest = new Inngest({
   id: 'microsoft',
@@ -15,11 +15,19 @@ export const inngest = new Inngest({
         skipToken: string | null;
       };
     };
+    'microsoft/third_party_apps.get_app_oauth_grants.requested': {
+      data: {
+        organisationId: string;
+        appId: string;
+        skipToken: string | null;
+      };
+    };
     'microsoft/third_party_apps.revoke_app_permission.requested': {
       data: {
         organisationId: string;
         appId: string;
-        permissionId: string;
+        permissionId?: string;
+        oauthGrantIds?: string[];
       };
     };
     'microsoft/third_party_apps.refresh_app_permission.requested': {
@@ -54,6 +62,10 @@ export const inngest = new Inngest({
       };
     };
   }>(),
-  middleware: [rateLimitMiddleware, unauthorizedMiddleware, sentryMiddleware],
+  middleware: [
+    rateLimitMiddleware,
+    // unauthorizedMiddleware, // TODO: This middleware has been disabled temporarily due to false positives
+    sentryMiddleware,
+  ],
   logger,
 });
