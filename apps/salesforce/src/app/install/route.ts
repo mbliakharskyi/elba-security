@@ -29,6 +29,8 @@ export function GET(request: NextRequest) {
   const redirectUrl = new URL(`${env.SALESFORCE_APP_INSTALL_URL}services/oauth2/authorize?`);
   redirectUrl.searchParams.append('client_id', env.SALESFORCE_CLIENT_ID);
   redirectUrl.searchParams.append('redirect_uri', env.SALESFORCE_REDIRECT_URI);
-  redirectUrl.searchParams.append('response_type', 'token');
+  redirectUrl.searchParams.append('response_type', 'code');
+  redirectUrl.searchParams.append('state', state);
+  redirectUrl.searchParams.append('scope', 'full refresh_token api');
   redirect(redirectUrl.toString());
 }

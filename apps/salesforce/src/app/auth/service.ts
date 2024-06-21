@@ -1,37 +1,38 @@
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
-import { getUsers } from '@/connectors/salesforce/users';
+import { getToken } from '@/connectors/salesforce/auth';
 import { inngest } from '@/inngest/client';
 import { encrypt } from '@/common/crypto';
 
 type SetupOrganisationParams = {
-  accessToken: string;
-  instanceUrl: string;
   organisationId: string;
+  code: string;
   region: string;
 };
 
 export const setupOrganisation = async ({
-  accessToken,
-  instanceUrl,
   organisationId,
+  code,
   region,
 }: SetupOrganisationParams) => {
-  await getUsers({ accessToken, instanceUrl, offset: 0 });
+  const { accessToken, refreshToken, instanceUrl, expiresAt } = await getToken(code);
 
-  const encodedAccessToken = await encrypt(accessToken);
+  const encryptedAccessToken = await encrypt(accessToken);
+  const encryptedRefreshToken = await encrypt(refreshToken);
+
   await db
     .insert(organisationsTable)
     .values({
       id: organisationId,
-      accessToken: encodedAccessToken,
+      accessToken: encryptedAccessToken,
+      refreshToken: encryptedRefreshToken,
       instanceUrl,
       region,
     })
     .onConflictDoUpdate({
       target: organisationsTable.id,
       set: {
-        accessToken: encodedAccessToken,
+        accessToken: encryptedAccessToken,
         instanceUrl,
         region,
       },
@@ -51,6 +52,13 @@ export const setupOrganisation = async ({
       name: 'salesforce/app.installed',
       data: {
         organisationId,
+      },
+    },
+    {
+      name: 'salesforce/token.refresh.requested',
+      data: {
+        organisationId,
+        expiresAt: expiresAt * 1000,
       },
     },
   ]);

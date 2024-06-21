@@ -1,7 +1,6 @@
 import { expect, test, describe, vi, beforeAll, afterAll } from 'vitest';
 import { eq } from 'drizzle-orm';
-import * as userConnector from '@/connectors/salesforce/users';
-import type { SalesforceUser } from '@/connectors/salesforce/users';
+import * as authConnector from '@/connectors/salesforce/auth';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { inngest } from '@/inngest/client';
@@ -9,28 +8,25 @@ import { SalesforceError } from '@/connectors/common/error';
 import { decrypt } from '@/common/crypto';
 import { setupOrganisation } from './service';
 
+const code = 'some-code';
 const accessToken = 'some token';
-const region = 'us';
-const offset = 0;
-const now = new Date();
+const refreshToken = 'some refresh token';
+const expiresAt = 1718939949;
 const instanceUrl = 'some url';
-const validUsers: SalesforceUser[] = Array.from({ length: 5 }, (_, i) => ({
-  Id: `id-${i}`,
-  Name: `name-${i}`,
-  Email: `user-${i}@foo.bar`,
-  IsActive: true,
-}));
-
-const getUsersData = {
-  validUsers,
-  invalidUsers: [],
-  nextPage: 0,
-};
-const organisation = {
-  id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
+const region = 'us';
+const now = new Date();
+const getTokenData = {
   accessToken,
-  refreshToken: 'some refresh token',
-  instanceUrl: 'some url',
+  refreshToken,
+  instanceUrl,
+  expiresAt,
+};
+
+const organisation = {
+  id: '00000000-0000-0000-0000-000000000001',
+  accessToken,
+  refreshToken,
+  instanceUrl,
   region,
 };
 
@@ -46,19 +42,18 @@ describe('setupOrganisation', () => {
   test('should setup organisation when the code is valid and the organisation is not registered', async () => {
     // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
-    const getUsers = vi.spyOn(userConnector, 'getUsers').mockResolvedValue(getUsersData);
+    const getToken = vi.spyOn(authConnector, 'getToken').mockResolvedValue(getTokenData);
 
     await expect(
       setupOrganisation({
         organisationId: organisation.id,
-        accessToken: organisation.accessToken,
-        instanceUrl: organisation.instanceUrl,
+        code,
         region,
       })
     ).resolves.toBeUndefined();
 
-    expect(getUsers).toBeCalledTimes(1);
-    expect(getUsers).toBeCalledWith({ accessToken, instanceUrl, offset });
+    expect(getToken).toBeCalledTimes(1);
+    expect(getToken).toBeCalledWith(code);
 
     const [storedOrganisation] = await db
       .select()
@@ -78,7 +73,7 @@ describe('setupOrganisation', () => {
           isFirstSync: true,
           organisationId: organisation.id,
           syncStartedAt: now.getTime(),
-          page: 0,
+          page: null,
         },
       },
       {
@@ -87,28 +82,40 @@ describe('setupOrganisation', () => {
           organisationId: organisation.id,
         },
       },
+      {
+        name: 'salesforce/token.refresh.requested',
+        data: {
+          organisationId: organisation.id,
+          expiresAt: new Date(expiresAt).getTime(),
+        },
+      },
     ]);
   });
 
   test('should setup organisation when the code is valid and the organisation is already registered', async () => {
+    // mock inngest client, only inngest.send should be used
     // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
+    // pre-insert an organisation to simulate an existing entry
     await db.insert(organisationsTable).values(organisation);
 
-    const getUsers = vi.spyOn(userConnector, 'getUsers').mockResolvedValue(getUsersData);
+    // mock getToken as above
+    const getToken = vi.spyOn(authConnector, 'getToken').mockResolvedValue(getTokenData);
 
+    // assert the function resolves without returning a value
     await expect(
       setupOrganisation({
         organisationId: organisation.id,
-        accessToken,
-        instanceUrl,
+        code,
         region,
       })
     ).resolves.toBeUndefined();
 
-    expect(getUsers).toBeCalledTimes(1);
-    expect(getUsers).toBeCalledWith({ accessToken, instanceUrl, offset });
+    // verify getToken usage
+    expect(getToken).toBeCalledTimes(1);
+    expect(getToken).toBeCalledWith(code);
 
+    // check if the token in the database is updated
     const [storedOrganisation] = await db
       .select()
       .from(organisationsTable)
@@ -118,6 +125,7 @@ describe('setupOrganisation', () => {
     }
     await expect(decrypt(storedOrganisation.accessToken)).resolves.toEqual(accessToken);
 
+    // verify that the user/sync event is sent
     expect(send).toBeCalledTimes(1);
     expect(send).toBeCalledWith([
       {
@@ -126,7 +134,7 @@ describe('setupOrganisation', () => {
           isFirstSync: true,
           organisationId: organisation.id,
           syncStartedAt: now.getTime(),
-          page: 0,
+          page: null,
         },
       },
       {
@@ -135,31 +143,43 @@ describe('setupOrganisation', () => {
           organisationId: organisation.id,
         },
       },
+      {
+        name: 'salesforce/token.refresh.requested',
+        data: {
+          organisationId: organisation.id,
+          expiresAt: new Date(expiresAt).getTime(),
+        },
+      },
     ]);
   });
 
   test('should not setup the organisation when the code is invalid', async () => {
+    // mock inngest client
     // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
     const error = new Error('invalid code');
-    const getUsers = vi.spyOn(userConnector, 'getUsers').mockRejectedValue(error);
+    // mock getToken to reject with a dumb error for an invalid code
+    const getToken = vi.spyOn(authConnector, 'getToken').mockRejectedValue(error);
 
+    // assert that the function throws the mocked error
     await expect(
       setupOrganisation({
         organisationId: organisation.id,
-        accessToken,
-        instanceUrl,
+        code,
         region,
       })
     ).rejects.toThrowError(error);
 
-    expect(getUsers).toBeCalledTimes(1);
-    expect(getUsers).toBeCalledWith({ accessToken, instanceUrl, offset });
+    // verify getToken usage
+    expect(getToken).toBeCalledTimes(1);
+    expect(getToken).toBeCalledWith(code);
 
+    // ensure no organisation is added or updated in the database
     await expect(
       db.select().from(organisationsTable).where(eq(organisationsTable.id, organisation.id))
     ).resolves.toHaveLength(0);
 
+    // ensure no sync users event is sent
     expect(send).toBeCalledTimes(0);
   });
 });
