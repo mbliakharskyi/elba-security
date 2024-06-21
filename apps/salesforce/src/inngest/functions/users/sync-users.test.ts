@@ -10,6 +10,7 @@ import { syncUsers } from './sync-users';
 const organisation = {
   id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
   accessToken: await encrypt('test-access-token'),
+  refreshToken: await encrypt('test-refresh-token'),
   instanceUrl: 'test-some-url',
   region: 'us',
 };

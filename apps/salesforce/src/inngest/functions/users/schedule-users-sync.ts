@@ -15,6 +15,7 @@ export const scheduleUsersSync = inngest.createFunction(
         id: organisationsTable.id,
         region: organisationsTable.region,
         accessToken: organisationsTable.accessToken,
+        refreshToken: organisationsTable.refreshToken,
         instanceUrl: organisationsTable.instanceUrl,
       })
       .from(organisationsTable);

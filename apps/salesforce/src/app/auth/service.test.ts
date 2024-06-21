@@ -10,6 +10,7 @@ import { setupOrganisation } from './service';
 
 const code = 'some-code';
 const accessToken = 'some token';
+const accessTokenType = 'access_token';
 const refreshToken = 'some refresh token';
 const expiresAt = 1718939949;
 const instanceUrl = 'some url';
@@ -19,9 +20,11 @@ const getTokenData = {
   accessToken,
   refreshToken,
   instanceUrl,
-  expiresAt,
 };
 
+const getExpiresInData = {
+  expiresAt,
+};
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   accessToken,
@@ -43,6 +46,9 @@ describe('setupOrganisation', () => {
     // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
     const getToken = vi.spyOn(authConnector, 'getToken').mockResolvedValue(getTokenData);
+    const getExpiresIn = vi
+      .spyOn(authConnector, 'getExpiresIn')
+      .mockResolvedValue(getExpiresInData);
 
     await expect(
       setupOrganisation({
@@ -54,6 +60,9 @@ describe('setupOrganisation', () => {
 
     expect(getToken).toBeCalledTimes(1);
     expect(getToken).toBeCalledWith(code);
+
+    expect(getExpiresIn).toBeCalledTimes(1);
+    expect(getExpiresIn).toBeCalledWith({ token: accessToken, tokenType: accessTokenType });
 
     const [storedOrganisation] = await db
       .select()
@@ -73,7 +82,7 @@ describe('setupOrganisation', () => {
           isFirstSync: true,
           organisationId: organisation.id,
           syncStartedAt: now.getTime(),
-          page: null,
+          page: 0,
         },
       },
       {
@@ -86,7 +95,7 @@ describe('setupOrganisation', () => {
         name: 'salesforce/token.refresh.requested',
         data: {
           organisationId: organisation.id,
-          expiresAt: new Date(expiresAt).getTime(),
+          expiresAt: new Date(expiresAt).getTime() * 1000,
         },
       },
     ]);
@@ -134,7 +143,7 @@ describe('setupOrganisation', () => {
           isFirstSync: true,
           organisationId: organisation.id,
           syncStartedAt: now.getTime(),
-          page: null,
+          page: 0,
         },
       },
       {
@@ -147,7 +156,7 @@ describe('setupOrganisation', () => {
         name: 'salesforce/token.refresh.requested',
         data: {
           organisationId: organisation.id,
-          expiresAt: new Date(expiresAt).getTime(),
+          expiresAt: new Date(expiresAt).getTime() * 1000,
         },
       },
     ]);

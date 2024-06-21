@@ -5,7 +5,7 @@ import { failureRetry } from '@elba-security/inngest';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { inngest } from '@/inngest/client';
-import { getRefreshToken } from '@/connectors/salesforce/auth';
+import { getRefreshToken, getExpiresIn } from '@/connectors/salesforce/auth';
 import { encrypt, decrypt } from '@/common/crypto';
 import { unauthorizedMiddleware } from '@/inngest/middlewares/unauthorized-middleware';
 
@@ -34,7 +34,7 @@ export const refreshToken = inngest.createFunction(
   async ({ event, step }) => {
     const { organisationId, expiresAt } = event.data;
 
-    await step.sleepUntil('wait-before-expiration', subMinutes(new Date(expiresAt), 29));
+    await step.sleepUntil('wait-before-expiration', subMinutes(new Date(expiresAt), 15));
 
     const nextExpiresAt = await step.run('refresh-token', async () => {
       const [organisation] = await db
@@ -50,11 +50,13 @@ export const refreshToken = inngest.createFunction(
 
       const refreshTokenInfo = await decrypt(organisation.refreshToken);
 
-      const {
-        accessToken: newAccessToken,
-        refreshToken: newRefreshToken,
-        expiresAt: newExpiresAt,
-      } = await getRefreshToken(refreshTokenInfo);
+      const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+        await getRefreshToken(refreshTokenInfo);
+
+      const { expiresAt: newExpiresAt } = await getExpiresIn({
+        token: newAccessToken,
+        tokenType: 'access_token',
+      });
 
       const encryptedAccessToken = await encrypt(newAccessToken);
       const encryptedRefreshToken = await encrypt(newRefreshToken);

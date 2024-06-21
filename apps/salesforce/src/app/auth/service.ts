@@ -1,6 +1,6 @@
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
-import { getToken } from '@/connectors/salesforce/auth';
+import { getToken , getExpiresIn } from '@/connectors/salesforce/auth';
 import { inngest } from '@/inngest/client';
 import { encrypt } from '@/common/crypto';
 
@@ -15,7 +15,10 @@ export const setupOrganisation = async ({
   code,
   region,
 }: SetupOrganisationParams) => {
-  const { accessToken, refreshToken, instanceUrl, expiresAt } = await getToken(code);
+  const { accessToken, refreshToken, instanceUrl } = await getToken(code);
+
+  const tokenType = 'access_token';
+  const { expiresAt } = await getExpiresIn({ token: accessToken, tokenType });
 
   const encryptedAccessToken = await encrypt(accessToken);
   const encryptedRefreshToken = await encrypt(refreshToken);

@@ -31,7 +31,6 @@ const now = new Date();
 // current token expires in an hour
 const expiresAt = now.getTime() + 60 * 1000;
 
-
 const setup = createInngestFunctionMock(refreshToken, 'salesforce/token.refresh.requested');
 
 describe('refresh-token', () => {
@@ -46,7 +45,6 @@ describe('refresh-token', () => {
   test('should abort sync when organisation is not registered', async () => {
     vi.spyOn(authConnector, 'getRefreshToken').mockResolvedValue({
       ...newTokens,
-      expiresAt,
     });
 
     const [result, { step }] = setup({
@@ -66,6 +64,8 @@ describe('refresh-token', () => {
 
     vi.spyOn(authConnector, 'getRefreshToken').mockResolvedValue({
       ...newTokens,
+    });
+    vi.spyOn(authConnector, 'getExpiresIn').mockResolvedValue({
       expiresAt,
     });
 
@@ -98,7 +98,7 @@ describe('refresh-token', () => {
       name: 'salesforce/token.refresh.requested',
       data: {
         organisationId: organisation.id,
-        expiresAt: now.getTime() + expiresAt * 1000,
+        expiresAt: expiresAt * 1000,
       },
     });
   });

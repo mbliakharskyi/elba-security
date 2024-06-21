@@ -9,6 +9,7 @@ import { unauthorizedMiddleware } from './unauthorized-middleware';
 const organisation = {
   id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
   accessToken: 'some-access-token',
+  refreshToken: 'some-refresh-token',
   instanceUrl: 'some url',
   region: 'us',
 };

@@ -8,11 +8,13 @@ import { deleteUser } from './delete-users';
 
 const userId = '45a76301-f1dd-4a77-b12f-9d7d3fca3c90';
 const accessToken = 'test-access-token';
+const refreshToken = 'test-refresh-token';
 const instanceUrl = 'test-some url';
 
 const organisation = {
   id: userId,
   accessToken: await encrypt(accessToken),
+  refreshToken: await encrypt(refreshToken),
   instanceUrl,
   region: 'us',
 };

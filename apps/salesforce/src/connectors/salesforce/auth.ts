@@ -47,14 +47,10 @@ export const getToken = async (code: string) => {
     throw new SalesforceError('Invalid salesforce token response');
   }
 
-  const accessToken = result.data.access_token;
-  const tokenType = 'access_token';
-  const { expiresAt } = await getExpiresIn({ token: accessToken, tokenType });
   return {
-    accessToken,
+    accessToken: result.data.access_token,
     refreshToken: result.data.refresh_token,
     instanceUrl: result.data.instance_url,
-    expiresAt,
   };
 };
 
@@ -85,14 +81,10 @@ export const getRefreshToken = async (refreshToken: string) => {
     throw new SalesforceError('Invalid salesforce token response');
   }
 
-  const accessToken = result.data.access_token;
-  const tokenType = 'refresh_token';
-  const { expiresAt } = await getExpiresIn({ token: accessToken, tokenType });
   return {
-    accessToken,
+    accessToken: result.data.access_token,
     refreshToken: result.data.refresh_token,
     instanceUrl: result.data.instance_url,
-    expiresAt,
   };
 };
 
