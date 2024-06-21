@@ -33,6 +33,7 @@ export const setupOrganisation = async ({
       target: organisationsTable.id,
       set: {
         accessToken: encryptedAccessToken,
+        refreshToken: encryptedRefreshToken,
         instanceUrl,
         region,
       },
