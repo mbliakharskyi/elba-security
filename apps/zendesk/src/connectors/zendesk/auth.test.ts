@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call -- test convenient */
  
 
 import { http } from 'msw';
@@ -6,20 +5,18 @@ import { describe, expect, test, beforeEach } from 'vitest';
 import { server } from '@elba-security/test-utils';
 import { env } from '@/common/env';
 import { ZendeskError } from '../common/error';
-import { getToken, getWorkspaceIds, getRefreshToken } from './auth';
+import { getToken, getRefreshToken } from './auth';
 
 const validCode = '1234';
 const accessToken = 'access-token-1234';
 const validRefreshToken = 'valid-refresh-token';
-const invalidToken = 'invalid-token';
-const workspaceId = '000000';
 const expiresIn = 1234;
 
 describe('auth connector', () => {
   describe('getToken', () => {
     beforeEach(() => {
       server.use(
-        http.post(`${env.ZENDESK_APP_INSTALL_URL}/oauth_token`, async ({ request }) => {
+        http.post(`${env.ZENDESK_API_BASE_URL}/oauth2/token`, async ({ request }) => {
           const body = await request.text();
           const searchParams = new URLSearchParams(body);
           const grantType = searchParams.get('grant_type');
@@ -54,7 +51,7 @@ describe('auth connector', () => {
   describe('getRefreshToken', () => {
     beforeEach(() => {
       server.use(
-        http.post(`${env.ZENDESK_APP_INSTALL_URL}/oauth_token`, async ({ request }) => {
+        http.post(`${env.ZENDESK_API_BASE_URL}/oauth2/token`, async ({ request }) => {
           const body = await request.text();
           const searchParams = new URLSearchParams(body);
 
@@ -67,6 +64,7 @@ describe('auth connector', () => {
 
           return Response.json({
             access_token: accessToken,
+            refresh_token: validRefreshToken,
             expires_in: expiresIn,
           });
         })
@@ -76,40 +74,13 @@ describe('auth connector', () => {
     test('should return the new access token when the refreshToken is valid', async () => {
       await expect(getRefreshToken(validRefreshToken)).resolves.toStrictEqual({
         accessToken,
+        refreshToken: validRefreshToken,
         expiresIn,
       });
     });
 
     test('should throw when the refreshToken is invalid', async () => {
       await expect(getToken('wrong-refreshtoken')).rejects.toBeInstanceOf(ZendeskError);
-    });
-  });
-
-  describe('getWorkspaceIds', () => {
-    beforeEach(() => {
-      server.use(
-        http.get(`${env.ZENDESK_API_BASE_URL}/workspaces`, ({ request }) => {
-          if (request.headers.get('Authorization') !== `Bearer ${accessToken}`) {
-            return new Response(undefined, { status: 401 });
-          }
-
-          return Response.json({
-            data: [
-              {
-                gid: workspaceId,
-              },
-            ],
-          });
-        })
-      );
-    });
-
-    test('should return the workspaceIds when the accessToken is valid', async () => {
-      await expect(getWorkspaceIds(accessToken)).resolves.toStrictEqual([workspaceId]);
-    });
-
-    test('should throw when the accessToken is invalid', async () => {
-      await expect(getWorkspaceIds(invalidToken)).rejects.toBeInstanceOf(ZendeskError);
     });
   });
 });

@@ -25,7 +25,7 @@ export function GET(request: NextRequest) {
   cookies().set('region', region);
   cookies().set('state', state);
 
-  const redirectUrl = new URL(`${env.ZENDESK_APP_INSTALL_URL}/oauth2/authorize`);
+  const redirectUrl = new URL(`${env.ZENDESK_API_BASE_URL}/oauth2/authorize`);
   redirectUrl.searchParams.append('response_type', 'code');
   redirectUrl.searchParams.append('client_id', env.ZENDESK_CLIENT_ID);
   redirectUrl.searchParams.append('redirect_uri', env.ZENDESK_REDIRECT_URI);

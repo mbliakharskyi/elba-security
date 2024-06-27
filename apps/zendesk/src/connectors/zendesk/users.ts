@@ -20,7 +20,6 @@ export type ZendeskUser = z.infer<typeof zendeskUserSchema>;
 const zendeskResponseSchema = z.object({
   items: z.array(z.unknown()),
   meta: z.object({
-    count: z.number(),
     links: z
       .object({
         next_page: z.string().optional(),
@@ -35,9 +34,9 @@ export type GetUsersParams = {
 };
 
 export const getUsers = async ({ accessToken, page }: GetUsersParams) => {
-  const url = new URL(`${env.ZENDESK_APP_INSTALL_URL}/v2/users`);
+  const url = new URL(`${env.ZENDESK_API_BASE_URL}/v2/users`);
 
-  url.searchParams.append('per_page', String(page));
+  url.searchParams.append('per_page', String(env.ZENDESK_USERS_SYNC_BATCH_SIZE));
 
   if (page) {
     url.searchParams.append('page', String(page));

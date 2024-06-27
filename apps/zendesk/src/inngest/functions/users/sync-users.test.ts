@@ -17,11 +17,16 @@ const syncStartedAt = Date.now();
 const syncedBefore = Date.now();
 const nextPage = '1';
 const users: usersConnector.ZendeskUser[] = Array.from({ length: 2 }, (_, i) => ({
-  gid: `id-${i}`,
-  name: `name-${i}`,
-  email: `user-${i}@foo.bar`,
-  resource_type: 'user',
-  is_active: true,
+  data: {
+    id: i,
+    name: `name-${i}`,
+    email: `user-${i}@foo.bar`,
+    status: 'active',
+    role: 'admin',
+  },
+  meta: {
+    type: 'user',
+  },
 }));
 
 const setup = createInngestFunctionMock(syncUsers, 'zendesk/users.sync.requested');
@@ -86,13 +91,15 @@ describe('synchronize-users', () => {
           additionalEmails: [],
           displayName: 'name-0',
           email: 'user-0@foo.bar',
-          id: 'id-0',
+          id: '0',
+          role: 'admin',
         },
         {
           additionalEmails: [],
           displayName: 'name-1',
           email: 'user-1@foo.bar',
-          id: 'id-1',
+          id: '1',
+          role: 'admin',
         },
       ],
     });
@@ -124,13 +131,15 @@ describe('synchronize-users', () => {
           additionalEmails: [],
           displayName: 'name-0',
           email: 'user-0@foo.bar',
-          id: 'id-0',
+          id: '0',
+          role: 'admin',
         },
         {
           additionalEmails: [],
           displayName: 'name-1',
           email: 'user-1@foo.bar',
-          id: 'id-1',
+          id: '1',
+          role: 'admin',
         },
       ],
     });

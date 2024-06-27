@@ -14,7 +14,7 @@ export const getToken = async (code: string) => {
     'base64'
   );
 
-  const response = await fetch(`${env.ZENDESK_APP_INSTALL_URL}/oauth2/token`, {
+  const response = await fetch(`${env.ZENDESK_API_BASE_URL}/oauth2/token`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -52,7 +52,7 @@ export const getRefreshToken = async (refreshToken: string) => {
     'base64'
   );
 
-  const response = await fetch(`${env.ZENDESK_APP_INSTALL_URL}/oauth2/token`, {
+  const response = await fetch(`${env.ZENDESK_API_BASE_URL}/oauth2/token`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -75,7 +75,7 @@ export const getRefreshToken = async (refreshToken: string) => {
   const result = tokenResponseSchema.safeParse(data);
 
   if (!result.success) {
-    logger.error('Invalid Jira refresh token response', {
+    logger.error('Invalid Zendesk refresh token response', {
       data,
       result: JSON.stringify(result, null, 2),
     });
