@@ -61,7 +61,7 @@ describe('registerOrganisation', () => {
 
     // check if getUsers was called correctly
     expect(getUsers).toBeCalledTimes(1);
-    expect(getUsers).toBeCalledWith({ serviceToken, accountId, accessUrl });
+    expect(getUsers).toBeCalledWith({ serviceToken, accountId, accessUrl, page: null});
     // verify the organisation token is set in the database
     const [storedOrganisation] = await db
       .select()
@@ -111,7 +111,7 @@ describe('registerOrganisation', () => {
       })
     ).resolves.toBeUndefined();
     expect(getUsers).toBeCalledTimes(1);
-    expect(getUsers).toBeCalledWith({ serviceToken, accountId, accessUrl });
+    expect(getUsers).toBeCalledWith({ serviceToken, accountId, accessUrl, page: null });
     // check if the token in the database is updated
     const [storedOrganisation] = await db
       .select()

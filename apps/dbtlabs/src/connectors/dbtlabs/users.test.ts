@@ -59,7 +59,7 @@ describe('users connector', () => {
       ).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
-        nextPage: (offset + limit).toString(),
+        nextPage: offset + limit,
       });
     });
 
