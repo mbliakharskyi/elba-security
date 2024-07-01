@@ -9,12 +9,12 @@ const tokenResponseSchema = z.object({
   expires_in: z.number(),
 });
 
-export const getToken = async (code: string) => {
+export const getToken = async (code: string, subDomain: string) => {
   const encodedKey = Buffer.from(`${env.ZENDESK_CLIENT_ID}:${env.ZENDESK_CLIENT_SECRET}`).toString(
     'base64'
   );
 
-  const response = await fetch(`${env.ZENDESK_API_BASE_URL}/oauth2/token`, {
+  const response = await fetch(`${subDomain}/oauth2/token`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',

@@ -21,8 +21,9 @@ export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get('code');
   const organisationId = request.cookies.get('organisation_id')?.value;
   const region = request.cookies.get('region')?.value;
+  const subDomain = request.cookies.get('subdomain')?.value;
 
-  if (!isStateValid(request) || !organisationId || !code || !region) {
+  if (!isStateValid(request) || !organisationId || !code || !region || !subDomain) {
     return new ElbaInstallRedirectResponse({
       region,
       sourceId: env.ELBA_SOURCE_ID,
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  await setupOrganisation({ organisationId, code, region });
+  await setupOrganisation({ organisationId, code, region, subDomain });
   redirect(
     getRedirectUrl({
       region,
