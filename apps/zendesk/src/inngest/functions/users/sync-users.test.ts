@@ -7,26 +7,22 @@ import { organisationsTable } from '@/database/schema';
 import { encrypt } from '@/common/crypto';
 import { syncUsers } from './sync-users';
 
+const subDomain = 'https://some-subdomain';
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   accessToken: await encrypt('test-access-token'),
-  refreshToken: await encrypt('test-refresh-token'),
   region: 'us',
+  subDomain,
 };
 const syncStartedAt = Date.now();
 const syncedBefore = Date.now();
-const nextPage = '1';
+const nextPageLink = `${subDomain}/api/v2/users?page=2&per_page=1&role%5B%5D=admin&role%5B%5D=agent`;
 const users: usersConnector.ZendeskUser[] = Array.from({ length: 2 }, (_, i) => ({
-  data: {
-    id: i,
-    name: `name-${i}`,
-    email: `user-${i}@foo.bar`,
-    status: 'active',
-    role: 'admin',
-  },
-  meta: {
-    type: 'user',
-  },
+  id: i,
+  name: `name-${i}`,
+  email: `user-${i}@foo.bar`,
+  active: true,
+  role: 'admin',
 }));
 
 const setup = createInngestFunctionMock(syncUsers, 'zendesk/users.sync.requested');
@@ -60,14 +56,14 @@ describe('synchronize-users', () => {
     vi.spyOn(usersConnector, 'getUsers').mockResolvedValue({
       validUsers: users,
       invalidUsers: [],
-      nextPage,
+      nextPage: nextPageLink,
     });
 
     const [result, { step }] = setup({
       organisationId: organisation.id,
       isFirstSync: false,
       syncStartedAt,
-      page: nextPage,
+      page: nextPageLink,
     });
 
     await expect(result).resolves.toStrictEqual({ status: 'ongoing' });
@@ -80,7 +76,7 @@ describe('synchronize-users', () => {
         organisationId: organisation.id,
         isFirstSync: false,
         syncStartedAt,
-        page: nextPage,
+        page: nextPageLink,
       },
     });
 
@@ -93,6 +89,7 @@ describe('synchronize-users', () => {
           email: 'user-0@foo.bar',
           id: '0',
           role: 'admin',
+          url: `${subDomain}/admin/people/team/members`,
         },
         {
           additionalEmails: [],
@@ -100,6 +97,7 @@ describe('synchronize-users', () => {
           email: 'user-1@foo.bar',
           id: '1',
           role: 'admin',
+          url: `${subDomain}/admin/people/team/members`,
         },
       ],
     });
@@ -133,6 +131,7 @@ describe('synchronize-users', () => {
           email: 'user-0@foo.bar',
           id: '0',
           role: 'admin',
+          url: `${subDomain}/admin/people/team/members`,
         },
         {
           additionalEmails: [],
@@ -140,6 +139,7 @@ describe('synchronize-users', () => {
           email: 'user-1@foo.bar',
           id: '1',
           role: 'admin',
+          url: `${subDomain}/admin/people/team/members`,
         },
       ],
     });

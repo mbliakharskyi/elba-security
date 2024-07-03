@@ -1,28 +1,23 @@
- 
-
 import { http } from 'msw';
 import { describe, expect, test, beforeEach } from 'vitest';
 import { server } from '@elba-security/test-utils';
-import { env } from '@/common/env';
 import { ZendeskError } from '../common/error';
 import type { ZendeskUser } from './users';
 import { getUsers } from './users';
 
 const validToken = 'token-1234';
-const endPage = '3';
-const nextPageLink = 'next-page-link';
+const endPage = 'end-page';
+const endPageLink = `https://some-subdomain/api/v2/users?page=${endPage}&per_page=1&role%5B%5D=admin&role%5B%5D=agent`;
+const nextPageLink =
+  'https://some-subdomain/api/v2/users?page=2&per_page=1&role%5B%5D=admin&role%5B%5D=agent';
+const subDomain = 'https://some-subdomain';
 
 const validUsers: ZendeskUser[] = Array.from({ length: 5 }, (_, i) => ({
-  data: {
-    id: i,
-    name: `name-${i}`,
-    email: `user-${i}@foo.bar`,
-    status: 'active',
-    role: 'admin',
-  },
-  meta: {
-    type: 'user',
-  },
+  id: i,
+  name: `name-${i}`,
+  email: `user-${i}@foo.bar`,
+  active: true,
+  role: 'admin',
 }));
 
 const invalidUsers = [];
@@ -32,7 +27,7 @@ describe('users connector', () => {
     // mock token API endpoint using msw
     beforeEach(() => {
       server.use(
-        http.get(`${env.ZENDESK_API_BASE_URL}/v2/users`, ({ request }) => {
+        http.get(`${subDomain}/api/v2/users`, ({ request }) => {
           if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
             return new Response(undefined, { status: 401 });
           }
@@ -40,10 +35,8 @@ describe('users connector', () => {
           const url = new URL(request.url);
           const page = url.searchParams.get('page');
           const responseData = {
-            items: validUsers,
-            meta: {
-              links: page === endPage ? {} : { next_page: nextPageLink },
-            },
+            users: validUsers,
+            next_page: page === endPage ? null : nextPageLink,
           };
           return Response.json(responseData);
         })
@@ -52,7 +45,7 @@ describe('users connector', () => {
 
     test('should return users and nextPage when the token is valid and their is another page', async () => {
       await expect(
-        getUsers({ accessToken: validToken, page: nextPageLink })
+        getUsers({ accessToken: validToken, page: nextPageLink, subDomain })
       ).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
@@ -61,7 +54,9 @@ describe('users connector', () => {
     });
 
     test('should return users and no nextPage when the token is valid and their is no other page', async () => {
-      await expect(getUsers({ accessToken: validToken, page: endPage })).resolves.toStrictEqual({
+      await expect(
+        getUsers({ accessToken: validToken, page: endPageLink, subDomain })
+      ).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
         nextPage: null,
@@ -69,7 +64,9 @@ describe('users connector', () => {
     });
 
     test('should throws when the token is invalid', async () => {
-      await expect(getUsers({ accessToken: 'foo-bar' })).rejects.toBeInstanceOf(ZendeskError);
+      await expect(getUsers({ accessToken: 'foo-bar', subDomain })).rejects.toBeInstanceOf(
+        ZendeskError
+      );
     });
   });
 });

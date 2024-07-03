@@ -10,12 +10,13 @@ import { decrypt } from '@/common/crypto';
 import { type ZendeskUser } from '@/connectors/zendesk/users';
 import { createElbaClient } from '@/connectors/elba/client';
 
-const formatElbaUser = (user: ZendeskUser): User => ({
+const formatElbaUser = ({ user, subDomain }: { user: ZendeskUser; subDomain: string }): User => ({
   id: String(user.id),
   displayName: user.name,
   email: user.email,
   role: user.role,
   additionalEmails: [],
+  url: `${subDomain}/admin/people/team/members`,
 });
 
 export const syncUsers = inngest.createFunction(
@@ -63,7 +64,7 @@ export const syncUsers = inngest.createFunction(
     const nextPage = await step.run('list-users', async () => {
       const result = await getUsers({ accessToken: token, page, subDomain });
 
-      const users = result.validUsers.filter(({ active }) => active).map(formatElbaUser);
+      const users = result.validUsers.map((user) => formatElbaUser({ user, subDomain }));
 
       if (result.invalidUsers.length > 0) {
         logger.warn('Retrieved users contains invalid data', {

@@ -1,21 +1,18 @@
 import { http } from 'msw';
 import { describe, expect, test, beforeEach } from 'vitest';
 import { server } from '@elba-security/test-utils';
-import { env } from '@/common/env';
 import { ZendeskError } from '../common/error';
 import { getToken } from './auth';
 
 const validCode = '1234';
-const subDomain = 'some-subdomain';
+const subDomain = 'https://some-subdomain';
 const accessToken = 'access-token-1234';
-const validRefreshToken = 'valid-refresh-token';
-const expiresIn = 1234;
 
 describe('auth connector', () => {
   describe('getToken', () => {
     beforeEach(() => {
       server.use(
-        http.post(`${env.ZENDESK_API_BASE_URL}/oauth2/token`, async ({ request }) => {
+        http.post(`${subDomain}/oauth/tokens`, async ({ request }) => {
           const body = await request.text();
           const searchParams = new URLSearchParams(body);
           const grantType = searchParams.get('grant_type');
@@ -27,8 +24,6 @@ describe('auth connector', () => {
 
           return Response.json({
             access_token: accessToken,
-            refresh_token: validRefreshToken,
-            expires_in: expiresIn,
           });
         })
       );
@@ -37,8 +32,6 @@ describe('auth connector', () => {
     test('should return the accessToken when the code is valid', async () => {
       await expect(getToken({ code: validCode, subDomain })).resolves.toStrictEqual({
         accessToken,
-        refreshToken: validRefreshToken,
-        expiresIn,
       });
     });
 

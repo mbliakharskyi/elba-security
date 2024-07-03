@@ -5,14 +5,14 @@ import { organisationsTable } from '@/database/schema';
 import { scheduleUsersSync } from './schedule-users-sync';
 
 const now = Date.now();
-
+const subDomain = 'some-subdomain';
 const setup = createInngestFunctionMock(scheduleUsersSync);
 
 export const organisations = Array.from({ length: 5 }, (_, i) => ({
   id: `00000000-0000-0000-0000-00000000000${i}`,
   accessToken: `test-access-token${i}`,
-  refreshToken: `test-refresh-token${i}`,
   region: `us`,
+  subDomain,
 }));
 
 describe('schedule-users-syncs', () => {

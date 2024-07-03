@@ -9,22 +9,19 @@ import { decrypt } from '@/common/crypto';
 import { setupOrganisation } from './service';
 
 const code = 'some-code';
-const accessToken = 'some token';
-const refreshToken = 'some refresh token';
-const expiresIn = 60;
+const accessToken = 'some-token';
 const region = 'us';
 const now = new Date();
+const subDomain = 'some-subdomain';
 const getTokenData = {
   accessToken,
-  refreshToken,
-  expiresIn,
 };
 
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   accessToken,
-  refreshToken,
   region,
+  subDomain,
 };
 
 describe('setupOrganisation', () => {
@@ -46,11 +43,12 @@ describe('setupOrganisation', () => {
         organisationId: organisation.id,
         code,
         region,
+        subDomain,
       })
     ).resolves.toBeUndefined();
 
     expect(getToken).toBeCalledTimes(1);
-    expect(getToken).toBeCalledWith(code);
+    expect(getToken).toBeCalledWith({ code, subDomain });
 
     const [storedOrganisation] = await db
       .select()
@@ -79,13 +77,6 @@ describe('setupOrganisation', () => {
           organisationId: organisation.id,
         },
       },
-      {
-        name: 'zendesk/token.refresh.requested',
-        data: {
-          organisationId: organisation.id,
-          expiresAt: now.getTime() + 60 * 1000,
-        },
-      },
     ]);
   });
 
@@ -105,12 +96,13 @@ describe('setupOrganisation', () => {
         organisationId: organisation.id,
         code,
         region,
+        subDomain,
       })
     ).resolves.toBeUndefined();
 
     // verify getToken usage
     expect(getToken).toBeCalledTimes(1);
-    expect(getToken).toBeCalledWith(code);
+    expect(getToken).toBeCalledWith({ code, subDomain });
 
     // check if the token in the database is updated
     const [storedOrganisation] = await db
@@ -140,13 +132,6 @@ describe('setupOrganisation', () => {
           organisationId: organisation.id,
         },
       },
-      {
-        name: 'zendesk/token.refresh.requested',
-        data: {
-          organisationId: organisation.id,
-          expiresAt: now.getTime() + 60 * 1000,
-        },
-      },
     ]);
   });
 
@@ -164,12 +149,13 @@ describe('setupOrganisation', () => {
         organisationId: organisation.id,
         code,
         region,
+        subDomain,
       })
     ).rejects.toThrowError(error);
 
     // verify getToken usage
     expect(getToken).toBeCalledTimes(1);
-    expect(getToken).toBeCalledWith(code);
+    expect(getToken).toBeCalledWith({ code, subDomain });
 
     // ensure no organisation is added or updated in the database
     await expect(

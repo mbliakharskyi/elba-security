@@ -7,11 +7,12 @@ import { organisationsTable } from '@/database/schema';
 import { env } from '@/common/env';
 import { removeOrganisation } from './remove-organisation';
 
+const subDomain = 'some-subdomain';
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   accessToken: 'access-token',
-  refreshToken: 'refresh-token',
   region: 'us',
+  subDomain,
 };
 
 const setup = createInngestFunctionMock(removeOrganisation, 'zendesk/app.uninstalled');
