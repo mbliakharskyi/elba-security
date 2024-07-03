@@ -13,6 +13,7 @@ const accessToken = 'some-token';
 const region = 'us';
 const now = new Date();
 const subDomain = 'some-subdomain';
+const ownerId = 'test-owner-id';
 const getTokenData = {
   accessToken,
 };
@@ -22,6 +23,7 @@ const organisation = {
   accessToken,
   region,
   subDomain,
+  ownerId,
 };
 
 describe('setupOrganisation', () => {

@@ -8,6 +8,7 @@ import { deleteUser } from './delete-users';
 
 const userId = 'user-id';
 const accessToken = 'test-access-token';
+const ownerId = 'test-owner-id';
 const subDomain = 'some-subdomain';
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
@@ -15,6 +16,7 @@ const organisation = {
   organizationUri: 'some organization_uri',
   subDomain,
   region: 'us',
+  ownerId,
 };
 
 const setup = createInngestFunctionMock(deleteUser, 'zendesk/users.delete.requested');

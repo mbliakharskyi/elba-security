@@ -6,4 +6,5 @@ export const organisationsTable = pgTable('organisations', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   accessToken: text('access_token').notNull(),
   subDomain: text('subdomain').notNull(),
+  ownerId: text('owner_id').notNull(),
 });

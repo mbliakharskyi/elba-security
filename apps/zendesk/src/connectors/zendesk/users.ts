@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { logger } from '@elba-security/logger';
 import { env } from '@/common/env';
 import { ZendeskError } from '../common/error';
 
@@ -17,9 +18,19 @@ const zendeskResponseSchema = z.object({
   next_page: z.string().nullable(),
 });
 
+const ownerIdResponseSchema = z.object({
+  account: z.object({
+    owner_id: z.number(),
+  }),
+});
+
 export type GetUsersParams = {
   accessToken: string;
   page?: string | null;
+  subDomain: string;
+};
+export type GetOwnerIdParams = {
+  accessToken: string;
   subDomain: string;
 };
 
@@ -74,14 +85,43 @@ export const getUsers = async ({ accessToken, page, subDomain }: GetUsersParams)
 // Owner of the organization cannot be deleted
 export const deleteUser = async ({ userId, accessToken, subDomain }: DeleteUsersParams) => {
   const response = await fetch(`${subDomain}/api/v2/users/${userId}`, {
-    method: 'DELETE',
+    method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${accessToken}`,
     },
+    body: JSON.stringify({
+      suspended: true,
+    }),
   });
 
   if (!response.ok && response.status !== 404) {
     throw new ZendeskError(`Could not delete user with Id: ${userId}`, { response });
   }
+};
+
+export const getOwnerId = async ({ accessToken, subDomain }: GetOwnerIdParams) => {
+  const response = await fetch(`${subDomain}/api/v2/account`, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new ZendeskError('Could not retrieve owner id', { response });
+  }
+
+  const resData: unknown = await response.json();
+
+  const result = ownerIdResponseSchema.safeParse(resData);
+  if (!result.success) {
+    logger.error('Invalid Zendesk owner id response', { resData });
+    throw new ZendeskError('Invalid Zendesk owner id response');
+  }
+
+  return {
+    ownerId: String(result.data.account.owner_id),
+  };
 };

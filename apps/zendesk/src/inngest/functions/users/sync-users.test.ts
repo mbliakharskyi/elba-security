@@ -7,12 +7,14 @@ import { organisationsTable } from '@/database/schema';
 import { encrypt } from '@/common/crypto';
 import { syncUsers } from './sync-users';
 
+const ownerId = 'test-owner-id';
 const subDomain = 'https://some-subdomain';
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   accessToken: await encrypt('test-access-token'),
   region: 'us',
   subDomain,
+  ownerId,
 };
 const syncStartedAt = Date.now();
 const syncedBefore = Date.now();

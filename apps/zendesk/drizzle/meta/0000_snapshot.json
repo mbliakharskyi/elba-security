@@ -1,5 +1,5 @@
 {
-  "id": "c51b2c0f-c9bc-4f63-9f7d-fe633945c707",
+  "id": "839f101d-025b-45f5-a288-104d6dd10d2f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "5",
   "dialect": "pg",
@@ -35,6 +35,12 @@
         },
         "subdomain": {
           "name": "subdomain",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "owner_id": {
+          "name": "owner_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
