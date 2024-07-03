@@ -24,12 +24,6 @@ export const inngest = new Inngest({
         organisationId: string;
       };
     };
-    'zendesk/token.refresh.requested': {
-      data: {
-        organisationId: string;
-        expiresAt: number;
-      };
-    };
     'zendesk/users.delete.requested': {
       data: {
         organisationId: string;

@@ -1,4 +1,3 @@
-import { addSeconds } from 'date-fns/addSeconds';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { getToken } from '@/connectors/zendesk/auth';
@@ -18,25 +17,24 @@ export const setupOrganisation = async ({
   region,
   subDomain,
 }: SetupOrganisationParams) => {
-  const { accessToken, refreshToken, expiresIn } = await getToken(code, subDomain);
+  const { accessToken } = await getToken({ code, subDomain });
 
   const encryptedAccessToken = await encrypt(accessToken);
-  const encodedRefreshToken = await encrypt(refreshToken);
 
   await db
     .insert(organisationsTable)
     .values({
       id: organisationId,
       accessToken: encryptedAccessToken,
-      refreshToken: encodedRefreshToken,
+      subDomain,
       region,
     })
     .onConflictDoUpdate({
       target: organisationsTable.id,
       set: {
         accessToken: encryptedAccessToken,
-        refreshToken: encodedRefreshToken,
         region,
+        subDomain,
       },
     });
 
@@ -54,13 +52,6 @@ export const setupOrganisation = async ({
       name: 'zendesk/app.installed',
       data: {
         organisationId,
-      },
-    },
-    {
-      name: 'zendesk/token.refresh.requested',
-      data: {
-        organisationId,
-        expiresAt: addSeconds(new Date(), expiresIn).getTime(),
       },
     },
   ]);

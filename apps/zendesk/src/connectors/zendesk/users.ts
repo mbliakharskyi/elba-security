@@ -3,46 +3,40 @@ import { env } from '@/common/env';
 import { ZendeskError } from '../common/error';
 
 const zendeskUserSchema = z.object({
-  data: z.object({
-    id: z.number(),
-    name: z.string(),
-    email: z.string(),
-    status: z.string(), // We only want active users
-    role: z.string(),
-  }),
-  meta: z.object({
-    type: z.literal('user'),
-  }),
+  id: z.number(),
+  name: z.string(),
+  email: z.string(),
+  active: z.boolean(), // We only want active users
+  role: z.string(),
 });
 
 export type ZendeskUser = z.infer<typeof zendeskUserSchema>;
 
 const zendeskResponseSchema = z.object({
-  items: z.array(z.unknown()),
-  meta: z.object({
-    links: z
-      .object({
-        next_page: z.string().optional(),
-      })
-      .optional(),
-  }),
+  users: z.array(z.unknown()),
+  next_page: z.string().nullable(),
 });
 
 export type GetUsersParams = {
   accessToken: string;
   page?: string | null;
+  subDomain: string;
 };
 
-export const getUsers = async ({ accessToken, page }: GetUsersParams) => {
-  const url = new URL(`${env.ZENDESK_API_BASE_URL}/v2/users`);
+export type DeleteUsersParams = {
+  accessToken: string;
+  userId: string;
+  subDomain: string;
+};
 
+export const getUsers = async ({ accessToken, page, subDomain }: GetUsersParams) => {
+  const url = new URL(`${subDomain}/api/v2/users`);
+
+  url.searchParams.append('role[]', 'admin');
+  url.searchParams.append('role[]', 'agent');
   url.searchParams.append('per_page', String(env.ZENDESK_USERS_SYNC_BATCH_SIZE));
 
-  if (page) {
-    url.searchParams.append('page', String(page));
-  }
-
-  const response = await fetch(url.toString(), {
+  const response = await fetch(page ? page : url.toString(), {
     method: 'GET',
     headers: {
       Accept: 'application/json',
@@ -55,12 +49,13 @@ export const getUsers = async ({ accessToken, page }: GetUsersParams) => {
   }
 
   const resData: unknown = await response.json();
-  const { items, meta } = zendeskResponseSchema.parse(resData);
+
+  const { users, next_page: nextPage } = zendeskResponseSchema.parse(resData);
 
   const validUsers: ZendeskUser[] = [];
   const invalidUsers: unknown[] = [];
 
-  for (const user of items) {
+  for (const user of users) {
     const userResult = zendeskUserSchema.safeParse(user);
     if (userResult.success) {
       validUsers.push(userResult.data);
@@ -72,6 +67,21 @@ export const getUsers = async ({ accessToken, page }: GetUsersParams) => {
   return {
     validUsers,
     invalidUsers,
-    nextPage: meta.links?.next_page ? meta.links.next_page : null,
+    nextPage,
   };
+};
+
+// Owner of the organization cannot be deleted
+export const deleteUser = async ({ userId, accessToken, subDomain }: DeleteUsersParams) => {
+  const response = await fetch(`${subDomain}/api/v2/users/${userId}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok && response.status !== 404) {
+    throw new ZendeskError(`Could not delete user with Id: ${userId}`, { response });
+  }
 };

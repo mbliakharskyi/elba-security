@@ -11,10 +11,10 @@ import { type ZendeskUser } from '@/connectors/zendesk/users';
 import { createElbaClient } from '@/connectors/elba/client';
 
 const formatElbaUser = (user: ZendeskUser): User => ({
-  id: String(user.data.id),
-  displayName: user.data.name,
-  email: user.data.email,
-  role: user.data.role,
+  id: String(user.id),
+  displayName: user.name,
+  email: user.email,
+  role: user.role,
   additionalEmails: [],
 });
 
@@ -48,6 +48,7 @@ export const syncUsers = inngest.createFunction(
       .select({
         token: organisationsTable.accessToken,
         region: organisationsTable.region,
+        subDomain: organisationsTable.subDomain,
       })
       .from(organisationsTable)
       .where(eq(organisationsTable.id, organisationId));
@@ -57,13 +58,12 @@ export const syncUsers = inngest.createFunction(
 
     const elba = createElbaClient({ organisationId, region: organisation.region });
     const token = await decrypt(organisation.token);
+    const subDomain = organisation.subDomain;
 
     const nextPage = await step.run('list-users', async () => {
-      const result = await getUsers({ accessToken: token, page });
+      const result = await getUsers({ accessToken: token, page, subDomain });
 
-      const users = result.validUsers
-        .filter(({ data }) => data.status === 'active')
-        .map(formatElbaUser);
+      const users = result.validUsers.filter(({ active }) => active).map(formatElbaUser);
 
       if (result.invalidUsers.length > 0) {
         logger.warn('Retrieved users contains invalid data', {

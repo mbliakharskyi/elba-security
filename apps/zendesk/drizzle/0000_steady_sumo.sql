@@ -3,5 +3,5 @@ CREATE TABLE IF NOT EXISTS "organisations" (
 	"region" text NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"access_token" text NOT NULL,
-	"refresh_token" text NOT NULL
+	"subdomain" text NOT NULL
 );
