@@ -1,6 +1,7 @@
 import { expect, test, describe, vi, beforeAll, afterAll } from 'vitest';
 import { eq } from 'drizzle-orm';
 import * as authConnector from '@/connectors/zendesk/auth';
+import * as usersConnector from '@/connectors/zendesk/users';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { inngest } from '@/inngest/client';
@@ -16,6 +17,11 @@ const subDomain = 'some-subdomain';
 const ownerId = 'test-owner-id';
 const getTokenData = {
   accessToken,
+};
+
+const getOwnerIdData = {
+  ownerId,
+  subDomain,
 };
 
 const organisation = {
@@ -39,6 +45,7 @@ describe('setupOrganisation', () => {
     // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
     const getToken = vi.spyOn(authConnector, 'getToken').mockResolvedValue(getTokenData);
+    const getOwnerId = vi.spyOn(usersConnector, 'getOwnerId').mockResolvedValue(getOwnerIdData);
 
     await expect(
       setupOrganisation({
@@ -52,6 +59,8 @@ describe('setupOrganisation', () => {
     expect(getToken).toBeCalledTimes(1);
     expect(getToken).toBeCalledWith({ code, subDomain });
 
+    expect(getOwnerId).toBeCalledTimes(1);
+    expect(getOwnerId).toBeCalledWith({ accessToken, subDomain });
     const [storedOrganisation] = await db
       .select()
       .from(organisationsTable)
@@ -91,6 +100,7 @@ describe('setupOrganisation', () => {
 
     // mock getToken as above
     const getToken = vi.spyOn(authConnector, 'getToken').mockResolvedValue(getTokenData);
+    const getOwnerId = vi.spyOn(usersConnector, 'getOwnerId').mockResolvedValue(getOwnerIdData);
 
     // assert the function resolves without returning a value
     await expect(
@@ -105,7 +115,8 @@ describe('setupOrganisation', () => {
     // verify getToken usage
     expect(getToken).toBeCalledTimes(1);
     expect(getToken).toBeCalledWith({ code, subDomain });
-
+    expect(getOwnerId).toBeCalledTimes(1);
+    expect(getOwnerId).toBeCalledWith({ accessToken, subDomain });
     // check if the token in the database is updated
     const [storedOrganisation] = await db
       .select()

@@ -92,6 +92,7 @@ describe('synchronize-users', () => {
           id: '0',
           role: 'admin',
           url: `${subDomain}/admin/people/team/members`,
+          isSuspendable: true,
         },
         {
           additionalEmails: [],
@@ -99,6 +100,7 @@ describe('synchronize-users', () => {
           email: 'user-1@foo.bar',
           id: '1',
           role: 'admin',
+          isSuspendable: true,
           url: `${subDomain}/admin/people/team/members`,
         },
       ],
@@ -133,6 +135,7 @@ describe('synchronize-users', () => {
           email: 'user-0@foo.bar',
           id: '0',
           role: 'admin',
+          isSuspendable: true,
           url: `${subDomain}/admin/people/team/members`,
         },
         {
@@ -141,6 +144,7 @@ describe('synchronize-users', () => {
           email: 'user-1@foo.bar',
           id: '1',
           role: 'admin',
+          isSuspendable: true,
           url: `${subDomain}/admin/people/team/members`,
         },
       ],
