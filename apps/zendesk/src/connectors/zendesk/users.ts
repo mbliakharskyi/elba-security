@@ -85,14 +85,11 @@ export const getUsers = async ({ accessToken, page, subDomain }: GetUsersParams)
 // Owner of the organization cannot be deleted
 export const deleteUser = async ({ userId, accessToken, subDomain }: DeleteUsersParams) => {
   const response = await fetch(`${subDomain}/api/v2/users/${userId}`, {
-    method: 'PUT',
+    method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify({
-      suspended: true,
-    }),
   });
 
   if (!response.ok && response.status !== 404) {

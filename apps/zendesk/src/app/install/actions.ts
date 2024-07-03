@@ -64,7 +64,7 @@ export const install = (_: FormState, formData: FormData): Promise<FormState> =>
     redirectUrl.searchParams.append('client_id', env.ZENDESK_CLIENT_ID);
     redirectUrl.searchParams.append('redirect_uri', env.ZENDESK_REDIRECT_URI);
     redirectUrl.searchParams.append('state', state);
-    redirectUrl.searchParams.append('scope', 'read users:write');
+    redirectUrl.searchParams.append('scope', 'read write');
 
     redirect(redirectUrl.toString());
   } catch (error) {
