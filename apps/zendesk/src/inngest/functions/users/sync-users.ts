@@ -75,7 +75,9 @@ export const syncUsers = inngest.createFunction(
     const nextPage = await step.run('list-users', async () => {
       const result = await getUsers({ accessToken: token, page, subDomain });
 
-      const users = result.validUsers.map((user) => formatElbaUser({ user, subDomain, ownerId }));
+      const users = result.validUsers
+        .filter(({ active, suspended }) => active && !suspended)
+        .map((user) => formatElbaUser({ user, subDomain, ownerId }));
 
       if (result.invalidUsers.length > 0) {
         logger.warn('Retrieved users contains invalid data', {

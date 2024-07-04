@@ -9,6 +9,7 @@ const zendeskUserSchema = z.object({
   email: z.string(),
   active: z.boolean(), // We only want active users
   role: z.string(),
+  suspended: z.boolean(),
 });
 
 export type ZendeskUser = z.infer<typeof zendeskUserSchema>;
@@ -85,11 +86,16 @@ export const getUsers = async ({ accessToken, page, subDomain }: GetUsersParams)
 // Owner of the organization cannot be deleted
 export const deleteUser = async ({ userId, accessToken, subDomain }: DeleteUsersParams) => {
   const response = await fetch(`${subDomain}/api/v2/users/${userId}`, {
-    method: 'DELETE',
+    method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${accessToken}`,
     },
+    body: JSON.stringify({
+      user: {
+        suspended: true,
+      },
+    }),
   });
 
   if (!response.ok && response.status !== 404) {

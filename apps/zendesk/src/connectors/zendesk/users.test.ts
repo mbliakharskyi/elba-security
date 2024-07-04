@@ -19,6 +19,7 @@ const validUsers: ZendeskUser[] = Array.from({ length: 5 }, (_, i) => ({
   name: `name-${i}`,
   email: `user-${i}@foo.bar`,
   active: true,
+  suspended: false,
   role: 'admin',
 }));
 
@@ -75,7 +76,7 @@ describe('users connector', () => {
   describe('deleteUser', () => {
     beforeEach(() => {
       server.use(
-        http.delete<{ userId: string }>(`${subDomain}/api/v2/users/${userId}`, ({ request }) => {
+        http.put<{ userId: string }>(`${subDomain}/api/v2/users/${userId}`, ({ request }) => {
           if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
             return new Response(undefined, { status: 401 });
           }

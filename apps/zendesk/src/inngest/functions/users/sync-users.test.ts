@@ -24,6 +24,7 @@ const users: usersConnector.ZendeskUser[] = Array.from({ length: 2 }, (_, i) => 
   name: `name-${i}`,
   email: `user-${i}@foo.bar`,
   active: true,
+  suspended: false,
   role: 'admin',
 }));
 
