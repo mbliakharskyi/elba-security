@@ -13,13 +13,12 @@ const apiKey = 'test-api-key';
 const region = 'us';
 const now = new Date();
 const validUsers: JumpcloudUser[] = Array.from({ length: 2 }, (_, i) => ({
-  id: `${i}`,
-  given_name: `given_name-${i}`,
-  family_name: `family_name-${i}`,
-  role: 'Account Administrator',
-  active: true,
-  email: `user${i}@foo.bar`,
-  invited: false,
+  _id: '0442f541-45d2-487a-9e4b-de03ce4c559e',
+  firstname: `firstname-${i}`,
+  lastname: `lastname-${i}`,
+  suspended: false,
+  enableMultiFactor: false,
+  email: `user-${i}@foo.bar`,
 }));
 
 const invalidUsers = [];
