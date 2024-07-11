@@ -28,20 +28,17 @@ export default function InstallPage() {
       <InstructionsSteps>
         <InstructionsStep index={1}>
           <h3>Create an API client in Jumpcloud to link to Elba</h3>
+          <p>1. Log in to JumpCloud as an Administrator</p>
           <p>
-            1. In the Jumpcloud Dashboard, use the menu (top-left) and navigate to{' '}
-            <b>
-              Your Username
-              {' ->'} API key
-            </b>
-            .
+            2. In the Admin Portal, click your account initials displayed in the top-right and
+            select <b>My API Key</b> from the drop down menu.
           </p>
           <p>
-            2. Click on the <b>Generate API Key button</b>
+            3. If you haven’t generated an API key yet, you will have the option to{' '}
+            <b>Generate New API Key</b> . Please note that only Admins with Billing role can enable
+            API access.
           </p>
-          <p>
-            3. Copy the API Key and API Secret and paste them below. (You will not see them again)
-          </p>
+          <p>4. Copy the API Key and paste them below. (You will not see them again)</p>
         </InstructionsStep>
         <InstructionsStep index={2}>
           <h3>Connect Jumpcloud</h3>
