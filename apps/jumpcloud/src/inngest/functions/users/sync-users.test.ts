@@ -74,17 +74,21 @@ describe('sync-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'given_name-0 family_name-0',
+          displayName: 'firstname-0 lastname-0',
           email: 'user-0@foo.bar',
-          id: '0',
-          role: 'Account Administrator',
+          id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
+          role: 'admin',
+          authMethod: 'password',
+          url: 'https://console.jumpcloud.com/#/settings/administrators/details/45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
         },
         {
           additionalEmails: [],
-          displayName: 'given_name-1 family_name-1',
+          displayName: 'firstname-1 lastname-1',
           email: 'user-1@foo.bar',
-          id: '1',
-          role: 'Account Administrator',
+          id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c91',
+          role: 'admin',
+          authMethod: 'password',
+          url: 'https://console.jumpcloud.com/#/settings/administrators/details/45a76301-f1dd-4a77-b12f-9d7d3fca3c91',
         },
       ],
     });
@@ -97,6 +101,7 @@ describe('sync-users', () => {
         isFirstSync: false,
         syncStartedAt,
         page: nextPage,
+        role,
       },
     });
   });
@@ -116,7 +121,7 @@ describe('sync-users', () => {
       isFirstSync: false,
       syncStartedAt,
       page: null,
-      role,
+      role: 'member',
     });
 
     await expect(result).resolves.toStrictEqual({ status: 'completed' });
@@ -127,17 +132,21 @@ describe('sync-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'given_name-0 family_name-0',
+          displayName: 'firstname-0 lastname-0',
           email: 'user-0@foo.bar',
-          id: '0',
-          role: 'Account Administrator',
+          id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
+          role: 'member',
+          authMethod: 'password',
+          url: 'https://console.jumpcloud.com/#/users/45a76301-f1dd-4a77-b12f-9d7d3fca3c90/details',
         },
         {
           additionalEmails: [],
-          displayName: 'given_name-1 family_name-1',
+          displayName: 'firstname-1 lastname-1',
           email: 'user-1@foo.bar',
-          id: '1',
-          role: 'Account Administrator',
+          id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c91',
+          role: 'member',
+          authMethod: 'password',
+          url: 'https://console.jumpcloud.com/#/users/45a76301-f1dd-4a77-b12f-9d7d3fca3c91/details',
         },
       ],
     });

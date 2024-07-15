@@ -78,7 +78,7 @@ describe('getJumpcloudUsers', () => {
 describe('deleteUser', () => {
   beforeEach(() => {
     server.use(
-      http.delete<{ adminId: string }>(
+      http.put<{ adminId: string }>(
         `${env.JUMPCLOUD_API_BASE_URL}users/:adminId`,
         ({ request, params }) => {
           if (request.headers.get('x-api-key') !== validApiKey) {
@@ -93,7 +93,7 @@ describe('deleteUser', () => {
       )
     );
     server.use(
-      http.delete<{ memberId: string }>(
+      http.put<{ memberId: string }>(
         `${env.JUMPCLOUD_API_BASE_URL}systemusers/:memberId`,
         ({ request, params }) => {
           if (request.headers.get('x-api-key') !== validApiKey) {
