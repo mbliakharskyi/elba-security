@@ -22,12 +22,12 @@ export type JumpcloudUser = z.infer<typeof jumpcloudUserSchema>;
 
 const jumpcloudResponseSchema = z.object({
   results: z.array(z.unknown()),
-  skip: z.string().nullable().optional(),
+  totalCount: z.number(),
 });
 
 export type GetUsersParams = {
   apiKey: string;
-  after: string | null;
+  after: number;
   role: 'admin' | 'member';
 };
 
@@ -45,10 +45,7 @@ export const getUsers = async ({ apiKey, after, role }: GetUsersParams) => {
   );
 
   url.searchParams.append('limit', String(perPage));
-
-  if (after) {
-    url.searchParams.append('skip', String(after));
-  }
+  url.searchParams.append('skip', String(after));
 
   const response = await fetch(url.toString(), {
     method: 'GET',
@@ -63,7 +60,7 @@ export const getUsers = async ({ apiKey, after, role }: GetUsersParams) => {
   }
 
   const resData: unknown = await response.json();
-  const { results, skip } = jumpcloudResponseSchema.parse(resData);
+  const { results, totalCount } = jumpcloudResponseSchema.parse(resData);
 
   const validUsers: JumpcloudUser[] = [];
   const invalidUsers: unknown[] = [];
@@ -80,7 +77,7 @@ export const getUsers = async ({ apiKey, after, role }: GetUsersParams) => {
   return {
     validUsers,
     invalidUsers,
-    nextPage: skip ? skip : null,
+    nextPage: totalCount > after + perPage ? after + perPage : null,
   };
 };
 

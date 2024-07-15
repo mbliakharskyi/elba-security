@@ -58,7 +58,7 @@ describe('registerOrganisation', () => {
 
     // check if getUsers was called correctly
     expect(getUsers).toBeCalledTimes(1);
-    expect(getUsers).toBeCalledWith({ apiKey, after: null, role: 'admin' });
+    expect(getUsers).toBeCalledWith({ apiKey, after: 0, role: 'admin' });
 
     // verify the organisation token is set in the database
     const [storedOrganisation] = await db
@@ -79,7 +79,7 @@ describe('registerOrganisation', () => {
           isFirstSync: true,
           organisationId: organisation.id,
           syncStartedAt: now.getTime(),
-          page: null,
+          page: 0,
           role: 'admin',
         },
       },
@@ -112,7 +112,7 @@ describe('registerOrganisation', () => {
     ).resolves.toBeUndefined();
 
     expect(getUsers).toBeCalledTimes(1);
-    expect(getUsers).toBeCalledWith({ apiKey, after: null, role: 'admin' });
+    expect(getUsers).toBeCalledWith({ apiKey, after: 0, role: 'admin' });
 
     // check if the apiKey in the database is updated
     const [storedOrganisation] = await db
@@ -134,7 +134,7 @@ describe('registerOrganisation', () => {
           isFirstSync: true,
           organisationId: organisation.id,
           syncStartedAt: now.getTime(),
-          page: null,
+          page: 0,
           role: 'admin',
         },
       },

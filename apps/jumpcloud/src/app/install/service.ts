@@ -15,7 +15,7 @@ export const registerOrganisation = async ({
   apiKey,
   region,
 }: SetupOrganisationParams) => {
-  await getUsers({ apiKey, after: null, role: 'admin' });
+  await getUsers({ apiKey, after: 0, role: 'admin' });
   const encryptedApiKey = await encrypt(apiKey);
 
   await db
@@ -40,7 +40,7 @@ export const registerOrganisation = async ({
         isFirstSync: true,
         syncStartedAt: Date.now(),
         role: 'admin',
-        page: null,
+        page: 0,
       },
     },
     // this will cancel scheduled token refresh if it exists

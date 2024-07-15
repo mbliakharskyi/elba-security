@@ -7,7 +7,7 @@ import { organisationsTable } from '@/database/schema';
 import * as crypto from '@/common/crypto';
 import { synchronizeUsers } from './sync-users';
 
-const nextPage = '1';
+const nextPage = 1;
 const role = 'admin';
 const organisation = {
   id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
@@ -120,7 +120,7 @@ describe('sync-users', () => {
       organisationId: organisation.id,
       isFirstSync: false,
       syncStartedAt,
-      page: null,
+      page: 0,
       role: 'member',
     });
 

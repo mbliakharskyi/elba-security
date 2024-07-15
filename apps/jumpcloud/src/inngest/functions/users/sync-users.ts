@@ -116,7 +116,7 @@ export const synchronizeUsers = inngest.createFunction(
         name: 'jumpcloud/users.sync.requested',
         data: {
           ...event.data,
-          page: nextPage || null,
+          page: nextPage || 0,
           role: nextPage ? role : 'member',
         },
       });

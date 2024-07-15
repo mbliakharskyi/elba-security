@@ -6,12 +6,15 @@ import { env } from '@/common/env';
 import { type JumpcloudUser, getUsers, deleteUser } from './users';
 import { JumpcloudError } from './commons/error';
 
-const nextCursor = 'test-next-cursor';
+const nextCursor = 1;
 const validApiKey = 'test-api-key';
 const memberId = 'test-member-id';
 const adminId = 'test-admin-id';
+const totalCount = 150;
+const perPage = 20;
+const endPage = 150;
 
-const validUsers: JumpcloudUser[] = Array.from({ length: 5 }, (_, i) => ({
+const validNextPageUsers: JumpcloudUser[] = Array.from({ length: 20 }, (_, i) => ({
   _id: '0442f541-45d2-487a-9e4b-de03ce4c559e',
   firstname: `firstname-${i}`,
   lastname: `lastname-${i}`,
@@ -19,7 +22,14 @@ const validUsers: JumpcloudUser[] = Array.from({ length: 5 }, (_, i) => ({
   enableMultiFactor: false,
   email: `user-${i}@foo.bar`,
 }));
-
+const validEndPageUsers: JumpcloudUser[] = Array.from({ length: 2 }, (_, i) => ({
+  _id: '0442f541-45d2-487a-9e4b-de03ce4c559e',
+  firstname: `firstname-${i}`,
+  lastname: `lastname-${i}`,
+  suspended: false,
+  enableMultiFactor: false,
+  email: `user-${i}@foo.bar`,
+}));
 const invalidUsers = [];
 
 describe('getJumpcloudUsers', () => {
@@ -29,19 +39,22 @@ describe('getJumpcloudUsers', () => {
         return new Response(undefined, { status: 401 });
       }
 
-      const url = new URL(request.url);
-      const after = url.searchParams.get('skip');
-      let returnData;
-      if (after) {
-        returnData = {
-          results: validUsers,
-          skip: nextCursor,
-        };
-      } else {
-        returnData = {
-          results: validUsers,
-        };
-      }
+      const urlObj = new URL(request.url);
+
+      const perPageParam = parseInt(urlObj.searchParams.get('limit') || '0');
+      const after = parseInt(urlObj.searchParams.get('skip') || '0');
+
+      const returnData =
+        totalCount > perPageParam + after
+          ? {
+              results: validNextPageUsers,
+              totalCount,
+            }
+          : {
+              results: validEndPageUsers,
+              totalCount,
+            };
+
       return Response.json(returnData);
     };
     server.use(http.get(`${env.JUMPCLOUD_API_BASE_URL}users`, resolver));
@@ -52,26 +65,26 @@ describe('getJumpcloudUsers', () => {
     await expect(
       getUsers({ apiKey: validApiKey, after: nextCursor, role: 'admin' })
     ).resolves.toStrictEqual({
-      validUsers,
+      validUsers: validNextPageUsers,
       invalidUsers,
-      nextPage: nextCursor,
+      nextPage: perPage + nextCursor,
     });
   });
 
   test('should return users and no nextPage when the apiKey is valid and their is no other page', async () => {
     await expect(
-      getUsers({ apiKey: validApiKey, after: null, role: 'member' })
+      getUsers({ apiKey: validApiKey, after: endPage, role: 'member' })
     ).resolves.toStrictEqual({
-      validUsers,
+      validUsers: validEndPageUsers,
       invalidUsers,
       nextPage: null,
     });
   });
 
   test('should throws when the token is invalid', async () => {
-    await expect(
-      getUsers({ apiKey: 'foo-id', after: nextCursor, role: 'admin' })
-    ).rejects.toBeInstanceOf(JumpcloudError);
+    await expect(getUsers({ apiKey: 'foo-id', after: 0, role: 'admin' })).rejects.toBeInstanceOf(
+      JumpcloudError
+    );
   });
 });
 
