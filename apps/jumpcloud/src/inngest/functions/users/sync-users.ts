@@ -27,6 +27,12 @@ const formatElbaUserAuthMethod = (user: JumpcloudUser) => {
   return 'password';
 };
 
+const formatElbaUserUrl = (user: JumpcloudUser, role: 'admin' | 'member') => {
+  return role === 'admin'
+    ? `https://console.jumpcloud.com/#/settings/administrators/details/${user._id}`
+    : `https://console.jumpcloud.com/#/users/${user._id}/details`;
+};
+
 const formatElbaUser = (user: JumpcloudUser, role: 'admin' | 'member'): User => ({
   id: user._id,
   displayName: formatElbaUserDisplayName(user),
@@ -34,6 +40,7 @@ const formatElbaUser = (user: JumpcloudUser, role: 'admin' | 'member'): User => 
   additionalEmails: user.alternateEmail ? [user.alternateEmail] : [],
   role,
   authMethod: formatElbaUserAuthMethod(user),
+  url: formatElbaUserUrl(user, role),
 });
 
 export const synchronizeUsers = inngest.createFunction(

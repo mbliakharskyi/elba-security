@@ -90,11 +90,14 @@ const deleteUserByRole = async ({ userId, apiKey, role }: DeleteUserByRoleParams
   );
 
   const response = await fetch(url.toString(), {
-    method: 'DELETE',
+    method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       'x-api-key': apiKey,
     },
+    body: JSON.stringify({
+      suspended: true,
+    }),
   });
 
   if (!response.ok && response.status !== 404) {
