@@ -28,9 +28,7 @@ describe('deleteSourceUser', () => {
   });
 
   test('should delete user', async () => {
-    vi.spyOn(crypto, 'decrypt')
-      .mockResolvedValueOnce('test-api-key')
-      .mockResolvedValueOnce('test-api-secret');
+    vi.spyOn(crypto, 'decrypt').mockResolvedValueOnce('test-api-key');
     vi.spyOn(usersConnector, 'deleteUser').mockResolvedValueOnce();
     await db.insert(organisationsTable).values(organisation);
 

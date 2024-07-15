@@ -30,9 +30,7 @@ const setup = createInngestFunctionMock(synchronizeUsers, 'jumpcloud/users.sync.
 
 describe('sync-users', () => {
   beforeEach(() => {
-    vi.spyOn(crypto, 'decrypt')
-      .mockResolvedValueOnce('test-api-key')
-      .mockResolvedValueOnce('test-api-secret');
+    vi.spyOn(crypto, 'decrypt').mockResolvedValueOnce('test-api-key');
     vi.clearAllMocks;
   });
 
@@ -41,7 +39,7 @@ describe('sync-users', () => {
       organisationId: organisation.id,
       isFirstSync: false,
       syncStartedAt: Date.now(),
-      page: null,
+      page: 0,
       role,
     });
 
