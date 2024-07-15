@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { env } from '@/common/env';
-import { JumpcloudError } from './commons/error';
+import { JumpcloudError } from '../commons/error';
 
 const jumpcloudUserSchema = z.object({
   _id: z.string(),

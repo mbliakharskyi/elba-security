@@ -3,8 +3,9 @@ import { http } from 'msw';
 import { expect, test, describe, beforeEach } from 'vitest';
 import { server } from '@elba-security/test-utils';
 import { env } from '@/common/env';
-import { type JumpcloudUser, getUsers, deleteUser } from './users';
-import { JumpcloudError } from './commons/error';
+import { JumpcloudError } from '../commons/error';
+import type { JumpcloudUser } from './users';
+import { getUsers, deleteUser } from './users';
 
 const nextCursor = 1;
 const validApiKey = 'test-api-key';

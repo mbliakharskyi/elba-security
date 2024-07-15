@@ -1,7 +1,7 @@
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { inngest } from '@/inngest/client';
-import { getUsers } from '@/connectors/users';
+import { getUsers } from '@/connectors/jumpcloud/users';
 import { encrypt } from '@/common/crypto';
 
 type SetupOrganisationParams = {
