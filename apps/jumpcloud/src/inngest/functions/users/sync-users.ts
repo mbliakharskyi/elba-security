@@ -1,14 +1,13 @@
 import type { User } from '@elba-security/sdk';
-import { Elba } from '@elba-security/sdk';
 import { eq } from 'drizzle-orm';
 import { NonRetriableError } from 'inngest';
 import { logger } from '@elba-security/logger';
 import { getUsers } from '@/connectors/users';
 import { db } from '@/database/client';
-import { Organisation } from '@/database/schema';
-import { env } from '@/env';
+import { organisationsTable } from '@/database/schema';
 import { inngest } from '@/inngest/client';
 import { type JumpcloudUser } from '@/connectors/users';
+import { createElbaClient } from '@/connectors/elba/client';
 import { decrypt } from '@/common/crypto';
 
 const formatElbaUserDisplayName = (user: JumpcloudUser) => {
@@ -28,6 +27,12 @@ const formatElbaUserAuthMethod = (user: JumpcloudUser) => {
   return 'password';
 };
 
+const formatElbaUserUrl = (user: JumpcloudUser, role: 'admin' | 'member') => {
+  return role === 'admin'
+    ? `https://console.jumpcloud.com/#/settings/administrators/details/${user._id}`
+    : `https://console.jumpcloud.com/#/users/${user._id}/details`;
+};
+
 const formatElbaUser = (user: JumpcloudUser, role: 'admin' | 'member'): User => ({
   id: user._id,
   displayName: formatElbaUserDisplayName(user),
@@ -35,18 +40,29 @@ const formatElbaUser = (user: JumpcloudUser, role: 'admin' | 'member'): User => 
   additionalEmails: user.alternateEmail ? [user.alternateEmail] : [],
   role,
   authMethod: formatElbaUserAuthMethod(user),
+  url: formatElbaUserUrl(user, role),
 });
 
 export const synchronizeUsers = inngest.createFunction(
   {
-    id: 'synchronize-users',
+    id: 'jumpcloud-synchronize-users',
     priority: {
-      run: 'event.data.isFirstSync ? 600 : -600',
+      run: 'event.data.isFirstSync ? 600 : 0',
     },
     concurrency: {
       key: 'event.data.organisationId',
       limit: 1,
     },
+    cancelOn: [
+      {
+        event: 'jumpcloud/app.uninstalled',
+        match: 'data.organisationId',
+      },
+      {
+        event: 'jumpcloud/app.installed',
+        match: 'data.organisationId',
+      },
+    ],
     retries: 3,
   },
   { event: 'jumpcloud/users.sync.requested' },
@@ -55,27 +71,23 @@ export const synchronizeUsers = inngest.createFunction(
 
     const [organisation] = await db
       .select({
-        apiKey: Organisation.apiKey,
-        region: Organisation.region,
+        apiKey: organisationsTable.apiKey,
+        region: organisationsTable.region,
       })
-      .from(Organisation)
-      .where(eq(Organisation.id, organisationId));
+      .from(organisationsTable)
+      .where(eq(organisationsTable.id, organisationId));
+
     if (!organisation) {
       throw new NonRetriableError(`Could not retrieve organisation with id=${organisationId}`);
     }
 
-    const elba = new Elba({
-      organisationId,
-      apiKey: env.ELBA_API_KEY,
-      baseUrl: env.ELBA_API_BASE_URL,
-      region: organisation.region,
-    });
+    const decryptedApiKey = await decrypt(organisation.apiKey);
 
-    const apiKey = await decrypt(organisation.apiKey);
+    const elba = createElbaClient({ organisationId, region: organisation.region });
 
     const nextPage = await step.run('list-users', async () => {
       const result = await getUsers({
-        apiKey,
+        apiKey: decryptedApiKey,
         after: page,
         role,
       });
@@ -90,7 +102,10 @@ export const synchronizeUsers = inngest.createFunction(
           invalidUsers: result.invalidUsers,
         });
       }
-      await elba.users.update({ users });
+
+      if (users.length > 0) {
+        await elba.users.update({ users });
+      }
 
       return result.nextPage;
     });
@@ -101,7 +116,7 @@ export const synchronizeUsers = inngest.createFunction(
         name: 'jumpcloud/users.sync.requested',
         data: {
           ...event.data,
-          page: nextPage || null,
+          page: nextPage || 0,
           role: nextPage ? role : 'member',
         },
       });

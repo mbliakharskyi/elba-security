@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { env } from '@/env';
+import { env } from '@/common/env';
 import { JumpcloudError } from './commons/error';
 
 const jumpcloudUserSchema = z.object({
@@ -22,16 +22,22 @@ export type JumpcloudUser = z.infer<typeof jumpcloudUserSchema>;
 
 const jumpcloudResponseSchema = z.object({
   results: z.array(z.unknown()),
-  skip: z.string().nullable().optional(),
+  totalCount: z.number(),
 });
 
 export type GetUsersParams = {
   apiKey: string;
-  after: string | null;
+  after: number;
   role: 'admin' | 'member';
 };
 
-const perPage = env.USERS_SYNC_BATCH_SIZE;
+export type DeleteUserByRoleParams = {
+  userId: string;
+  apiKey: string;
+  role: 'admin' | 'member';
+};
+
+const perPage = env.JUMPCLOUD_USERS_SYNC_BATCH_SIZE;
 
 export const getUsers = async ({ apiKey, after, role }: GetUsersParams) => {
   const url = new URL(
@@ -39,26 +45,22 @@ export const getUsers = async ({ apiKey, after, role }: GetUsersParams) => {
   );
 
   url.searchParams.append('limit', String(perPage));
-
-  // Ensure 'after' is defined before appending 'skip'
-  if (after) {
-    url.searchParams.append('skip', String(after));
-  }
+  url.searchParams.append('skip', String(after));
 
   const response = await fetch(url.toString(), {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': `${apiKey}`,
+      'x-api-key': apiKey,
     },
   });
 
   if (!response.ok) {
-    throw new JumpcloudError('Could not retrieve users', { response });
+    throw new JumpcloudError('API request failed', { response });
   }
 
   const resData: unknown = await response.json();
-  const { results, skip } = jumpcloudResponseSchema.parse(resData);
+  const { results, totalCount } = jumpcloudResponseSchema.parse(resData);
 
   const validUsers: JumpcloudUser[] = [];
   const invalidUsers: unknown[] = [];
@@ -75,14 +77,8 @@ export const getUsers = async ({ apiKey, after, role }: GetUsersParams) => {
   return {
     validUsers,
     invalidUsers,
-    nextPage: skip ? skip : null,
+    nextPage: totalCount > after + perPage ? after + perPage : null,
   };
-};
-
-export type DeleteUserByRoleParams = {
-  userId: string;
-  apiKey: string;
-  role: 'admin' | 'member';
 };
 
 const deleteUserByRole = async ({ userId, apiKey, role }: DeleteUserByRoleParams) => {
@@ -91,15 +87,18 @@ const deleteUserByRole = async ({ userId, apiKey, role }: DeleteUserByRoleParams
   );
 
   const response = await fetch(url.toString(), {
-    method: 'DELETE',
+    method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': `${apiKey}`,
+      'x-api-key': apiKey,
     },
+    body: JSON.stringify({
+      suspended: true,
+    }),
   });
 
   if (!response.ok && response.status !== 404) {
-    throw new JumpcloudError('Could not delete user', { response });
+    throw new JumpcloudError(`Could not delete user with Id: ${userId}`, { response });
   }
 };
 

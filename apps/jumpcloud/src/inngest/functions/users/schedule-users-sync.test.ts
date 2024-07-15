@@ -1,20 +1,17 @@
 import { expect, test, describe, beforeAll, vi, afterAll } from 'vitest';
 import { createInngestFunctionMock } from '@elba-security/test-utils';
 import { db } from '@/database/client';
-import { Organisation } from '@/database/schema';
-import { encrypt } from '@/common/crypto';
-import { scheduleUsersSynchronize } from './schedule-users-synchronize';
+import { organisationsTable } from '@/database/schema';
+import { scheduleUsersSync } from './schedule-users-sync';
 
 const now = Date.now();
-const role = 'admin';
-const setup = createInngestFunctionMock(scheduleUsersSynchronize);
 
-const encodedApiKey = await encrypt('test-api-key');
+const setup = createInngestFunctionMock(scheduleUsersSync);
 
-export const organisations = Array.from({ length: 5 }, (_, i) => ({
-  id: `b91f113b-bcf9-4a28-98c7-5b13fb671c1${i}`,
+export const organisations = Array.from({ length: 2 }, (_, i) => ({
+  id: `00000000-0000-0000-0000-00000000000${i}`,
   region: 'us',
-  apiKey: encodedApiKey,
+  apiKey: `test-api-key${i}`,
 }));
 
 describe('schedule-users-syncs', () => {
@@ -33,11 +30,13 @@ describe('schedule-users-syncs', () => {
   });
 
   test('should schedule jobs when there are organisations', async () => {
-    await db.insert(Organisation).values(organisations);
+    await db.insert(organisationsTable).values(organisations);
     const [result, { step }] = setup();
 
     await expect(result).resolves.toStrictEqual({
-      organisations: organisations.map(({ ...organisation }) => organisation),
+      organisations: organisations.map(({ id }) => ({
+        id,
+      })),
     });
     expect(step.sendEvent).toBeCalledTimes(1);
     expect(step.sendEvent).toBeCalledWith(
@@ -48,8 +47,8 @@ describe('schedule-users-syncs', () => {
           organisationId: id,
           syncStartedAt: now,
           isFirstSync: false,
-          page: null,
-          role,
+          page: 0,
+          role: 'admin',
         },
       }))
     );

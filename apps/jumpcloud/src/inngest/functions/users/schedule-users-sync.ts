@@ -1,19 +1,19 @@
-import { env } from '@/env';
+import { env } from '@/common/env';
 import { db } from '@/database/client';
-import { Organisation } from '@/database/schema';
+import { organisationsTable } from '@/database/schema';
 import { inngest } from '../../client';
 
-export const scheduleUsersSynchronize = inngest.createFunction(
-  { id: 'schedule-users-syncs' },
-  { cron: env.USERS_SYNC_CRON },
+export const scheduleUsersSync = inngest.createFunction(
+  {
+    id: 'jumpcloud-schedule-users-syncs',
+  },
+  { cron: env.JUMPCLOUD_USERS_SYNC_CRON },
   async ({ step }) => {
     const organisations = await db
       .select({
-        id: Organisation.id,
-        region: Organisation.region,
-        apiKey: Organisation.apiKey,
+        id: organisationsTable.id,
       })
-      .from(Organisation);
+      .from(organisationsTable);
 
     if (organisations.length > 0) {
       await step.sendEvent(
@@ -24,7 +24,7 @@ export const scheduleUsersSynchronize = inngest.createFunction(
             isFirstSync: false,
             organisationId: id,
             syncStartedAt: Date.now(),
-            page: null,
+            page: 0,
             role: 'admin',
           },
         }))

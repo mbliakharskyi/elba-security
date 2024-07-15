@@ -13,17 +13,20 @@ export const rateLimitMiddleware = new InngestMiddleware({
               ...context
             } = ctx;
 
-            // Check if the error is a rate limit error (HTTP Status 429)
             if (error instanceof JumpcloudError && error.response?.status === 429) {
-              const retryAfter = 60; // Default retry after 60 seconds
+              const retryAfter = error.response.headers.get('retry-after') || 60;
 
               return {
                 ...context,
                 result: {
                   ...result,
-                  error: new RetryAfterError(`Rate limit exceeded for '${fn.name}'`, retryAfter, {
-                    cause: error,
-                  }),
+                  error: new RetryAfterError(
+                    `Rate limit exceeded for '${fn.name}'. Retry after ${retryAfter} seconds.`,
+                    `${retryAfter}s`,
+                    {
+                      cause: error,
+                    }
+                  ),
                 },
               };
             }

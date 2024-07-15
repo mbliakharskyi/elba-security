@@ -1,12 +1,10 @@
-type JumpcloudErrorOptions = { response?: Response; request?: Request };
+type JumpcloudErrorOptions = { response?: Response };
 
 export class JumpcloudError extends Error {
   response?: Response;
-  request?: Request;
 
-  constructor(message: string, { response, request }: JumpcloudErrorOptions = {}) {
+  constructor(message: string, { response }: JumpcloudErrorOptions = {}) {
     super(message);
     this.response = response;
-    this.request = request;
   }
 }
