@@ -28,17 +28,20 @@ export default function InstallPage() {
       <InstructionsSteps>
         <InstructionsStep index={1}>
           <h3>Create an API client in Apollo to link to Elba</h3>
-          <p>1. Log in to JumpCloud as an Administrator</p>
           <p>
-            2. In the Admin Portal, click your account initials displayed in the top-right and
-            select <b>My API Key</b> from the drop down menu.
+            1. Launch Apollo and click <b>Settings</b> {'>'} <b>Integrations</b>.
           </p>
           <p>
-            3. If you haven’t generated an API key yet, you will have the option to{' '}
-            <b>Generate New API Key</b> . Please note that only Admins with Billing role can enable
-            API access.
+            2. Find the <b>API</b> option and click <b>Connect</b>.
           </p>
-          <p>4. Copy the API Key and paste them below. (You will not see them again)</p>
+          <p>
+            3. Click <b>API Keys</b> to view or create new API keys. Then, click{' '}
+            <b>Create New Key</b> to generate a new API Key.
+          </p>
+          <p>4. Name your API Key and add a description.</p>
+          <p>
+            5. Click <b>Create API Key</b>.
+          </p>
         </InstructionsStep>
         <InstructionsStep index={2}>
           <h3>Connect Apollo</h3>
