@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { RetryAfterError } from 'inngest';
-import { JumpcloudError } from '@/connectors/commons/error';
+import { JumpcloudError } from '@/connectors/common/error';
 import { rateLimitMiddleware } from './rate-limit-middleware';
 
 describe('rate-limit middleware', () => {

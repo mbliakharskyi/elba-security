@@ -2,7 +2,7 @@ import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { NonRetriableError } from 'inngest';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
-import { JumpcloudError } from '@/connectors/commons/error';
+import { JumpcloudError } from '@/connectors/common/error';
 import { unauthorizedMiddleware } from './unauthorized-middleware';
 
 const organisation = {

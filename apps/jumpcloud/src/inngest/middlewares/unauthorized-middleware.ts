@@ -1,6 +1,6 @@
 import { InngestMiddleware, NonRetriableError } from 'inngest';
 import { z } from 'zod';
-import { JumpcloudError } from '@/connectors/commons/error';
+import { JumpcloudError } from '@/connectors/common/error';
 
 const requiredDataSchema = z.object({
   organisationId: z.string().uuid(),

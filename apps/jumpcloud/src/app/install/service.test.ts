@@ -5,7 +5,7 @@ import { organisationsTable } from '@/database/schema';
 import { inngest } from '@/inngest/client';
 import * as userConnector from '@/connectors/jumpcloud/users';
 import type { JumpcloudUser } from '@/connectors/jumpcloud/users';
-import { JumpcloudError } from '@/connectors/commons/error';
+import { JumpcloudError } from '@/connectors/common/error';
 import { decrypt } from '@/common/crypto';
 import { registerOrganisation } from './service';
 
