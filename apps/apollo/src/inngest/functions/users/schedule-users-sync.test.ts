@@ -47,8 +47,7 @@ describe('schedule-users-syncs', () => {
           organisationId: id,
           syncStartedAt: now,
           isFirstSync: false,
-          page: 0,
-          role: 'admin',
+          page: 1,
         },
       }))
     );

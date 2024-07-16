@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { env } from '@/common/env';
-import { ApolloError } from '../commons/error';
+import { ApolloError } from '../common/error';
 
 const apolloUserSchema = z.object({
   id: z.string(),

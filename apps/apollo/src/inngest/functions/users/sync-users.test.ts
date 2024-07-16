@@ -7,8 +7,7 @@ import { organisationsTable } from '@/database/schema';
 import * as crypto from '@/common/crypto';
 import { synchronizeUsers } from './sync-users';
 
-const nextPage = 1;
-const role = 'admin';
+const nextPage = 2;
 const organisation = {
   id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
   apiKey: 'test-api-key',
@@ -37,7 +36,7 @@ describe('sync-users', () => {
       organisationId: organisation.id,
       isFirstSync: false,
       syncStartedAt: Date.now(),
-      page: 0,
+      page: 1,
     });
 
     await expect(result).rejects.toBeInstanceOf(NonRetriableError);
@@ -68,17 +67,17 @@ describe('sync-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'firstname-0 lastname-0',
+          displayName: 'name-0',
           email: 'user-0@foo.bar',
           id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
-          url: 'https://console.apollo.com/#/settings/administrators/details/45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
+          url: 'https://app.apollo.io/#/users/45a76301-f1dd-4a77-b12f-9d7d3fca3c90/edit',
         },
         {
           additionalEmails: [],
-          displayName: 'firstname-1 lastname-1',
+          displayName: 'name-1',
           email: 'user-1@foo.bar',
           id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c91',
-          url: 'https://console.apollo.com/#/settings/administrators/details/45a76301-f1dd-4a77-b12f-9d7d3fca3c91',
+          url: 'https://app.apollo.io/#/users/45a76301-f1dd-4a77-b12f-9d7d3fca3c91/edit',
         },
       ],
     });
@@ -91,7 +90,6 @@ describe('sync-users', () => {
         isFirstSync: false,
         syncStartedAt,
         page: nextPage,
-        role,
       },
     });
   });
@@ -110,7 +108,7 @@ describe('sync-users', () => {
       organisationId: organisation.id,
       isFirstSync: false,
       syncStartedAt,
-      page: 0,
+      page: 1,
     });
 
     await expect(result).resolves.toStrictEqual({ status: 'completed' });
@@ -121,17 +119,17 @@ describe('sync-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'firstname-0 lastname-0',
+          displayName: 'name-0',
           email: 'user-0@foo.bar',
           id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
-          url: 'https://console.apollo.com/#/users/45a76301-f1dd-4a77-b12f-9d7d3fca3c90/details',
+          url: 'https://app.apollo.io/#/users/45a76301-f1dd-4a77-b12f-9d7d3fca3c90/edit',
         },
         {
           additionalEmails: [],
-          displayName: 'firstname-1 lastname-1',
+          displayName: 'name-1',
           email: 'user-1@foo.bar',
           id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c91',
-          url: 'https://console.apollo.com/#/users/45a76301-f1dd-4a77-b12f-9d7d3fca3c91/details',
+          url: 'https://app.apollo.io/#/users/45a76301-f1dd-4a77-b12f-9d7d3fca3c91/edit',
         },
       ],
     });

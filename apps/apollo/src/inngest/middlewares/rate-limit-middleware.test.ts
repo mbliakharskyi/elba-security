@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { RetryAfterError } from 'inngest';
-import { ApolloError } from '@/connectors/commons/error';
+import { ApolloError } from '@/connectors/common/error';
 import { rateLimitMiddleware } from './rate-limit-middleware';
 
 describe('rate-limit middleware', () => {
@@ -16,7 +16,7 @@ describe('rate-limit middleware', () => {
     ).toBeUndefined();
   });
 
-  test('should not transform the output when the error is not about confluence rate limit', () => {
+  test('should not transform the output when the error is not about apollo rate limit', () => {
     expect(
       rateLimitMiddleware
         .init()
@@ -30,7 +30,7 @@ describe('rate-limit middleware', () => {
     ).toBeUndefined();
   });
 
-  test('should transform the output error to RetryAfterError when the error is about confluence rate limit', () => {
+  test('should transform the output error to RetryAfterError when the error is about  rate limit', () => {
     const rateLimitError = new ApolloError('foo bar', {
       // @ts-expect-error this is a mock
       response: {
@@ -56,9 +56,7 @@ describe('rate-limit middleware', () => {
       .onFunctionRun({ fn: { name: 'foo' } })
       .transformOutput(context);
     expect(result?.result.error).toBeInstanceOf(RetryAfterError);
-    const expectedRetryAfter = new Date();
-    expectedRetryAfter.setMinutes(expectedRetryAfter.getMinutes() + 1);
-    expect(result?.result.error.retryAfter).toEqual(expectedRetryAfter.toISOString());
+    expect(result?.result.error.retryAfter).toStrictEqual('60');
     expect(result).toMatchObject({
       foo: 'bar',
       baz: {

@@ -5,7 +5,7 @@ import { organisationsTable } from '@/database/schema';
 import { inngest } from '@/inngest/client';
 import * as userConnector from '@/connectors/apollo/users';
 import type { ApolloUser } from '@/connectors/apollo/users';
-import { ApolloError } from '@/connectors/commons/error';
+import { ApolloError } from '@/connectors/common/error';
 import { decrypt } from '@/common/crypto';
 import { registerOrganisation } from './service';
 
@@ -56,7 +56,7 @@ describe('registerOrganisation', () => {
 
     // check if getUsers was called correctly
     expect(getUsers).toBeCalledTimes(1);
-    expect(getUsers).toBeCalledWith({ apiKey, after: 0 });
+    expect(getUsers).toBeCalledWith({ apiKey, after: 1 });
 
     // verify the organisation token is set in the database
     const [storedOrganisation] = await db
@@ -77,7 +77,7 @@ describe('registerOrganisation', () => {
           isFirstSync: true,
           organisationId: organisation.id,
           syncStartedAt: now.getTime(),
-          page: 0,
+          page: 1,
         },
       },
       {
@@ -109,7 +109,7 @@ describe('registerOrganisation', () => {
     ).resolves.toBeUndefined();
 
     expect(getUsers).toBeCalledTimes(1);
-    expect(getUsers).toBeCalledWith({ apiKey, after: 0 });
+    expect(getUsers).toBeCalledWith({ apiKey, after: 1 });
 
     // check if the apiKey in the database is updated
     const [storedOrganisation] = await db
@@ -131,7 +131,7 @@ describe('registerOrganisation', () => {
           isFirstSync: true,
           organisationId: organisation.id,
           syncStartedAt: now.getTime(),
-          page: 0,
+          page: 1,
         },
       },
       {
