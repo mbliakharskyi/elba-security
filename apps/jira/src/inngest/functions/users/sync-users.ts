@@ -9,11 +9,12 @@ import { inngest } from '@/inngest/client';
 import { decrypt } from '@/common/crypto';
 import { createElbaClient } from '@/connectors/elba/client';
 
-const formatElbaUser = (user: JiraUser): User => ({
+const formatElbaUser = ({ user, domain }: { user: JiraUser; domain: string }): User => ({
   id: user.accountId,
   displayName: user.displayName,
   email: user.emailAddress,
   additionalEmails: [],
+  url: `https://${domain}.atlassian.net/jira/people/${user.accountId}`,
 });
 
 export const syncUsers = inngest.createFunction(
@@ -68,7 +69,7 @@ export const syncUsers = inngest.createFunction(
     const nextPage = await step.run('list-users', async () => {
       const result = await getUsers({ apiToken: decryptedToken, domain, email, page });
 
-      const users = result.validUsers.map(formatElbaUser);
+      const users = result.validUsers.map((user) => formatElbaUser({ user, domain }));
 
       if (result.invalidUsers.length > 0) {
         logger.warn('Retrieved users contains invalid data', {
