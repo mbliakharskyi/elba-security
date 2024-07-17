@@ -123,8 +123,8 @@ export const getOwnerId = async ({ apiToken, domain, email }: GetOwnerIdParams) 
 
   const result = ownerIdResponseSchema.safeParse(resData);
   if (!result.success) {
-    logger.error('Invalid Zendesk owner id response', { resData });
-    throw new JiraError('Invalid Zendesk owner id response');
+    logger.error('Invalid Jira owner id response', { resData });
+    throw new JiraError('Invalid Jira owner id response');
   }
 
   return {
