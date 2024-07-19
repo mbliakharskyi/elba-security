@@ -34,6 +34,7 @@ describe('registerOrganisation', () => {
   });
 
   test('should setup organisation when the organisation id is valid and the organisation is not registered', async () => {
+    // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
     // mocked the getOwnerId function
     const getOwnerId = vi.spyOn(userConnector, 'getOwnerId').mockResolvedValue(getOwnerIdData);
@@ -83,6 +84,7 @@ describe('registerOrganisation', () => {
   });
 
   test('should setup organisation when the organisation id is valid and the organisation is already registered', async () => {
+    // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
     // mocked the getOwnerId function
     const getOwnerId = vi.spyOn(userConnector, 'getOwnerId').mockResolvedValue(getOwnerIdData);
@@ -136,6 +138,7 @@ describe('registerOrganisation', () => {
   });
 
   test('should not setup the organisation when the organisation id is invalid', async () => {
+    // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
     // mocked the getOwnerId function
     vi.spyOn(userConnector, 'getOwnerId').mockResolvedValue(getOwnerIdData);
