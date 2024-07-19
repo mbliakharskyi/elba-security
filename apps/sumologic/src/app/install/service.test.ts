@@ -7,10 +7,11 @@ import * as userConnector from '@/connectors/sumologic/users';
 import * as crypto from '@/common/crypto';
 import { registerOrganisation } from './service';
 
-const accessId = 'test-accessId';
-const accessKey = 'test-accessKey';
-const sourceRegion = 'EU';
+const accessId = 'test-access-id';
+const accessKey = 'test-access-key';
+const sourceRegion = 'eu';
 const region = 'us';
+const ownerId = 'test-owner-id';
 const now = new Date();
 
 const organisation = {
@@ -19,16 +20,10 @@ const organisation = {
   accessKey,
   sourceRegion,
   region,
+  ownerId,
 };
 
-const getUsersData = [
-  {
-    accountId: '1',
-    displayName: 'admin',
-    active: true,
-    emailAddress: 'john@example.com',
-  },
-];
+const getOwnerIdData = { ownerId };
 
 describe('registerOrganisation', () => {
   beforeAll(() => {
@@ -41,10 +36,10 @@ describe('registerOrganisation', () => {
   test('should setup organisation when the organisation id is valid and the organisation is not registered', async () => {
     // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
-    // mocked the getUsers function
-    // @ts-expect-error -- this is a mock
-    const getUsers = vi.spyOn(userConnector, 'getUsers').mockResolvedValue(getUsersData);
+    // mocked the getOwnerId function
+    const getOwnerId = vi.spyOn(userConnector, 'getOwnerId').mockResolvedValue(getOwnerIdData);
     vi.spyOn(crypto, 'encrypt').mockResolvedValue(accessId);
+
     await expect(
       registerOrganisation({
         organisationId: organisation.id,
@@ -54,8 +49,8 @@ describe('registerOrganisation', () => {
         region,
       })
     ).resolves.toBeUndefined();
-    expect(getUsers).toBeCalledTimes(1);
-    expect(getUsers).toBeCalledWith({ accessId, accessKey, sourceRegion, page: 0 });
+    expect(getOwnerId).toBeCalledTimes(1);
+    expect(getOwnerId).toBeCalledWith({ accessId, accessKey, sourceRegion });
 
     await expect(
       db.select().from(organisationsTable).where(eq(organisationsTable.id, organisation.id))
@@ -65,6 +60,7 @@ describe('registerOrganisation', () => {
         accessKey,
         sourceRegion,
         region,
+        ownerId,
       },
     ]);
     expect(send).toBeCalledTimes(1);
@@ -75,7 +71,7 @@ describe('registerOrganisation', () => {
           isFirstSync: true,
           organisationId: organisation.id,
           syncStartedAt: now.getTime(),
-          page: 0,
+          page: null,
         },
       },
       {
@@ -91,9 +87,10 @@ describe('registerOrganisation', () => {
   test('should setup organisation when the organisation id is valid and the organisation is already registered', async () => {
     // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
-    // mocked the getUsers function
-    // @ts-expect-error -- this is a mock
-    const getUsers = vi.spyOn(userConnector, 'getUsers').mockResolvedValue(getUsersData);
+    // mocked the getOwnerId function
+    const getOwnerId = vi.spyOn(userConnector, 'getOwnerId').mockResolvedValue(getOwnerIdData);
+    vi.spyOn(crypto, 'encrypt').mockResolvedValue(accessId);
+
     // pre-insert an organisation to simulate an existing entry
     await db.insert(organisationsTable).values(organisation);
     await expect(
@@ -106,8 +103,8 @@ describe('registerOrganisation', () => {
       })
     ).resolves.toBeUndefined();
 
-    expect(getUsers).toBeCalledTimes(1);
-    expect(getUsers).toBeCalledWith({ accessId, accessKey, sourceRegion, page: 0 });
+    expect(getOwnerId).toBeCalledTimes(1);
+    expect(getOwnerId).toBeCalledWith({ accessId, accessKey, sourceRegion });
 
     // check if the accessId in the database is updated
     await expect(
@@ -131,7 +128,7 @@ describe('registerOrganisation', () => {
           isFirstSync: true,
           organisationId: organisation.id,
           syncStartedAt: now.getTime(),
-          page: 0,
+          page: null,
         },
       },
       {
@@ -146,9 +143,8 @@ describe('registerOrganisation', () => {
   test('should not setup the organisation when the organisation id is invalid', async () => {
     // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
-    // mocked the getUsers function
-    // @ts-expect-error -- this is a mock
-    vi.spyOn(userConnector, 'getUsers').mockResolvedValue(getUsersData);
+    // mocked the getOwnerId function
+    vi.spyOn(userConnector, 'getOwnerId').mockResolvedValue(getOwnerIdData);
     const wrongId = 'xfdhg-dsf';
     const error = new Error(`invalid input syntax for type uuid: "${wrongId}"`);
 

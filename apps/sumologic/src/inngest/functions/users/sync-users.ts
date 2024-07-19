@@ -86,14 +86,13 @@ export const syncUsers = inngest.createFunction(
     });
 
     const decryptedAccessId = await decrypt(organisation.accessId);
-    const decryptedAccessKey = await decrypt(organisation.accessKey);
     const ownerId = organisation.ownerId;
     const sourceRegion = organisation.sourceRegion;
 
     const nextPage = await step.run('list-users', async () => {
       const result = await getUsers({
         accessId: decryptedAccessId,
-        accessKey: decryptedAccessKey,
+        accessKey: organisation.accessKey,
         sourceRegion,
         page,
       });

@@ -11,13 +11,14 @@ import { removeOrganisation } from './remove-organisation';
 const accessId = 'test-access-token';
 const accessKey = 'test-accessKey';
 const sourceRegion = 'EU';
-
+const ownerId = 'test-owner-id';
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   accessId: await encrypt(accessId),
   region: 'us',
   accessKey,
   sourceRegion,
+  ownerId,
 };
 const setup = createInngestFunctionMock(removeOrganisation, 'sumologic/app.uninstalled');
 
@@ -38,7 +39,7 @@ describe('remove-organisation', () => {
     expect(elba).toBeCalledWith({
       organisationId: organisation.id,
       region: organisation.region,
-      accessId: env.ELBA_API_KEY,
+      apiKey: env.ELBA_API_KEY,
       baseUrl: env.ELBA_API_BASE_URL,
     });
     const elbaInstance = elba.mock.results.at(0)?.value;

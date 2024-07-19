@@ -21,7 +21,6 @@ export const registerOrganisation = async ({
   const { ownerId } = await getOwnerId({ accessId, accessKey, sourceRegion });
 
   const encodedAccessId = await encrypt(accessId);
-  const encodedAccessKey = await encrypt(accessKey);
 
   await db
     .insert(organisationsTable)
@@ -29,7 +28,7 @@ export const registerOrganisation = async ({
       id: organisationId,
       region,
       accessId: encodedAccessId,
-      accessKey: encodedAccessKey,
+      accessKey,
       sourceRegion,
       ownerId,
     })
@@ -38,7 +37,7 @@ export const registerOrganisation = async ({
       set: {
         region,
         accessId: encodedAccessId,
-        accessKey: encodedAccessKey,
+        accessKey,
         sourceRegion,
         ownerId,
       },

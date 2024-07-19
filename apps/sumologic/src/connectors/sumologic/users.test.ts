@@ -3,26 +3,24 @@ import { describe, expect, test, beforeEach } from 'vitest';
 import { server } from '@elba-security/test-utils';
 import { SumologicError } from '../common/error';
 import type { SumologicUser } from './users';
-import { getUsers, deleteUser } from './users';
+import { getUsers, deleteUser, getOwnerId, getUserDetail } from './users';
 
-const validApiKey = 'accessId-1234';
-const validAppKey = 'accessKey-1234';
-const endPage = 2;
-const nextPage = 1;
-const testId = 'test-id';
+const validAccessId = 'accessId-1234';
+const validAccessKey = 'accessKey-1234';
+const endPage = '2';
+const nextPage = '1';
+const firstName = 'test-first-name';
+const lastName = 'test-last-name';
 const accessKey = 'test-accessKey';
-const sourceRegion = 'EU1';
-const totalCount = 20;
-const totalFilteredCount = 41;
-
+const sourceRegion = 'eu';
+const userId = 'test-user-id';
 const validUsers: SumologicUser[] = Array.from({ length: 5 }, (_, i) => ({
-  id: `id-${i}`,
-  attributes: {
-    name: `name-${i}`,
-    email: `user-${i}@foo.bar`,
-    status: 'Active',
-    mfa_enabled: false,
-  },
+  id: `0442f541-45d2-487a-9e4b-de03ce4c559${i}`,
+  firstName: `firstName-${i}`,
+  lastName: `lastName-${i}`,
+  isActive: true,
+  isMfaEnabled: false,
+  email: `user-${i}@foo.bar`,
 }));
 
 const invalidUsers = [];
@@ -32,32 +30,19 @@ describe('users connector', () => {
     // mock token API endpoint using msw
     beforeEach(() => {
       server.use(
-        http.get(`https://api.sumologichq.eu/api/v2/users`, ({ request }) => {
-          if (request.headers.get('DD-API-KEY') !== validApiKey) {
+        http.get(`https://api.${sourceRegion}.sumologic.com/api/v1/users`, ({ request }) => {
+          const encodedKey = Buffer.from(`${validAccessId}:${validAccessKey}`).toString('base64');
+
+          if (request.headers.get('Authorization') !== `Basic ${encodedKey}`) {
             return new Response(undefined, { status: 401 });
           }
-          if (request.headers.get('DD-APPLICATION-KEY') !== validAppKey) {
-            return new Response(undefined, { status: 401 });
-          }
+
           const url = new URL(request.url);
-          const page = url.searchParams.get('page[number]');
+          const page = url.searchParams.get('token');
 
           const responseData = {
             data: validUsers,
-            meta:
-              page === String(endPage)
-                ? {
-                    page: {
-                      total_count: totalCount,
-                      total_filtered_count: totalFilteredCount,
-                    },
-                  }
-                : {
-                    page: {
-                      total_count: totalCount,
-                      total_filtered_count: totalFilteredCount,
-                    },
-                  },
+            next: page === endPage ? null : nextPage,
           };
           return Response.json(responseData);
         })
@@ -66,19 +51,24 @@ describe('users connector', () => {
 
     test('should return users and nextPage when the token is valid and their is another page', async () => {
       await expect(
-        getUsers({ accessId: validApiKey, accessKey: validAppKey, sourceRegion, page: nextPage })
+        getUsers({
+          accessId: validAccessId,
+          accessKey: validAccessKey,
+          sourceRegion,
+          page: null,
+        })
       ).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
-        nextPage: nextPage + 1,
+        nextPage,
       });
     });
 
     test('should return users and no nextPage when the token is valid and their is no other page', async () => {
       await expect(
         getUsers({
-          accessId: validApiKey,
-          accessKey: validAppKey,
+          accessId: validAccessId,
+          accessKey: validAccessKey,
           sourceRegion,
           page: endPage,
         })
@@ -89,15 +79,15 @@ describe('users connector', () => {
       });
     });
 
-    test('should throws when the Api Key is invalid', async () => {
+    test('should throws when the Access ID is invalid', async () => {
       await expect(
-        getUsers({ accessId: 'foo-bar', accessKey: validAppKey, sourceRegion, page: 0 })
+        getUsers({ accessId: 'foo-bar', accessKey: validAccessKey, sourceRegion, page: null })
       ).rejects.toBeInstanceOf(SumologicError);
     });
 
-    test('should throws when the App Key is invalid', async () => {
+    test('should throws when the Access ID is invalid', async () => {
       await expect(
-        getUsers({ accessId: validApiKey, accessKey: 'foo-bar', sourceRegion, page: 0 })
+        getUsers({ accessId: validAccessId, accessKey: 'foo-bar', sourceRegion, page: null })
       ).rejects.toBeInstanceOf(SumologicError);
     });
   });
@@ -105,23 +95,31 @@ describe('users connector', () => {
   describe('deleteUser', () => {
     beforeEach(() => {
       server.use(
-        http.delete<{ testId: string }>(
-          `https://api.sumologichq.eu/api/v2/users/:userId`,
+        http.put<{ userId: string }>(
+          `https://api.${sourceRegion}.sumologic.com/api/v1/users/:userId`,
           ({ request }) => {
-            const url = new URL(request.url.toString());
-            const userId = url.pathname.split('/').pop();
+            const encodedKey = Buffer.from(`${validAccessId}:${validAccessKey}`).toString('base64');
 
-            if (request.headers.get('DD-API-KEY') !== validApiKey) {
+            if (request.headers.get('Authorization') !== `Basic ${encodedKey}`) {
               return new Response(undefined, { status: 401 });
-            }
-            if (request.headers.get('DD-APPLICATION-KEY') !== validAppKey) {
-              return new Response(undefined, { status: 401 });
-            }
-            if (userId !== testId) {
-              return new Response(undefined, { status: 404 });
             }
 
             return new Response(undefined, { status: 200 });
+          }
+        )
+      );
+
+      server.use(
+        http.get<{ userId: string }>(
+          `https://api.${sourceRegion}.sumologic.com/api/v1/users/:userId`,
+          ({ request }) => {
+            const encodedKey = Buffer.from(`${validAccessId}:${validAccessKey}`).toString('base64');
+
+            if (request.headers.get('Authorization') !== `Basic ${encodedKey}`) {
+              return new Response(undefined, { status: 401 });
+            }
+
+            return Response.json({ firstName, lastName });
           }
         )
       );
@@ -129,15 +127,20 @@ describe('users connector', () => {
 
     test('should delete user successfully when token is valid', async () => {
       await expect(
-        deleteUser({ accessId: validApiKey, accessKey: validAppKey, sourceRegion, userId: testId })
+        deleteUser({
+          accessId: validAccessId,
+          accessKey: validAccessKey,
+          sourceRegion,
+          userId,
+        })
       ).resolves.not.toThrow();
     });
 
     test('should not throw when the user is not found', async () => {
       await expect(
         deleteUser({
-          accessId: validApiKey,
-          accessKey: validAppKey,
+          accessId: validAccessId,
+          accessKey: validAccessKey,
           sourceRegion,
           userId: 'invalid-user-id',
         })
@@ -146,7 +149,92 @@ describe('users connector', () => {
 
     test('should throw SumologicError when token is invalid', async () => {
       await expect(
-        deleteUser({ accessId: 'invalidApiKey', accessKey, sourceRegion, userId: testId })
+        deleteUser({ accessId: 'invalidAccessId', accessKey, sourceRegion, userId })
+      ).rejects.toBeInstanceOf(SumologicError);
+    });
+  });
+
+  describe('getOwnerId', () => {
+    // mock token API endpoint using msw
+    beforeEach(() => {
+      server.use(
+        http.get(
+          `https://api.${sourceRegion}.sumologic.com/api/v1/account/accountOwner`,
+          ({ request }) => {
+            const encodedKey = Buffer.from(`${validAccessId}:${validAccessKey}`).toString('base64');
+
+            if (request.headers.get('Authorization') !== `Basic ${encodedKey}`) {
+              return new Response(undefined, { status: 401 });
+            }
+
+            return Response.json(userId);
+          }
+        )
+      );
+    });
+
+    test('should return owner id when the token is valid', async () => {
+      await expect(
+        getOwnerId({
+          accessId: validAccessId,
+          accessKey: validAccessKey,
+          sourceRegion,
+        })
+      ).resolves.toStrictEqual({ ownerId: userId });
+    });
+
+    test('should throws when the Access ID is invalid', async () => {
+      await expect(
+        getOwnerId({ accessId: 'foo-bar', accessKey: validAccessKey, sourceRegion })
+      ).rejects.toBeInstanceOf(SumologicError);
+    });
+
+    test('should throws when the Access Key is invalid', async () => {
+      await expect(
+        getOwnerId({ accessId: validAccessId, accessKey: 'foo-bar', sourceRegion })
+      ).rejects.toBeInstanceOf(SumologicError);
+    });
+  });
+
+  describe('getUserDetail', () => {
+    // mock token API endpoint using msw
+    beforeEach(() => {
+      server.use(
+        http.get(
+          `https://api.${sourceRegion}.sumologic.com/api/v1/users/${userId}`,
+          ({ request }) => {
+            const encodedKey = Buffer.from(`${validAccessId}:${validAccessKey}`).toString('base64');
+
+            if (request.headers.get('Authorization') !== `Basic ${encodedKey}`) {
+              return new Response(undefined, { status: 401 });
+            }
+
+            return Response.json({ firstName, lastName });
+          }
+        )
+      );
+    });
+
+    test('should return owner id when the token is valid', async () => {
+      await expect(
+        getUserDetail({
+          accessId: validAccessId,
+          accessKey: validAccessKey,
+          sourceRegion,
+          userId,
+        })
+      ).resolves.toStrictEqual({ firstName, lastName });
+    });
+
+    test('should throws when the Access ID is invalid', async () => {
+      await expect(
+        getUserDetail({ accessId: 'foo-bar', accessKey: validAccessKey, sourceRegion, userId })
+      ).rejects.toBeInstanceOf(SumologicError);
+    });
+
+    test('should throws when the Access Key is invalid', async () => {
+      await expect(
+        getUserDetail({ accessId: validAccessId, accessKey: 'foo-bar', sourceRegion, userId })
       ).rejects.toBeInstanceOf(SumologicError);
     });
   });

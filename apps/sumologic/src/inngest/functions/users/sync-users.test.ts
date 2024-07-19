@@ -10,26 +10,25 @@ import { syncUsers } from './sync-users';
 const accessId = 'test-access-token';
 const accessKey = 'test-accessKey';
 const sourceRegion = 'EU';
-
+const ownerId = 'test-owner-id';
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   accessId: await encrypt(accessId),
   region: 'us',
   accessKey,
   sourceRegion,
+  ownerId,
 };
 const syncStartedAt = Date.now();
 const syncedBefore = Date.now();
-const nextPage = 1;
+const nextPage = '1';
 const users: usersConnector.SumologicUser[] = Array.from({ length: 2 }, (_, i) => ({
-  id: `id-${i}`,
-  attributes: {
-    name: `displayName-${i}`,
-    email: `user-${i}@foo.bar`,
-    sourceRegion: 'EU',
-    mfa_enabled: false,
-    status: 'Active',
-  },
+  id: `0442f541-45d2-487a-9e4b-de03ce4c559${i}`,
+  firstName: `firstName-${i}`,
+  lastName: `lastName-${i}`,
+  isActive: true,
+  isMfaEnabled: false,
+  email: `user-${i}@foo.bar`,
 }));
 
 const setup = createInngestFunctionMock(syncUsers, 'sumologic/users.sync.requested');
@@ -46,7 +45,7 @@ describe('synchronize-users', () => {
       organisationId: organisation.id,
       isFirstSync: false,
       syncStartedAt: Date.now(),
-      page: 0,
+      page: null,
     });
 
     await expect(result).rejects.toBeInstanceOf(NonRetriableError);
@@ -122,7 +121,7 @@ describe('synchronize-users', () => {
       organisationId: organisation.id,
       isFirstSync: false,
       syncStartedAt,
-      page: 0,
+      page: null,
     });
 
     await expect(result).resolves.toStrictEqual({ status: 'completed' });
