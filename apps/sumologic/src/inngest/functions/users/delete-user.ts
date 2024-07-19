@@ -44,11 +44,12 @@ export const deleteUser = inngest.createFunction(
     }
 
     const accessId = await decrypt(organisation.accessId);
+    const accessKey = await decrypt(organisation.accessKey);
 
     await deleteSumologicUser({
       userId,
       accessId,
-      accessKey: organisation.accessKey,
+      accessKey,
       sourceRegion: organisation.sourceRegion,
     });
   }

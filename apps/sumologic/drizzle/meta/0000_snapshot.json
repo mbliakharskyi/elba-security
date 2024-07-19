@@ -1,5 +1,5 @@
 {
-  "id": "b7387792-5501-47d1-b000-0420e1a599e4",
+  "id": "d6423785-8272-4daf-a5bf-2605b76a57f6",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "5",
   "dialect": "pg",
@@ -28,6 +28,12 @@
         },
         "source_region": {
           "name": "source_region",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "owner_id": {
+          "name": "owner_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true

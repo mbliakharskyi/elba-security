@@ -29,20 +29,20 @@ export default function InstallPage() {
       <InstructionsSteps>
         <InstructionsStep index={1}>
           <div>
-            <h3>How to obtain your DataDog Application Key and API Key?</h3>
+            <h3>How to obtain your Sumologic Access ID and Access Key?</h3>
             <p>
-              1. In Sumologic, Navigate to <b>Organization Settings</b>
+              1. Log in to your account and click your name in the left-nav and open the{' '}
+              <b>Preferences</b> page.
             </p>
             <p>
-              2. For the Application key, create an application key on the Application Keys Page in
-              Sumologic and input the key value in Elba. The minimum scope of the key must include:{' '}
-              <b>user_access_read, user_access_manage</b>
+              2. In the <b>My Access Keys</b> section, click <b>+ Add Access Key</b>.
             </p>
             <p>
-              3. For the API key, create an API key from the API Keys Page in Sumologic and input
-              the key value in Elba:
+              3. Enter a name for the access key in the <b>Access Key Name</b> field.
             </p>
-            <p>4. Choose your Sumologic account region</p>
+            <p>
+              4. Copy the <b>Access ID</b> and <b>Access Key</b>
+            </p>
           </div>
         </InstructionsStep>
 
@@ -50,18 +50,18 @@ export default function InstallPage() {
           <h3>Connect Sumologic</h3>
           <Form action={formAction}>
             <FormField isInvalid={Boolean(state.errors?.accessId?.at(0))}>
-              <FormLabel>API Key</FormLabel>
+              <FormLabel>Access ID</FormLabel>
               <Input minLength={1} name="accessId" placeholder="Paste Your Key" type="text" />
               {state.errors?.accessId?.at(0) ? (
                 <FormErrorMessage>{state.errors.accessId.at(0)}</FormErrorMessage>
               ) : null}
             </FormField>
             <FormField isInvalid={Boolean(state.errors?.accessKey?.at(0))}>
-              <FormLabel>Application Key</FormLabel>
+              <FormLabel>Access Key</FormLabel>
               <Input
                 minLength={1}
                 name="accessKey"
-                placeholder="Paste Your Application Key"
+                placeholder="Paste Your Access Key"
                 type="text"
               />
               {state.errors?.accessKey?.at(0) ? (
@@ -73,7 +73,7 @@ export default function InstallPage() {
 
               <Select name="sourceRegion" placeholder="Select a region">
                 {Object.entries(SUMOLOGIC_REGIONS_NAMES).map(([value, name]) => (
-                  <option key={value} value={value}>
+                  <option key={name} value={name}>
                     {`[${value}] - ${name}`}
                   </option>
                 ))}
