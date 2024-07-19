@@ -9,7 +9,7 @@ export const createElbaClient = ({
   region: string;
 }) =>
   new Elba({
-    accessId: env.ELBA_API_KEY,
+    apiKey: env.ELBA_API_KEY,
     baseUrl: env.ELBA_API_BASE_URL,
     organisationId,
     region,

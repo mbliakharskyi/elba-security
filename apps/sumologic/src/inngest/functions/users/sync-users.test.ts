@@ -9,7 +9,7 @@ import { syncUsers } from './sync-users';
 
 const accessId = 'test-access-token';
 const accessKey = 'test-accessKey';
-const sourceRegion = 'EU';
+const sourceRegion = 'eu';
 const ownerId = 'test-owner-id';
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
@@ -23,7 +23,7 @@ const syncStartedAt = Date.now();
 const syncedBefore = Date.now();
 const nextPage = '1';
 const users: usersConnector.SumologicUser[] = Array.from({ length: 2 }, (_, i) => ({
-  id: `0442f541-45d2-487a-9e4b-de03ce4c559${i}`,
+  id: `id-${i}`,
   firstName: `firstName-${i}`,
   lastName: `lastName-${i}`,
   isActive: true,
@@ -91,17 +91,21 @@ describe('synchronize-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'displayName-0',
+          displayName: 'firstName-0 lastName-0',
           email: 'user-0@foo.bar',
           id: 'id-0',
           authMethod: 'password',
+          isSuspendable: true,
+          url: `https://service.${sourceRegion}.sumologic.com/ui/#/manage/users`,
         },
         {
           additionalEmails: [],
-          displayName: 'displayName-1',
+          displayName: 'firstName-1 lastName-1',
           email: 'user-1@foo.bar',
           id: 'id-1',
           authMethod: 'password',
+          isSuspendable: true,
+          url: `https://service.${sourceRegion}.sumologic.com/ui/#/manage/users`,
         },
       ],
     });
@@ -131,17 +135,21 @@ describe('synchronize-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'displayName-0',
+          displayName: 'firstName-0 lastName-0',
           email: 'user-0@foo.bar',
           id: 'id-0',
           authMethod: 'password',
+          isSuspendable: true,
+          url: `https://service.${sourceRegion}.sumologic.com/ui/#/manage/users`,
         },
         {
           additionalEmails: [],
-          displayName: 'displayName-1',
+          displayName: 'firstName-1 lastName-1',
           email: 'user-1@foo.bar',
           id: 'id-1',
           authMethod: 'password',
+          isSuspendable: true,
+          url: `https://service.${sourceRegion}.sumologic.com/ui/#/manage/users`,
         },
       ],
     });
