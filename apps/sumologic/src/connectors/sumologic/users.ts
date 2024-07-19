@@ -19,7 +19,7 @@ const sumologicResponseSchema = z.object({
   next: z.string().nullable(),
 });
 
-const ownerIdResponseSchema = z.string();
+const sumologicOwnerIdResponseSchema = z.string();
 export type GetUsersParams = {
   accessId: string;
   accessKey: string;
@@ -27,6 +27,10 @@ export type GetUsersParams = {
   page?: string | null;
 };
 
+const sumologicUserDetailResponseSchema = z.object({
+  firstName: z.string(),
+  lastName: z.string(),
+});
 export type DeleteUsersParams = {
   userId: string;
   accessId: string;
@@ -39,6 +43,14 @@ export type GetOwnerIdParams = {
   accessKey: string;
   sourceRegion: string;
 };
+
+export type GetUserDetailParams = {
+  accessId: string;
+  accessKey: string;
+  sourceRegion: string;
+  userId: string;
+};
+
 export const getUsers = async ({ accessId, accessKey, sourceRegion, page }: GetUsersParams) => {
   const encodedKey = Buffer.from(`${accessId}:${accessKey}`).toString('base64');
 
@@ -89,15 +101,27 @@ export const deleteUser = async ({
   sourceRegion,
   userId,
 }: DeleteUsersParams) => {
+  const { firstName, lastName } = await getUserDetail({
+    accessId,
+    accessKey,
+    sourceRegion,
+    userId,
+  });
+
   const url = new URL(`https://api.${sourceRegion}.sumologic.com/api/v1/users/${userId}`);
   const encodedKey = Buffer.from(`${accessId}:${accessKey}`).toString('base64');
 
   const response = await fetch(url.toString(), {
-    method: 'DELETE',
+    method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Basic ${encodedKey}`,
     },
+    body: JSON.stringify({
+      firstName,
+      lastName,
+      isActive: false,
+    }),
   });
 
   if (!response.ok && response.status !== 404) {
@@ -123,7 +147,7 @@ export const getOwnerId = async ({ accessId, accessKey, sourceRegion }: GetOwner
 
   const resData: unknown = await response.json();
 
-  const result = ownerIdResponseSchema.safeParse(resData);
+  const result = sumologicOwnerIdResponseSchema.safeParse(resData);
   if (!result.success) {
     logger.error('Invalid Sumologic owner id response', { resData });
     throw new SumologicError('Invalid Sumologic owner id response');
@@ -131,5 +155,41 @@ export const getOwnerId = async ({ accessId, accessKey, sourceRegion }: GetOwner
 
   return {
     ownerId: result.data,
+  };
+};
+
+export const getUserDetail = async ({
+  accessId,
+  accessKey,
+  sourceRegion,
+  userId,
+}: GetUserDetailParams) => {
+  const encodedKey = Buffer.from(`${accessId}:${accessKey}`).toString('base64');
+
+  const url = new URL(`https://api.${sourceRegion}.sumologic.com/api/v1/users/${userId}`);
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Basic ${encodedKey}`,
+    },
+  });
+  if (!response.ok) {
+    throw new SumologicError('Could not retrieve Sumologic user by id', { response });
+  }
+
+  const resData: unknown = await response.json();
+
+  const { firstName, lastName } = sumologicUserDetailResponseSchema.parse(resData);
+
+  if (!firstName || !lastName) {
+    logger.error('Invalid Sumologic user detail response', { resData });
+    throw new SumologicError('Invalid Sumologic user detail response');
+  }
+
+  return {
+    firstName,
+    lastName,
   };
 };
