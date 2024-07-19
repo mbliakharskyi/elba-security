@@ -27,7 +27,6 @@ const invalidUsers = [];
 
 describe('users connector', () => {
   describe('getUsers', () => {
-    // mock token API endpoint using msw
     beforeEach(() => {
       server.use(
         http.get(`https://api.${sourceRegion}.sumologic.com/api/v1/users`, ({ request }) => {
@@ -125,7 +124,7 @@ describe('users connector', () => {
       );
     });
 
-    test('should delete user successfully when token is valid', async () => {
+    test('should delete user successfully when access id and access key are valid', async () => {
       await expect(
         deleteUser({
           accessId: validAccessId,
@@ -147,15 +146,20 @@ describe('users connector', () => {
       ).resolves.toBeUndefined();
     });
 
-    test('should throw SumologicError when token is invalid', async () => {
+    test('should throw SumologicError when access id is invalid', async () => {
       await expect(
         deleteUser({ accessId: 'invalidAccessId', accessKey, sourceRegion, userId })
+      ).rejects.toBeInstanceOf(SumologicError);
+    });
+
+    test('should throw SumologicError when access key is invalid', async () => {
+      await expect(
+        deleteUser({ accessId: validAccessId, accessKey: 'invalidAccessId', sourceRegion, userId })
       ).rejects.toBeInstanceOf(SumologicError);
     });
   });
 
   describe('getOwnerId', () => {
-    // mock token API endpoint using msw
     beforeEach(() => {
       server.use(
         http.get(
@@ -173,7 +177,7 @@ describe('users connector', () => {
       );
     });
 
-    test('should return owner id when the token is valid', async () => {
+    test('should return owner id when the access id and access key are valid', async () => {
       await expect(
         getOwnerId({
           accessId: validAccessId,
@@ -197,7 +201,6 @@ describe('users connector', () => {
   });
 
   describe('getUserDetail', () => {
-    // mock token API endpoint using msw
     beforeEach(() => {
       server.use(
         http.get(
@@ -215,7 +218,7 @@ describe('users connector', () => {
       );
     });
 
-    test('should return owner id when the token is valid', async () => {
+    test('should return owner id when the access id and access key are valid', async () => {
       await expect(
         getUserDetail({
           accessId: validAccessId,

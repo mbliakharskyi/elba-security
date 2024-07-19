@@ -78,8 +78,8 @@ export const install = async (_: FormState, formData: FormData): Promise<FormSta
     if (error instanceof SumologicError && error.response?.status === 401) {
       return {
         errors: {
-          accessId: ['The given API Token seems to be invalid'],
-          accessKey: ['The given API App Key seems to be invalid'],
+          accessId: ['The given Access Id seems to be invalid'],
+          accessKey: ['The given API Access Key seems to be invalid'],
           sourceRegion: ['The given Source Region seems to be invalid'],
         },
       };
