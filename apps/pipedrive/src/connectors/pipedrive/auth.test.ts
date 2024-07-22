@@ -9,12 +9,13 @@ const validCode = '1234';
 const accessToken = 'access-token-1234';
 const validRefreshToken = 'valid-refresh-token';
 const expiresIn = 1234;
+const apiDomain = 'test-api-domain';
 
 describe('auth connector', () => {
   describe('getToken', () => {
     beforeEach(() => {
       server.use(
-        http.post(`${env.PIPEDRIVE_APP_INSTALL_URL}/oauth_token`, async ({ request }) => {
+        http.post(`${env.PIPEDRIVE_APP_INSTALL_URL}/token`, async ({ request }) => {
           const body = await request.text();
           const searchParams = new URLSearchParams(body);
           const grantType = searchParams.get('grant_type');
@@ -28,6 +29,7 @@ describe('auth connector', () => {
             access_token: accessToken,
             refresh_token: validRefreshToken,
             expires_in: expiresIn,
+            api_domain: apiDomain,
           });
         })
       );
@@ -38,6 +40,7 @@ describe('auth connector', () => {
         accessToken,
         refreshToken: validRefreshToken,
         expiresIn,
+        apiDomain,
       });
     });
 
@@ -49,7 +52,7 @@ describe('auth connector', () => {
   describe('getRefreshToken', () => {
     beforeEach(() => {
       server.use(
-        http.post(`${env.PIPEDRIVE_APP_INSTALL_URL}/oauth_token`, async ({ request }) => {
+        http.post(`${env.PIPEDRIVE_APP_INSTALL_URL}/token`, async ({ request }) => {
           const body = await request.text();
           const searchParams = new URLSearchParams(body);
 
@@ -62,7 +65,9 @@ describe('auth connector', () => {
 
           return Response.json({
             access_token: accessToken,
+            refresh_token: validRefreshToken,
             expires_in: expiresIn,
+            api_domain: apiDomain,
           });
         })
       );
@@ -71,12 +76,13 @@ describe('auth connector', () => {
     test('should return the new access token when the refreshToken is valid', async () => {
       await expect(getRefreshToken(validRefreshToken)).resolves.toStrictEqual({
         accessToken,
+        refreshToken: validRefreshToken,
         expiresIn,
       });
     });
 
     test('should throw when the refreshToken is invalid', async () => {
-      await expect(getToken('wrong-refreshtoken')).rejects.toBeInstanceOf(PipedriveError);
+      await expect(getRefreshToken('wrong-refreshtoken')).rejects.toBeInstanceOf(PipedriveError);
     });
   });
 });

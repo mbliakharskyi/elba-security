@@ -39,7 +39,7 @@ export type DeleteUsersParams = {
 
 export const getUsers = async ({ accessToken, page, apiDomain }: GetUsersParams) => {
   const url = new URL(`${apiDomain}/v1/users`);
-  url.searchParams.append('limit', String(env.PIPEDRIVE_USERS_SYNC_CRON));
+  url.searchParams.append('limit', String(env.PIPEDRIVE_USERS_SYNC_BATCH_SIZE));
 
   if (page) {
     url.searchParams.append('start', String(page));
@@ -63,8 +63,6 @@ export const getUsers = async ({ accessToken, page, apiDomain }: GetUsersParams)
   const validUsers: PipedriveUser[] = [];
   const invalidUsers: unknown[] = [];
 
-  // We don't have any ways to eliminate the invited users, we send them all to elba even if they are invalid
-  // However, In Pipedrive dashboard, we can't see the invited users tab
   for (const user of data) {
     const userResult = pipedriveUserSchema.safeParse(user);
     if (userResult.success) {

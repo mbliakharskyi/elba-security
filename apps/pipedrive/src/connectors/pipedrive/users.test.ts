@@ -7,16 +7,17 @@ import { getUsers, deleteUser } from './users';
 
 const validToken = 'token-1234';
 const endPage = '3';
-const nextPage = '2';
+const nextPage = 2;
 const userId = 'test-user-id';
 const apiDomain = 'https://test-api-domain.pipedrive.com';
 
 const validUsers: PipedriveUser[] = Array.from({ length: 5 }, (_, i) => ({
-  gid: `gid-${i}`,
-  name: `first_name-${i}`,
+  id: i,
+  name: `name-${i}`,
+  active_flag: true,
+  is_admin: 1,
+  is_you: false,
   email: `user-${i}@foo.bar`,
-  is_active: true,
-  resource_type: 'user',
 }));
 
 const invalidUsers = [];
@@ -26,17 +27,25 @@ describe('users connector', () => {
     // mock token API endpoint using msw
     beforeEach(() => {
       server.use(
-        http.get(`${apiDomain}/users`, ({ request }) => {
+        http.get(`${apiDomain}/v1/users`, ({ request }) => {
           if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
             return new Response(undefined, { status: 401 });
           }
 
           const url = new URL(request.url);
-          const offset = url.searchParams.get('offset');
+          const page = url.searchParams.get('start');
           const responseData =
-            offset === endPage
-              ? { data: validUsers }
-              : { data: validUsers, next_page: { offset: nextPage } };
+            page === endPage
+              ? { data: validUsers, additional_data: {} }
+              : {
+                  data: validUsers,
+                  additional_data: {
+                    pagination: {
+                      more_items_in_collection: true,
+                      next_start: nextPage,
+                    },
+                  },
+                };
           return Response.json(responseData);
         })
       );
@@ -44,7 +53,7 @@ describe('users connector', () => {
 
     test('should return users and nextPage when the token is valid and their is another page', async () => {
       await expect(
-        getUsers({ accessToken: validToken, page: nextPage, apiDomain })
+        getUsers({ accessToken: validToken, page: String(nextPage), apiDomain })
       ).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
@@ -72,7 +81,7 @@ describe('users connector', () => {
   describe('deleteUser', () => {
     beforeEach(() => {
       server.use(
-        http.post<{ userId: string }>(`${apiDomain}/v1/users/:userId`, ({ request }) => {
+        http.put<{ userId: string }>(`${apiDomain}/v1/users/:userId`, ({ request }) => {
           if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
             return new Response(undefined, { status: 401 });
           }

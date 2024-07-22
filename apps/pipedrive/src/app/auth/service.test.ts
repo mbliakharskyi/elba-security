@@ -12,12 +12,14 @@ const code = 'some-code';
 const accessToken = 'some token';
 const refreshToken = 'some refresh token';
 const expiresIn = 60;
+const apiDomain = 'test-api-domain';
 const region = 'us';
 const now = new Date();
 const getTokenData = {
   accessToken,
   refreshToken,
   expiresIn,
+  apiDomain,
 };
 
 const organisation = {
@@ -25,6 +27,7 @@ const organisation = {
   accessToken,
   refreshToken,
   region,
+  apiDomain,
 };
 
 describe('setupOrganisation', () => {

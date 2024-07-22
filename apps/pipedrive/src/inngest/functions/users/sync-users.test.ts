@@ -12,16 +12,18 @@ const organisation = {
   accessToken: await encrypt('test-access-token'),
   refreshToken: await encrypt('test-refresh-token'),
   region: 'us',
+  apiDomain: 'https://test-api-domain.com',
 };
 const syncStartedAt = Date.now();
 const syncedBefore = Date.now();
-const nextPage = '1';
+const nextPage = 1;
 const users: usersConnector.PipedriveUser[] = Array.from({ length: 2 }, (_, i) => ({
-  gid: `id-${i}`,
+  id: i,
   name: `name-${i}`,
+  active_flag: true,
+  is_admin: 1,
+  is_you: false,
   email: `user-${i}@foo.bar`,
-  resource_type: 'user',
-  is_active: true,
 }));
 
 const setup = createInngestFunctionMock(syncUsers, 'pipedrive/users.sync.requested');
@@ -62,7 +64,7 @@ describe('synchronize-users', () => {
       organisationId: organisation.id,
       isFirstSync: false,
       syncStartedAt,
-      page: nextPage,
+      page: String(nextPage),
     });
 
     await expect(result).resolves.toStrictEqual({ status: 'ongoing' });
@@ -75,7 +77,7 @@ describe('synchronize-users', () => {
         organisationId: organisation.id,
         isFirstSync: false,
         syncStartedAt,
-        page: nextPage,
+        page: String(nextPage),
       },
     });
 
@@ -86,13 +88,19 @@ describe('synchronize-users', () => {
           additionalEmails: [],
           displayName: 'name-0',
           email: 'user-0@foo.bar',
-          id: 'id-0',
+          id: '0',
+          role: 'admin',
+          isSuspendable: true,
+          url: 'https://test-api-domain.com/users/details/0/updates',
         },
         {
           additionalEmails: [],
           displayName: 'name-1',
           email: 'user-1@foo.bar',
-          id: 'id-1',
+          id: '1',
+          role: 'admin',
+          isSuspendable: true,
+          url: 'https://test-api-domain.com/users/details/1/updates',
         },
       ],
     });
@@ -124,13 +132,19 @@ describe('synchronize-users', () => {
           additionalEmails: [],
           displayName: 'name-0',
           email: 'user-0@foo.bar',
-          id: 'id-0',
+          id: '0',
+          role: 'admin',
+          isSuspendable: true,
+          url: 'https://test-api-domain.com/users/details/0/updates',
         },
         {
           additionalEmails: [],
           displayName: 'name-1',
           email: 'user-1@foo.bar',
-          id: 'id-1',
+          id: '1',
+          role: 'admin',
+          isSuspendable: true,
+          url: 'https://test-api-domain.com/users/details/1/updates',
         },
       ],
     });

@@ -17,7 +17,7 @@ export const env = z
     PIPEDRIVE_CLIENT_ID: z.string().min(1),
     PIPEDRIVE_CLIENT_SECRET: z.string().min(1),
     PIPEDRIVE_REDIRECT_URI: z.string().url(),
-    PIPEDRIVE_USERS_SYNC_BATCH_SIZE: zEnvInt().default(20),
+    PIPEDRIVE_USERS_SYNC_BATCH_SIZE: zEnvInt().default(100),
     PIPEDRIVE_DELETE_USER_CONCURRENCY: zEnvInt().default(5),
     PIPEDRIVE_USERS_SYNC_CRON: z.string().default('0 0 * * *'),
   })

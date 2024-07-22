@@ -11,6 +11,7 @@ const organisation = {
   accessToken: 'access-token',
   refreshToken: 'refresh-token',
   region: 'us',
+  apiDomain: 'test-api-domain',
 };
 
 describe('unauthorized middleware', () => {
