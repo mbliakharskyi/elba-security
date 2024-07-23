@@ -85,7 +85,7 @@ export const syncUsers = inngest.createFunction(
         name: 'pagerduty/users.sync.requested',
         data: {
           ...event.data,
-          page: nextPage,
+          page: String(nextPage),
         },
       });
       return {
