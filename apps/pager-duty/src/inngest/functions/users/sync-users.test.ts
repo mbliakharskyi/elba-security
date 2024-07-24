@@ -9,20 +9,20 @@ import { syncUsers } from './sync-users';
 
 const syncStartedAt = Date.now();
 const syncedBefore = Date.now();
-const nextPage = '1';
+const nextPage = 1;
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   accessToken: await encrypt('test-access-token'),
   refreshToken: await encrypt('test-refresh-token'),
   region: 'us',
+  subDomain: 'subdomain',
 };
 const users: usersConnector.PagerdutyUser[] = Array.from({ length: 2 }, (_, i) => ({
-  uri: `https://test-uri/organization_memberships/00000000-0000-0000-0000-00000000009${i}`,
-  user: {
-    name: `name-${i}`,
-    email: `user-${i}@foo.bar`,
-  },
-  role: 'user',
+  id: `id-${i}`,
+  name: `userName-${i}`,
+  role: 'admin',
+  email: `user-${i}@foo.bar`,
+  invitation_sent: false,
 }));
 
 const setup = createInngestFunctionMock(syncUsers, 'pagerduty/users.sync.requested');
@@ -63,7 +63,7 @@ describe('sync-users', () => {
       organisationId: organisation.id,
       isFirstSync: false,
       syncStartedAt,
-      page: nextPage,
+      page: String(nextPage),
     });
 
     await expect(result).resolves.toStrictEqual({ status: 'ongoing' });
@@ -76,7 +76,7 @@ describe('sync-users', () => {
         organisationId: organisation.id,
         isFirstSync: false,
         syncStartedAt,
-        page: nextPage,
+        page: String(nextPage),
       },
     });
 
@@ -85,17 +85,21 @@ describe('sync-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'name-0',
+          displayName: 'userName-0',
           email: 'user-0@foo.bar',
-          id: '00000000-0000-0000-0000-000000000090',
-          role: 'user',
+          id: 'id-0',
+          role: 'admin',
+          url: 'https://subdomain.pagerduty.com/users/id-0',
+          isSuspendable: true,
         },
         {
           additionalEmails: [],
-          displayName: 'name-1',
+          displayName: 'userName-1',
           email: 'user-1@foo.bar',
-          role: 'user',
-          id: '00000000-0000-0000-0000-000000000091',
+          role: 'admin',
+          id: 'id-1',
+          url: 'https://subdomain.pagerduty.com/users/id-1',
+          isSuspendable: true,
         },
       ],
     });
@@ -125,17 +129,21 @@ describe('sync-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'name-0',
+          displayName: 'userName-0',
           email: 'user-0@foo.bar',
-          role: 'user',
-          id: '00000000-0000-0000-0000-000000000090',
+          id: 'id-0',
+          role: 'admin',
+          url: 'https://subdomain.pagerduty.com/users/id-0',
+          isSuspendable: true,
         },
         {
           additionalEmails: [],
-          displayName: 'name-1',
+          displayName: 'userName-1',
           email: 'user-1@foo.bar',
-          role: 'user',
-          id: '00000000-0000-0000-0000-000000000091',
+          id: 'id-1',
+          role: 'admin',
+          url: 'https://subdomain.pagerduty.com/users/id-1',
+          isSuspendable: true,
         },
       ],
     });

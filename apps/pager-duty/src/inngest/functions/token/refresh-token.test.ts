@@ -24,6 +24,7 @@ const organisation = {
   accessToken: encryptedTokens.accessToken,
   refreshToken: encryptedTokens.refreshToken,
   region: 'us',
+  subDomain: 'subdomain',
 };
 const now = new Date();
 // current token expires in an hour

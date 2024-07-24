@@ -7,17 +7,16 @@ import type { PagerdutyUser } from './users';
 import { getUsers, deleteUser } from './users';
 
 const validToken = 'token-1234';
-const endPageToken = '3';
-const nextPageToken = '2';
+const endPageOffset = '3';
+const nextPageOffset = '2';
 const userId = 'test-user-id';
 
 const validUsers: PagerdutyUser[] = Array.from({ length: 5 }, (_, i) => ({
-  uri: `uri-${i}`,
-  user: {
-    name: `name-${i}`,
-    email: `user-${i}@foo.bar`,
-  },
-  role: 'user',
+  id: `id-${i}`,
+  name: `userName-${i}`,
+  role: 'owner',
+  email: `user-${i}@foo.bar`,
+  invitation_sent: false,
 }));
 
 const invalidUsers = [];
@@ -26,18 +25,17 @@ describe('users connector', () => {
   describe('getUsers', () => {
     beforeEach(() => {
       server.use(
-        http.get(`${env.PAGERDUTY_API_BASE_URL}/organization_memberships`, ({ request }) => {
+        http.get(`${env.PAGERDUTY_API_BASE_URL}users`, ({ request }) => {
           if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
             return new Response(undefined, { status: 401 });
           }
 
           const url = new URL(request.url);
-          const pageToken = url.searchParams.get('page_token');
+          const offset = url.searchParams.get('offset') || '0';
           const responseData = {
-            collection: validUsers,
-            pagination: {
-              next_page_token: pageToken === endPageToken ? null : nextPageToken,
-            },
+            users: validUsers,
+            offset: parseInt(offset, 10),
+            more: offset !== endPageOffset,
           };
           return Response.json(responseData);
         })
@@ -46,17 +44,17 @@ describe('users connector', () => {
 
     test('should return users and nextPage when the token is valid and their is another page', async () => {
       await expect(
-        getUsers({ accessToken: validToken, page: nextPageToken })
+        getUsers({ accessToken: validToken, page: nextPageOffset })
       ).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
-        nextPage: nextPageToken,
+        nextPage: parseInt(nextPageOffset, 10) + 1,
       });
     });
 
     test('should return users and no nextPage when the token is valid and their is no other page', async () => {
       await expect(
-        getUsers({ accessToken: validToken, page: endPageToken })
+        getUsers({ accessToken: validToken, page: endPageOffset })
       ).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
@@ -73,7 +71,7 @@ describe('users connector', () => {
     beforeEach(() => {
       server.use(
         http.delete<{ userId: string }>(
-          `${env.PAGERDUTY_API_BASE_URL}/organization_memberships/${userId}`,
+          `${env.PAGERDUTY_API_BASE_URL}users/${userId}`,
           ({ request }) => {
             if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
               return new Response(undefined, { status: 401 });

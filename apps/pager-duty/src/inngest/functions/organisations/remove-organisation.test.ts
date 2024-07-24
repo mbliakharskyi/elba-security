@@ -12,6 +12,7 @@ const organisation = {
   accessToken: 'access-token',
   refreshToken: 'refresh-token',
   region: 'us',
+  subDomain: 'subdomain',
 };
 
 const setup = createInngestFunctionMock(removeOrganisation, 'pagerduty/app.uninstalled');

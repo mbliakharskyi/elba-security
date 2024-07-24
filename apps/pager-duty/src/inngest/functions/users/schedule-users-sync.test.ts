@@ -13,6 +13,7 @@ export const organisations = Array.from({ length: 5 }, (_, i) => ({
   accessToken: `test-access-token${i}`,
   refreshToken: `test-refresh-token${i}`,
   region: `us`,
+  subDomain: 'subdomain',
 }));
 
 describe('schedule-users-syncs', () => {

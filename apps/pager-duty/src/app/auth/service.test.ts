@@ -13,6 +13,7 @@ const accessToken = 'some token';
 const refreshToken = 'some refresh token';
 const expiresIn = 60;
 const region = 'us';
+const subDomain = 'test-subdomain';
 const now = new Date();
 const getTokenData = {
   accessToken,
@@ -25,6 +26,7 @@ const organisation = {
   accessToken,
   refreshToken,
   region,
+  subDomain,
 };
 
 describe('setupOrganisation', () => {
@@ -46,6 +48,7 @@ describe('setupOrganisation', () => {
         organisationId: organisation.id,
         code,
         region,
+        subDomain,
       })
     ).resolves.toBeUndefined();
 
@@ -100,6 +103,7 @@ describe('setupOrganisation', () => {
         organisationId: organisation.id,
         code,
         region,
+        subDomain,
       })
     ).resolves.toBeUndefined();
 
@@ -154,6 +158,7 @@ describe('setupOrganisation', () => {
         organisationId: organisation.id,
         code,
         region,
+        subDomain,
       })
     ).rejects.toThrowError(error);
 

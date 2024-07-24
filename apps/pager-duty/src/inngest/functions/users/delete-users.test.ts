@@ -14,6 +14,7 @@ const organisation = {
   accessToken: await encrypt(accessToken),
   refreshToken: await encrypt(refreshToken),
   region: 'us',
+  subDomain: 'subdomain',
 };
 
 const setup = createInngestFunctionMock(deleteUser, 'pagerduty/users.delete.requested');
