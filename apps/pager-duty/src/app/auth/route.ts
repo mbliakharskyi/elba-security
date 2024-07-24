@@ -18,10 +18,11 @@ const isStateValid = (request: NextRequest) => {
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get('code');
+  const subDomain = request.nextUrl.searchParams.get('subdomain');
   const organisationId = request.cookies.get('organisation_id')?.value;
   const region = request.cookies.get('region')?.value;
 
-  if (!isStateValid(request) || !organisationId || !code || !region) {
+  if (!isStateValid(request) || !organisationId || !code || !region || !subDomain) {
     return new ElbaInstallRedirectResponse({
       region,
       sourceId: env.ELBA_SOURCE_ID,
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    await setupOrganisation({ organisationId, code, region });
+    await setupOrganisation({ organisationId, code, region, subDomain });
   } catch (error) {
     logger.error('Could not setup organisation', { error, organisationId });
     return new ElbaInstallRedirectResponse({

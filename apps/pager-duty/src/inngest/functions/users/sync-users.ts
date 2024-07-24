@@ -10,12 +10,14 @@ import { decrypt } from '@/common/crypto';
 import { type PagerdutyUser } from '@/connectors/pagerduty/users';
 import { createElbaClient } from '@/connectors/elba/client';
 
-const formatElbaUser = (user: PagerdutyUser): User => ({
+const formatElbaUser = ({ user, subDomain }: { user: PagerdutyUser; subDomain: string }): User => ({
   id: user.id,
   displayName: user.name,
   email: user.email,
   role: user.role,
   additionalEmails: [],
+  url: `https://${subDomain}.pagerduty.com/users/${user.id}`,
+  isSuspendable: user.role !== 'owner',
 });
 
 export const syncUsers = inngest.createFunction(
@@ -48,6 +50,7 @@ export const syncUsers = inngest.createFunction(
       .select({
         token: organisationsTable.accessToken,
         region: organisationsTable.region,
+        subDomain: organisationsTable.subDomain,
       })
       .from(organisationsTable)
       .where(eq(organisationsTable.id, organisationId));
@@ -57,6 +60,7 @@ export const syncUsers = inngest.createFunction(
 
     const elba = createElbaClient({ organisationId, region: organisation.region });
     const token = await decrypt(organisation.token);
+    const subDomain = organisation.subDomain;
 
     const nextPage = await step.run('list-users', async () => {
       const result = await getUsers({
@@ -64,7 +68,9 @@ export const syncUsers = inngest.createFunction(
         page,
       });
 
-      const users = result.validUsers.map(formatElbaUser);
+      const users = result.validUsers
+        .filter(({ invitation_sent: isPending }) => !isPending)
+        .map((user) => formatElbaUser({ user, subDomain }));
 
       if (result.invalidUsers.length > 0) {
         logger.warn('Retrieved users contains invalid data', {

@@ -9,12 +9,14 @@ type SetupOrganisationParams = {
   organisationId: string;
   code: string;
   region: string;
+  subDomain: string;
 };
 
 export const setupOrganisation = async ({
   organisationId,
   code,
   region,
+  subDomain,
 }: SetupOrganisationParams) => {
   const { accessToken, refreshToken, expiresIn } = await getToken(code);
 
@@ -28,6 +30,7 @@ export const setupOrganisation = async ({
       accessToken: encryptedAccessToken,
       refreshToken: encodedRefreshToken,
       region,
+      subDomain,
     })
     .onConflictDoUpdate({
       target: organisationsTable.id,
@@ -35,6 +38,7 @@ export const setupOrganisation = async ({
         accessToken: encryptedAccessToken,
         refreshToken: encodedRefreshToken,
         region,
+        subDomain,
       },
     });
 

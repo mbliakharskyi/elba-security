@@ -7,6 +7,7 @@ const pagerdutyUserSchema = z.object({
   name: z.string(),
   email: z.string(),
   role: z.string(),
+  invitation_sent: z.boolean(),
 });
 
 export type PagerdutyUser = z.infer<typeof pagerdutyUserSchema>;

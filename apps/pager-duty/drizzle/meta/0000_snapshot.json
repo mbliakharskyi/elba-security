@@ -1,5 +1,5 @@
 {
-  "id": "3a319473-d2e0-4a05-b3f2-5efd553d1e99",
+  "id": "d4312f4e-185b-4106-9adb-bd03ac3f88e5",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "5",
   "dialect": "pg",
@@ -35,6 +35,12 @@
         },
         "refresh_token": {
           "name": "refresh_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subdomain": {
+          "name": "subdomain",
           "type": "text",
           "primaryKey": false,
           "notNull": true
