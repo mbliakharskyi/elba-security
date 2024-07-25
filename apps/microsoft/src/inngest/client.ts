@@ -1,11 +1,15 @@
 import { EventSchemas, Inngest } from 'inngest';
-import { sentryMiddleware } from '@elba-security/inngest';
 import { logger } from '@elba-security/logger';
 import { rateLimitMiddleware } from './middlewares/rate-limit-middleware';
 
 export const inngest = new Inngest({
   id: 'microsoft',
   schemas: new EventSchemas().fromRecord<{
+    'microsoft/debug.inspect_token.requested': {
+      data: {
+        organisationId: string;
+      };
+    };
     'microsoft/third_party_apps.sync.requested': {
       data: {
         organisationId: string;
@@ -61,6 +65,6 @@ export const inngest = new Inngest({
       };
     };
   }>(),
-  middleware: [rateLimitMiddleware, sentryMiddleware],
+  middleware: [rateLimitMiddleware],
   logger,
 });
