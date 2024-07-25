@@ -11,17 +11,17 @@ const nextPage = '1';
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   apiKey: await encrypt('test-personal-token'),
-  accountId: '00000',
   region: 'us',
 };
 
 const users: usersConnector.LaunchdarklyUser[] = Array.from({ length: 2 }, (_, i) => ({
-  id: `${i}`,
-  access: `owner`,
-  user: {
-    name: `username-${i}`,
-    email: `user-${i}@foo.bar`,
-  },
+  _id: `${i}`,
+  role: 'admin',
+  firstName: `firstName-${i}`,
+  lastName: `lastName-${i}`,
+  email: `user-${i}@foo.bar`,
+  mfa: 'disabled',
+  _pendingInvite: false,
 }));
 
 const syncStartedAt = Date.now();
@@ -73,17 +73,21 @@ describe('sync-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'username-0',
+          displayName: 'firstName-0 lastName-0',
           email: 'user-0@foo.bar',
           id: '0',
-          role: 'owner',
+          role: 'admin',
+          isSuspendable: true,
+          url: 'https://app.launchdarkly.com/settings/members/0/permissions',
         },
         {
           additionalEmails: [],
-          displayName: 'username-1',
+          displayName: 'firstName-1 lastName-1',
           email: 'user-1@foo.bar',
           id: '1',
-          role: 'owner',
+          role: 'admin',
+          isSuspendable: true,
+          url: 'https://app.launchdarkly.com/settings/members/1/permissions',
         },
       ],
     });
@@ -125,17 +129,21 @@ describe('sync-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'username-0',
+          displayName: 'firstName-0 lastName-0',
           email: 'user-0@foo.bar',
           id: '0',
-          role: 'owner',
+          role: 'admin',
+          isSuspendable: true,
+          url: 'https://app.launchdarkly.com/settings/members/0/permissions',
         },
         {
           additionalEmails: [],
-          displayName: 'username-1',
+          displayName: 'firstName-1 lastName-1',
           email: 'user-1@foo.bar',
           id: '1',
-          role: 'owner',
+          role: 'admin',
+          isSuspendable: true,
+          url: 'https://app.launchdarkly.com/settings/members/1/permissions',
         },
       ],
     });

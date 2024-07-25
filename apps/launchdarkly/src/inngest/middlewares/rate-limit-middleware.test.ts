@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { RetryAfterError } from 'inngest';
-import { LaunchdarklyError } from '@/connectors/commons/error';
+import { LaunchdarklyError } from '@/connectors/common/error';
 import { rateLimitMiddleware } from './rate-limit-middleware';
 
 describe('rate-limit middleware', () => {
@@ -16,7 +16,7 @@ describe('rate-limit middleware', () => {
     ).toBeUndefined();
   });
 
-  test('should not transform the output when the error is not about confluence rate limit', () => {
+  test('should not transform the output when the error is not about Launchdarkly rate limit', () => {
     expect(
       rateLimitMiddleware
         .init()
@@ -30,12 +30,12 @@ describe('rate-limit middleware', () => {
     ).toBeUndefined();
   });
 
-  test('should transform the output error to RetryAfterError when the error is about confluence rate limit', () => {
+  test('should transform the output error to RetryAfterError when the error is about Launchdarkly rate limit', () => {
     const rateLimitError = new LaunchdarklyError('foo bar', {
       // @ts-expect-error this is a mock
       response: {
         status: 429,
-        headers: new Headers({ 'Retry-After': '10' }),
+        headers: new Headers({ 'retry-after': '10' }),
       },
     });
 

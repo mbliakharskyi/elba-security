@@ -9,7 +9,7 @@ import { removeOrganisation } from './remove-organisation';
 
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
-  apiKey: 'api-token',
+  apiKey: 'api-key',
   region: 'us-west-2',
 };
 

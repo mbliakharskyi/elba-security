@@ -5,7 +5,7 @@ import { RedirectType, redirect } from 'next/navigation';
 import { getRedirectUrl } from '@elba-security/sdk';
 import { isRedirectError } from 'next/dist/client/components/redirect';
 import { unstable_noStore } from 'next/cache'; // eslint-disable-line camelcase -- next sucks
-import { LaunchdarklyError } from '@/connectors/commons/error';
+import { LaunchdarklyError } from '@/connectors/common/error';
 import { env } from '@/common/env';
 import { registerOrganisation } from './service';
 

@@ -27,32 +27,20 @@ export default function InstallPage() {
       <h1>Setup Launchdarkly integration</h1>
       <InstructionsSteps>
         <InstructionsStep index={1}>
-          <h3>Create a service account</h3>
-          <p>1. On your Launchdarkly account, Navigate to Tokens page</p>
+          <h3>Create Personal Access Token</h3>
           <p>
-            2. In service tab click <strong>Manage service accounts</strong>
+            1. On your Launchdarkly account, Navigate to the Account settings page and Click into
+            the <b>Authorization</b> tab.
           </p>
           <p>
-            3. Click on <strong>+</strong> to create a new service account.
+            2. Click <b>Create token</b>. Give your token a human-readable Name and Assign a Role to
+            the token by choosing one from the menu.
+          </p>
+          <p>
+            3. Click <b>Save</b> token and copy it.
           </p>
         </InstructionsStep>
         <InstructionsStep index={2}>
-          <h3>Generate an API Token</h3>
-          <p>
-            1. Change the <strong>Workplace Role</strong> from <strong>None</strong> to{' '}
-            <strong>Admin</strong> & Save
-          </p>
-          <p>
-            2. In the service account API token section, click on <strong>+</strong> to create a new
-            token.
-          </p>
-          <p>
-            3. We encourage to leave the <strong>Expire Token</strong> checkbox unchecked as the
-            integration will be disconnected after token expiration.
-          </p>
-          <p>4. Copy the created token to the form bellow</p>
-        </InstructionsStep>
-        <InstructionsStep index={3}>
           <h3>Connect Launchdarkly</h3>
           <Form action={formAction}>
             <FormField isInvalid={Boolean(state.errors?.apiKey?.at(0))}>

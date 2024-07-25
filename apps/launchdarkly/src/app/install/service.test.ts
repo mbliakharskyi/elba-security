@@ -6,19 +6,20 @@ import { inngest } from '@/inngest/client';
 import * as userConnector from '@/connectors/launchdarkly/users';
 import { decrypt } from '@/common/crypto';
 import type { LaunchdarklyUser } from '@/connectors/launchdarkly/users';
-import { LaunchdarklyError } from '@/connectors/commons/error';
+import { LaunchdarklyError } from '@/connectors/common/error';
 import { registerOrganisation } from './service';
 
 const apiKey = 'test-api-token';
 const region = 'us';
 const now = new Date();
 const validUsers: LaunchdarklyUser[] = Array.from({ length: 2 }, (_, i) => ({
-  id: `${i}`,
-  access: `owner`,
-  user: {
-    name: `username-${i}`,
-    email: `user-${i}@foo.bar`,
-  },
+  _id: `${i}`,
+  role: `Account Administrator`,
+  firstName: `firstName-${i}`,
+  lastName: `lastN_name-${i}`,
+  email: `user-${i}@foo.bar`,
+  mfa: 'disabled',
+  _pendingInvite: false,
 }));
 
 const invalidUsers = [];

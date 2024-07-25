@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { env } from '@/common/env';
-import { LaunchdarklyError } from '../commons/error';
+import { LaunchdarklyError } from '../common/error';
 
 const launchdarklyUserSchema = z.object({
   _id: z.string(),
@@ -51,7 +51,7 @@ export const getUsers = async ({ apiKey, nextLink }: GetUsersParams) => {
   });
 
   if (!response.ok) {
-    throw new LaunchdarklyError('API request failed', { response });
+    throw new LaunchdarklyError('Could not retrieve users', { response });
   }
 
   const resData: unknown = await response.json();
