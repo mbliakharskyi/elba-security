@@ -23,12 +23,13 @@ const formatElbaUserRole = (role: ElasticUser['role_assignments']): string => {
   return 'member';
 };
 
-const formatElbaUser = (user: ElasticUser): User => ({
+const formatElbaUser = ({ user, ownerId }: { user: ElasticUser; ownerId: string }): User => ({
   id: user.user_id,
   displayName: user.name || user.email,
   email: user.email,
   role: formatElbaUserRole(user.role_assignments),
   additionalEmails: [],
+  isSuspendable: user.user_id !== ownerId,
   url: 'https://cloud.elastic.co/account/members',
 });
 
@@ -61,6 +62,7 @@ export const syncUsers = inngest.createFunction(
     const [organisation] = await db
       .select({
         apiKey: organisationsTable.apiKey,
+        ownerId: organisationsTable.ownerId,
         region: organisationsTable.region,
       })
       .from(organisationsTable)
@@ -76,6 +78,7 @@ export const syncUsers = inngest.createFunction(
     });
 
     const decryptedApiKey = await decrypt(organisation.apiKey);
+    const ownerId = organisation.ownerId;
 
     const { organizationId } = await step.run('get-organization-id', async () => {
       return getOrganizationId({ apiKey: decryptedApiKey });
@@ -84,7 +87,7 @@ export const syncUsers = inngest.createFunction(
     await step.run('list-all-users', async () => {
       const result = await getAllUsers({ apiKey: decryptedApiKey, page, organizationId });
 
-      const users = result.validUsers.map(formatElbaUser);
+      const users = result.validUsers.map((user) => formatElbaUser({ user, ownerId }));
 
       if (result.invalidUsers.length > 0) {
         logger.warn('Retrieved users contains invalid data', {

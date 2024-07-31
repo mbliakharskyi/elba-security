@@ -28,10 +28,9 @@ const setup = createInngestFunctionMock(syncUsers, 'elastic/users.sync.requested
 
 describe('synchronize-users', () => {
   test('should abort sync when organisation is not registered', async () => {
-    vi.spyOn(usersConnector, 'getUsers').mockResolvedValue({
+    vi.spyOn(usersConnector, 'getAllUsers').mockResolvedValue({
       validUsers: users,
       invalidUsers: [],
-      nextPage: null,
     });
 
     const [result, { step }] = setup({
@@ -43,7 +42,7 @@ describe('synchronize-users', () => {
 
     await expect(result).rejects.toBeInstanceOf(NonRetriableError);
 
-    expect(usersConnector.getUsers).toBeCalledTimes(0);
+    expect(usersConnector.getAllUsers).toBeCalledTimes(0);
 
     expect(step.sendEvent).toBeCalledTimes(0);
   });
@@ -52,10 +51,9 @@ describe('synchronize-users', () => {
     const elba = spyOnElba();
 
     await db.insert(organisationsTable).values(organisation);
-    vi.spyOn(usersConnector, 'getUsers').mockResolvedValue({
+    vi.spyOn(usersConnector, 'getAllUsers').mockResolvedValue({
       validUsers: users,
       invalidUsers: [],
-      nextPage,
     });
 
     const [result, { step }] = setup({
@@ -102,10 +100,9 @@ describe('synchronize-users', () => {
   test('should finalize the sync when there is a no next page', async () => {
     const elba = spyOnElba();
     await db.insert(organisationsTable).values(organisation);
-    vi.spyOn(usersConnector, 'getUsers').mockResolvedValue({
+    vi.spyOn(usersConnector, 'getAllUsers').mockResolvedValue({
       validUsers: users,
       invalidUsers: [],
-      nextPage: null,
     });
 
     const [result, { step }] = setup({

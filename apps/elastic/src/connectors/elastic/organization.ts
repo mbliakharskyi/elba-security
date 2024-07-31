@@ -32,7 +32,7 @@ export const getOrganizationId = async ({ apiKey }: GetOrganizationsParams) => {
     throw new ElasticError('Could not parse organization response');
   }
 
-  if (result.data.organizations.length === 0) {
+  if (!result.data.organizations[0]) {
     throw new ElasticError('No organization found');
   }
 

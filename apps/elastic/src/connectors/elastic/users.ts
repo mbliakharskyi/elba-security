@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { logger } from '@elba-security/logger';
 import { env } from '@/common/env';
 import { ElasticError } from '../common/error';
 
@@ -32,6 +33,9 @@ const elasticResponseSchema = z.object({
   members: z.array(z.unknown()),
 });
 
+const elasticOwnerIdResponseSchema = z.object({
+  id: z.string(),
+});
 export type GetUsersParams = {
   apiKey: string;
   organizationId: string;
@@ -99,4 +103,31 @@ export const deleteUser = async ({ apiKey, userId, organizationId }: DeleteUsers
   if (!response.ok && response.status !== 404) {
     throw new ElasticError(`Could not delete user with Id: ${userId}`, { response });
   }
+};
+
+export const getOwnerId = async ({ apiKey }: { apiKey: string }) => {
+  const url = new URL(`${env.ELASTIC_API_BASE_URL}/api/v1/account`);
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      Authorization: `ApiKey ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  if (!response.ok) {
+    throw new ElasticError('Could not retrieve owner id', { response });
+  }
+
+  const resData: unknown = await response.json();
+
+  const result = elasticOwnerIdResponseSchema.safeParse(resData);
+  if (!result.success) {
+    logger.error('Invalid Elastic owner id response', { resData });
+    throw new ElasticError('Invalid Elastic owner id response');
+  }
+
+  return {
+    ownerId: result.data.id,
+  };
 };
