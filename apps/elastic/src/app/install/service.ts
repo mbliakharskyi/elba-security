@@ -1,5 +1,5 @@
 import { encrypt } from '@/common/crypto';
-import { getOwnerId } from '@/connectors/elastic/users';
+import { getOrganizationId } from '@/connectors/elastic/organization';
 import { db } from '../../database/client';
 import { organisationsTable } from '../../database/schema';
 import { inngest } from '../../inngest/client';
@@ -14,19 +14,18 @@ export const registerOrganisation = async ({
   apiKey,
   region,
 }: SetupOrganisationParams) => {
-  const { ownerId } = await getOwnerId({ apiKey });
+  await getOrganizationId({ apiKey });
 
   const encodedToken = await encrypt(apiKey);
 
   await db
     .insert(organisationsTable)
-    .values({ id: organisationId, region, apiKey: encodedToken, ownerId })
+    .values({ id: organisationId, region, apiKey: encodedToken })
     .onConflictDoUpdate({
       target: organisationsTable.id,
       set: {
         region,
         apiKey: encodedToken,
-        ownerId,
       },
     });
 
