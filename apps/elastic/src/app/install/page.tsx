@@ -12,7 +12,6 @@ import {
 } from '@elba-security/design-system';
 import { useSearchParams } from 'next/navigation';
 import { useFormState } from 'react-dom';
-import Link from 'next/link';
 import type { FormState } from './actions';
 import { install } from './actions';
 
@@ -30,15 +29,12 @@ export default function InstallPage() {
         <InstructionsStep index={1}>
           <h3>How to generate token?</h3>
           <p>
-            1. Log in to you organization and navigate to{' '}
-            <Link
-              href="https://id.atlassian.com/manage-profile/security/api-tokens"
-              style={{ color: 'blue' }}>
-              API keys
-            </Link>{' '}
-            page
+            1. In your account click on your avatar in the upper right corner and select{' '}
+            <b>Organization</b>
           </p>
-          <p>2. Click Create API key.</p>
+          <p>
+            2. On the API keys tab click <b>Create API key.</b>
+          </p>
           <p>
             3. Give your API Key a name. For example, <b>elba-security</b> and create. Make sure to
             copy the token
