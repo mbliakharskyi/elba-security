@@ -45,7 +45,7 @@ describe('users connector', () => {
       });
     });
 
-    test('should return users and no nextPage when the api key is valid and their is no other page', async () => {
+    test('should return users when the api key is valid ', async () => {
       await expect(getAllUsers({ apiKey: validApiKey, organizationId })).resolves.toStrictEqual({
         validUsers,
         invalidUsers,

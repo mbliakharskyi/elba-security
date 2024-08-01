@@ -93,7 +93,6 @@ describe('synchronize-users', () => {
     const syncBeforeAtISO = new Date(syncedBefore).toISOString();
     expect(elbaInstance?.users.delete).toBeCalledTimes(1);
     expect(elbaInstance?.users.delete).toBeCalledWith({ syncedBefore: syncBeforeAtISO });
-    // the function should not send another event that continue the pagination
     expect(step.sendEvent).toBeCalledTimes(0);
   });
 });

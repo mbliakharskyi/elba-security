@@ -69,7 +69,7 @@ export const install = async (_: FormState, formData: FormData): Promise<FormSta
     if (error instanceof ElasticError && error.response?.status === 401) {
       return {
         errors: {
-          apiKey: ['The given API token seems to be invalid'],
+          apiKey: ['The given API Key seems to be invalid'],
         },
       };
     }
