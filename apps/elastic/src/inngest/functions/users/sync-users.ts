@@ -57,7 +57,7 @@ export const syncUsers = inngest.createFunction(
   },
   { event: 'elastic/users.sync.requested' },
   async ({ event, step }) => {
-    const { organisationId, syncStartedAt, page } = event.data;
+    const { organisationId, syncStartedAt } = event.data;
 
     const [organisation] = await db
       .select({
@@ -83,7 +83,7 @@ export const syncUsers = inngest.createFunction(
     });
 
     await step.run('list-all-users', async () => {
-      const result = await getAllUsers({ apiKey: decryptedApiKey, page, organizationId });
+      const result = await getAllUsers({ apiKey: decryptedApiKey, organizationId });
 
       const users = result.validUsers.map(formatElbaUser);
 

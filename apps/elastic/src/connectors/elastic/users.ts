@@ -4,7 +4,7 @@ import { ElasticError } from '../common/error';
 
 const elasticUserSchema = z.object({
   user_id: z.string(),
-  name: z.string().optional(),
+  name: z.string(),
   email: z.string(),
   role_assignments: z
     .object({
@@ -35,7 +35,6 @@ const elasticResponseSchema = z.object({
 export type GetUsersParams = {
   apiKey: string;
   organizationId: string;
-  page?: string | null;
 };
 
 export type DeleteUsersParams = {
@@ -44,12 +43,8 @@ export type DeleteUsersParams = {
   apiKey: string;
 };
 
-export const getAllUsers = async ({ apiKey, page, organizationId }: GetUsersParams) => {
+export const getAllUsers = async ({ apiKey, organizationId }: GetUsersParams) => {
   const url = new URL(`${env.ELASTIC_API_BASE_URL}/api/v1/organizations/${organizationId}/members`);
-
-  if (page) {
-    url.searchParams.append('from', String(page));
-  }
 
   const response = await fetch(url.toString(), {
     method: 'GET',
@@ -64,7 +59,6 @@ export const getAllUsers = async ({ apiKey, page, organizationId }: GetUsersPara
   }
 
   const resData: unknown = await response.json();
-
   const { members } = elasticResponseSchema.parse(resData);
 
   const validUsers: ElasticUser[] = [];

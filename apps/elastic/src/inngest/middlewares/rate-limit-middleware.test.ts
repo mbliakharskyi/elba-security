@@ -35,7 +35,7 @@ describe('rate-limit middleware', () => {
       // @ts-expect-error this is a mock
       response: {
         status: 429,
-        headers: new Headers({ 'Retry-After': '10' }),
+        headers: new Headers({ 'X-RateLimit-Reset': 'Wed, 31 Jul 2100 12:00:00 GMT' }),
       },
     });
 
@@ -56,7 +56,16 @@ describe('rate-limit middleware', () => {
       .onFunctionRun({ fn: { name: 'foo' } })
       .transformOutput(context);
     expect(result?.result.error).toBeInstanceOf(RetryAfterError);
-    expect(result?.result.error.retryAfter).toStrictEqual('10');
+
+    // Calculate the expected retryAfter value
+    const resetDate = new Date('Wed, 31 Jul 2100 12:00:00 GMT');
+    const currentTime = new Date();
+    const expectedRetryAfter = Math.max(
+      0,
+      Math.floor((resetDate.getTime() - currentTime.getTime()) / 1000)
+    );
+
+    expect(result?.result.error.retryAfter).toStrictEqual(`${expectedRetryAfter}`);
     expect(result).toMatchObject({
       foo: 'bar',
       baz: {

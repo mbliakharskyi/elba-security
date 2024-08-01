@@ -2,12 +2,14 @@ import { expect, test, describe, vi } from 'vitest';
 import { createInngestFunctionMock, spyOnElba } from '@elba-security/test-utils';
 import { NonRetriableError } from 'inngest';
 import * as usersConnector from '@/connectors/elastic/users';
+import * as organizationConnector from '@/connectors/elastic/organization';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { encrypt } from '@/common/crypto';
 import { syncUsers } from './sync-users';
 
 const apiKey = 'test-access-token';
+const organizationId = 'test-organization-id';
 
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
@@ -16,12 +18,14 @@ const organisation = {
 };
 const syncStartedAt = Date.now();
 const syncedBefore = Date.now();
-const nextPage = 1;
 const users: usersConnector.ElasticUser[] = Array.from({ length: 2 }, (_, i) => ({
-  organizationId: `id-${i}`,
-  displayName: `displayName-${i}`,
-  emailAddress: `user-${i}@foo.bar`,
-  organizationType: 'atlassian',
+  user_id: `user-id-${i}`,
+  name: `name-${i}`,
+  email: `user-${i}@foo.bar`,
+  role_assignments: {
+    organization: [{ role_id: 'test-role-id' }],
+    deployment: null,
+  },
 }));
 
 const setup = createInngestFunctionMock(syncUsers, 'elastic/users.sync.requested');
@@ -37,7 +41,6 @@ describe('synchronize-users', () => {
       organisationId: organisation.id,
       isFirstSync: false,
       syncStartedAt: Date.now(),
-      page: null,
     });
 
     await expect(result).rejects.toBeInstanceOf(NonRetriableError);
@@ -47,69 +50,19 @@ describe('synchronize-users', () => {
     expect(step.sendEvent).toBeCalledTimes(0);
   });
 
-  test('should continue the sync when there is a next page', async () => {
-    const elba = spyOnElba();
-
-    await db.insert(organisationsTable).values(organisation);
-    vi.spyOn(usersConnector, 'getAllUsers').mockResolvedValue({
-      validUsers: users,
-      invalidUsers: [],
-    });
-
-    const [result, { step }] = setup({
-      organisationId: organisation.id,
-      isFirstSync: false,
-      syncStartedAt,
-      page: String(nextPage),
-    });
-
-    await expect(result).resolves.toStrictEqual({ status: 'ongoing' });
-
-    const elbaInstance = elba.mock.results[0]?.value;
-    expect(step.sendEvent).toBeCalledTimes(1);
-    expect(step.sendEvent).toBeCalledWith('synchronize-users', {
-      name: 'elastic/users.sync.requested',
-      data: {
-        organisationId: organisation.id,
-        isFirstSync: false,
-        syncStartedAt,
-        page: String(nextPage),
-      },
-    });
-
-    expect(elbaInstance?.users.update).toBeCalledTimes(1);
-    expect(elbaInstance?.users.update).toBeCalledWith({
-      users: [
-        {
-          additionalEmails: [],
-          displayName: 'displayName-0',
-          email: 'user-0@foo.bar',
-          id: 'id-0',
-        },
-        {
-          additionalEmails: [],
-          displayName: 'displayName-1',
-          email: 'user-1@foo.bar',
-          id: 'id-1',
-        },
-      ],
-    });
-    expect(elbaInstance?.users.delete).not.toBeCalled();
-  });
-
-  test('should finalize the sync when there is a no next page', async () => {
+  test('should finalize the sync', async () => {
     const elba = spyOnElba();
     await db.insert(organisationsTable).values(organisation);
     vi.spyOn(usersConnector, 'getAllUsers').mockResolvedValue({
       validUsers: users,
       invalidUsers: [],
     });
+    vi.spyOn(organizationConnector, 'getOrganizationId').mockResolvedValueOnce({ organizationId });
 
     const [result, { step }] = setup({
       organisationId: organisation.id,
       isFirstSync: false,
       syncStartedAt,
-      page: null,
     });
 
     await expect(result).resolves.toStrictEqual({ status: 'completed' });
@@ -119,15 +72,21 @@ describe('synchronize-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'displayName-0',
+          displayName: 'name-0',
           email: 'user-0@foo.bar',
-          id: 'id-0',
+          id: 'user-id-0',
+          role: 'test role id',
+          isSuspendable: true,
+          url: 'https://cloud.elastic.co/account/members',
         },
         {
           additionalEmails: [],
-          displayName: 'displayName-1',
+          displayName: 'name-1',
           email: 'user-1@foo.bar',
-          id: 'id-1',
+          id: 'user-id-1',
+          role: 'test role id',
+          isSuspendable: true,
+          url: 'https://cloud.elastic.co/account/members',
         },
       ],
     });

@@ -13,12 +13,19 @@ export const rateLimitMiddleware = new InngestMiddleware({
               ...context
             } = ctx;
 
-            if (!(error instanceof ElasticError)) {
-              return;
-            }
+            if (error instanceof ElasticError && error.response?.status === 429) {
+              const rateLimitReset = error.response.headers.get('X-RateLimit-Reset') || 60;
 
-            if (error.response?.status === 429) {
-              const retryAfter = error.response.headers.get('retry-after') || 60;
+              let retryAfter = 60;
+
+              if (rateLimitReset) {
+                const resetDate = new Date(rateLimitReset);
+                const currentTime = new Date();
+                retryAfter = Math.max(
+                  0,
+                  Math.floor((resetDate.getTime() - currentTime.getTime()) / 1000)
+                );
+              }
 
               return {
                 ...context,
