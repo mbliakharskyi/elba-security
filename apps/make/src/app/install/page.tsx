@@ -13,9 +13,9 @@ import {
 } from '@elba-security/design-system';
 import { useSearchParams } from 'next/navigation';
 import { useFormState } from 'react-dom';
+import { useState } from 'react';
 import type { FormState } from './actions';
 import { install } from './actions';
-import { useEffect, useState } from 'react';
 
 export default function InstallPage() {
   const searchParams = useSearchParams();
@@ -23,12 +23,14 @@ export default function InstallPage() {
   const region = searchParams.get('region');
 
   const [state, formAction] = useFormState<FormState, FormData>(install, {});
+  const [selectedZone, setSelectedZone] = useState('');
 
-  const handleOrganizationChange = (e) => {
-    console.log('Selected organization ID:', e.target.value);
+  const handleOrganizationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedOrgId = e.target.value;
-    const selectedOrg = state.organizations?.find((org) => org.id === selectedOrgId);
-    console.log('Selected organization:', selectedOrg);
+    const selectedOrg = state.organizations?.find((org) => String(org.id) === selectedOrgId);
+    if (selectedOrg) {
+      setSelectedZone(selectedOrg.zone);
+    }
   };
 
   return (
@@ -71,36 +73,54 @@ export default function InstallPage() {
                 <FormErrorMessage>{state.errors.apiToken.at(0)}</FormErrorMessage>
               ) : null}
             </FormField>
-            <FormField isInvalid={Boolean(state.errors?.zoneDomain?.at(0))}>
-              <FormLabel>Zone Domain</FormLabel>
-              <Input
-                minLength={1}
-                name="zoneDomain"
-                placeholder="Paste Your Zone Domain"
-                type="text"
-              />
-              {state.errors?.zoneDomain?.at(0) ? (
-                <FormErrorMessage>{state.errors.zoneDomain.at(0)}</FormErrorMessage>
-              ) : null}
-            </FormField>
+
             {state.organizations ? (
-              <FormField isInvalid={Boolean(state.errors?.selectedOrganization?.at(0))}>
-                <FormLabel>Select Organization</FormLabel>
-                <Select
-                  name="selectedOrganization"
-                  placeholder="Select an organization"
-                  onChange={handleOrganizationChange}>
-                  {state.organizations.map((org) => (
-                    <option key={org.id} value={org.id}>
-                      {`${org.name} - ${org.zone}`}
-                    </option>
-                  ))}
-                </Select>
-                {state.errors?.selectedOrganization?.at(0) ? (
-                  <FormErrorMessage>{state.errors.selectedOrganization.at(0)}</FormErrorMessage>
+              <>
+                <FormField isInvalid={Boolean(state.errors?.zoneDomain?.at(0))}>
+                  <FormLabel>Zone Domain</FormLabel>
+                  <Input
+                    minLength={1}
+                    name="zoneDomain"
+                    placeholder="Paste Your Zone Domain"
+                    type="text"
+                    value={selectedZone}
+                    readOnly
+                  />
+                  {state.errors?.zoneDomain?.at(0) ? (
+                    <FormErrorMessage>{state.errors.zoneDomain.at(0)}</FormErrorMessage>
+                  ) : null}
+                </FormField>
+                <FormField isInvalid={Boolean(state.errors?.selectedOrganization?.at(0))}>
+                  <FormLabel>Select Organization</FormLabel>
+                  <Select
+                    name="selectedOrganization"
+                    placeholder="Select an organization"
+                    onChange={handleOrganizationChange}>
+                    {state.organizations.map((org) => (
+                      <option key={org.id} value={org.id}>
+                        {`${org.name} - ${org.zone}`}
+                      </option>
+                    ))}
+                  </Select>
+                  {state.errors?.selectedOrganization?.at(0) ? (
+                    <FormErrorMessage>{state.errors.selectedOrganization.at(0)}</FormErrorMessage>
+                  ) : null}
+                </FormField>
+              </>
+            ) : (
+              <FormField isInvalid={Boolean(state.errors?.zoneDomain?.at(0))}>
+                <FormLabel>Zone Domain</FormLabel>
+                <Input
+                  minLength={1}
+                  name="zoneDomain"
+                  placeholder="Paste Your Zone Domain"
+                  type="text"
+                />
+                {state.errors?.zoneDomain?.at(0) ? (
+                  <FormErrorMessage>{state.errors.zoneDomain.at(0)}</FormErrorMessage>
                 ) : null}
               </FormField>
-            ) : null}
+            )}
             {organisationId !== null && (
               <input name="organisationId" type="hidden" value={organisationId} />
             )}

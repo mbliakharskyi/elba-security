@@ -71,7 +71,7 @@ export default function InstallPage() {
             <FormField isInvalid={Boolean(state.errors?.sourceRegion?.at(0))}>
               <FormLabel>Region</FormLabel>
 
-              <Select name="sourceRegion" placeholder="Select a region" onChange={(e) => {console.log(e.target.value)}}>
+              <Select name="sourceRegion" placeholder="Select a region">
                 {Object.entries(DATADOG_REGIONS_NAMES).map(([value, name]) => (
                   <option key={value} value={value}>
                     {`[${value}] - ${name}`}

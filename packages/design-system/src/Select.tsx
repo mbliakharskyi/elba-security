@@ -17,7 +17,6 @@ export function Select({ className, onChange, placeholder, children, ...props }:
       if (event.target.value !== '') {
         setIsPlaceholderSelected(false);
       }
-      console.log('onChange', onChange)
       return onChange?.(event);
     },
     [onChange, setIsPlaceholderSelected]
