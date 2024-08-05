@@ -15,6 +15,7 @@ import { useSearchParams } from 'next/navigation';
 import { useFormState } from 'react-dom';
 import type { FormState } from './actions';
 import { install } from './actions';
+import { useEffect, useState } from 'react';
 
 export default function InstallPage() {
   const searchParams = useSearchParams();
@@ -22,6 +23,13 @@ export default function InstallPage() {
   const region = searchParams.get('region');
 
   const [state, formAction] = useFormState<FormState, FormData>(install, {});
+
+  const handleOrganizationChange = (e) => {
+    console.log('Selected organization ID:', e.target.value);
+    const selectedOrgId = e.target.value;
+    const selectedOrg = state.organizations?.find((org) => org.id === selectedOrgId);
+    console.log('Selected organization:', selectedOrg);
+  };
 
   return (
     <>
@@ -75,9 +83,13 @@ export default function InstallPage() {
                 <FormErrorMessage>{state.errors.zoneDomain.at(0)}</FormErrorMessage>
               ) : null}
             </FormField>
-            {state.organizations ? <FormField isInvalid={Boolean(state.errors?.selectedOrganization?.at(0))}>
+            {state.organizations ? (
+              <FormField isInvalid={Boolean(state.errors?.selectedOrganization?.at(0))}>
                 <FormLabel>Select Organization</FormLabel>
-                <Select name="selectedOrganization" placeholder="Select an organization">
+                <Select
+                  name="selectedOrganization"
+                  placeholder="Select an organization"
+                  onChange={handleOrganizationChange}>
                   {state.organizations.map((org) => (
                     <option key={org.id} value={org.id}>
                       {`${org.name} - ${org.zone}`}
@@ -87,7 +99,8 @@ export default function InstallPage() {
                 {state.errors?.selectedOrganization?.at(0) ? (
                   <FormErrorMessage>{state.errors.selectedOrganization.at(0)}</FormErrorMessage>
                 ) : null}
-              </FormField> : null}
+              </FormField>
+            ) : null}
             {organisationId !== null && (
               <input name="organisationId" type="hidden" value={organisationId} />
             )}
