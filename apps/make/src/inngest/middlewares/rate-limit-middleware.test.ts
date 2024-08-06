@@ -16,7 +16,7 @@ describe('rate-limit middleware', () => {
     ).toBeUndefined();
   });
 
-  test('should not transform the output when the error is not about Make rate limit', () => {
+  test('should not transform the output when the error is not about make rate limit', () => {
     expect(
       rateLimitMiddleware
         .init()
@@ -30,12 +30,13 @@ describe('rate-limit middleware', () => {
     ).toBeUndefined();
   });
 
-  test('should transform the output error to RetryAfterError when the error is about Make rate limit', () => {
+  test('should transform the output error to RetryAfterError when the error is about make rate limit', () => {
+    const rateLimitReset = '1700137003';
+
     const rateLimitError = new MakeError('foo bar', {
-      // @ts-expect-error this is a mock
       response: {
-        status: 429,
-        headers: new Headers({ 'retry-after': '10' }),
+        // @ts-expect-error -- this is a mock
+        headers: { 'x-ratelimit-remaining': '0', 'x-ratelimit-reset': rateLimitReset },
       },
     });
 
@@ -56,7 +57,9 @@ describe('rate-limit middleware', () => {
       .onFunctionRun({ fn: { name: 'foo' } })
       .transformOutput(context);
     expect(result?.result.error).toBeInstanceOf(RetryAfterError);
-    expect(result?.result.error.retryAfter).toStrictEqual('10');
+    expect(result?.result.error.retryAfter).toStrictEqual(
+      new Date(Number(rateLimitReset) * 1000).toISOString()
+    );
     expect(result).toMatchObject({
       foo: 'bar',
       baz: {

@@ -7,13 +7,13 @@ import { isRedirectError } from 'next/dist/client/components/redirect';
 import { unstable_noStore } from 'next/cache'; // eslint-disable-line camelcase -- next sucks
 import { MakeError } from '@/connectors/common/error';
 import { env } from '@/common/env';
-import { registerOrganisation , getSaasOrganizations } from './service';
+import { registerOrganisation, getSaasOrganizations } from './service';
 
 const formSchema = z.object({
   organisationId: z.string().uuid(),
   apiToken: z.string().min(1, { message: 'API token is required' }),
   zoneDomain: z.string().min(1, { message: 'Zone Domain is required' }),
-  selectedOrganization: z
+  selectedOrganizationId: z
     .string()
     .min(1, { message: 'Please select your organization' })
     .nullable(),
@@ -24,9 +24,9 @@ export type FormState = {
   errors?: {
     apiToken?: string[] | undefined;
     zoneDomain?: string[] | undefined;
-    selectedOrganization?: string[] | undefined;
+    selectedOrganizationId?: string[] | undefined;
   };
-  selectedOrganization?: string | null;
+  selectedOrganizationId?: string | null;
   organizations?: {
     id: number;
     name: string;
@@ -42,7 +42,7 @@ export const install = async (_: FormState, formData: FormData): Promise<FormSta
       apiToken: formData.get('apiToken'),
       zoneDomain: formData.get('zoneDomain'),
       organisationId: formData.get('organisationId'),
-      selectedOrganization: formData.get('selectedOrganization'),
+      selectedOrganizationId: formData.get('selectedOrganizationId'),
       region: formData.get('region'),
     });
 
@@ -65,14 +65,21 @@ export const install = async (_: FormState, formData: FormData): Promise<FormSta
       };
     }
 
-    if (!result.data.selectedOrganization) {
+    const { organisationId, zoneDomain, apiToken, selectedOrganizationId } = result.data;
+    if (!selectedOrganizationId) {
       return await getSaasOrganizations({
         apiToken: result.data.apiToken,
         zoneDomain: result.data.zoneDomain,
       });
     }
 
-    await registerOrganisation(result.data);
+    await registerOrganisation({
+      organisationId,
+      region: region as string,
+      zoneDomain,
+      apiToken,
+      selectedOrganizationId,
+    });
 
     redirect(
       getRedirectUrl({

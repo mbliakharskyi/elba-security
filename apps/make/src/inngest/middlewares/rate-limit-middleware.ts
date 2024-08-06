@@ -13,19 +13,23 @@ export const rateLimitMiddleware = new InngestMiddleware({
               ...context
             } = ctx;
 
-            if (error instanceof MakeError && error.response?.status === 429) {
-              const retryAfter = error.response.headers.get('retry-after') || 60;
+            if (
+              error instanceof MakeError &&
+              error.response?.headers['x-ratelimit-remaining'] === '0' &&
+              error.response.headers['x-ratelimit-reset']
+            ) {
+              const retryAfter = new Date(
+                Number(error.response.headers['x-ratelimit-reset']) * 1000
+              );
 
               return {
                 ...context,
                 result: {
                   ...result,
                   error: new RetryAfterError(
-                    `Rate limit exceeded for '${fn.name}'. Retry after ${retryAfter} seconds.`,
-                    `${retryAfter}s`,
-                    {
-                      cause: error,
-                    }
+                    `Make rate limit reached by '${fn.name}'`,
+                    retryAfter,
+                    { cause: error }
                   ),
                 },
               };

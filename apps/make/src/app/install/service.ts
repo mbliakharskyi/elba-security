@@ -8,6 +8,8 @@ import { getOrganizations } from '@/connectors/make/organizations';
 type SetupOrganisationParams = {
   organisationId: string;
   apiToken: string;
+  zoneDomain: string;
+  selectedOrganizationId: string;
   region: string;
 };
 
@@ -18,11 +20,13 @@ type GetSaasOrganisationParams = {
 export const registerOrganisation = async ({
   organisationId,
   apiToken,
+  zoneDomain,
+  selectedOrganizationId,
   region,
 }: SetupOrganisationParams) => {
   const encodedApiToken = await encrypt(apiToken);
 
-  await getUsers({ apiToken });
+  await getUsers({ apiToken, zoneDomain, selectedOrganizationId });
 
   await db
     .insert(organisationsTable)
@@ -30,12 +34,16 @@ export const registerOrganisation = async ({
       id: organisationId,
       region,
       apiToken: encodedApiToken,
+      zoneDomain,
+      selectedOrganizationId,
     })
     .onConflictDoUpdate({
       target: organisationsTable.id,
       set: {
         region,
         apiToken: encodedApiToken,
+        zoneDomain,
+        selectedOrganizationId,
       },
     });
 

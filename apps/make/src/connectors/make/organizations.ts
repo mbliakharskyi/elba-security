@@ -6,7 +6,7 @@ const makeOrganizationsResponseSchema = z.object({
     z.object({
       id: z.number(),
       name: z.string(),
-      zone: z.string({}),
+      zone: z.string(),
     })
   ),
 });

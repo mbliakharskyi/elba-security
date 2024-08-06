@@ -90,10 +90,10 @@ export default function InstallPage() {
                     <FormErrorMessage>{state.errors.zoneDomain.at(0)}</FormErrorMessage>
                   ) : null}
                 </FormField>
-                <FormField isInvalid={Boolean(state.errors?.selectedOrganization?.at(0))}>
+                <FormField isInvalid={Boolean(state.errors?.selectedOrganizationId?.at(0))}>
                   <FormLabel>Select Organization</FormLabel>
                   <Select
-                    name="selectedOrganization"
+                    name="selectedOrganizationId"
                     placeholder="Select an organization"
                     onChange={handleOrganizationChange}>
                     {state.organizations.map((org) => (
@@ -102,8 +102,8 @@ export default function InstallPage() {
                       </option>
                     ))}
                   </Select>
-                  {state.errors?.selectedOrganization?.at(0) ? (
-                    <FormErrorMessage>{state.errors.selectedOrganization.at(0)}</FormErrorMessage>
+                  {state.errors?.selectedOrganizationId?.at(0) ? (
+                    <FormErrorMessage>{state.errors.selectedOrganizationId.at(0)}</FormErrorMessage>
                   ) : null}
                 </FormField>
               </>

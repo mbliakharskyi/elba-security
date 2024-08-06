@@ -10,6 +10,8 @@ const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   apiToken: 'api-token',
   region: 'fra1',
+  zoneDomain: 'test-zone-domain.com',
+  selectedOrganizationId: 'test-selected-organization-id',
 };
 
 describe('unauthorized middleware', () => {

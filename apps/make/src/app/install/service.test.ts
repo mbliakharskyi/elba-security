@@ -10,15 +10,14 @@ import { MakeError } from '@/connectors/common/error';
 import { registerOrganisation } from './service';
 
 const apiToken = 'test-api-token';
+const zoneDomain = 'test-zone-domain.com';
+const selectedOrganizationId = 'test-selected-organization-id';
 const region = 'us';
 const now = new Date();
 const validUsers: MakeUser[] = Array.from({ length: 2 }, (_, i) => ({
-  id: `${i}`,
-  access: `owner`,
-  user: {
-    name: `username-${i}`,
-    email: `user-${i}@foo.bar`,
-  },
+  id: i,
+  name: `name-${i}`,
+  email: `user-${i}@foo.bar`,
 }));
 
 const invalidUsers = [];
@@ -31,6 +30,8 @@ const getUsersData = {
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   apiToken,
+  zoneDomain,
+  selectedOrganizationId,
   region,
 };
 
@@ -52,12 +53,14 @@ describe('registerOrganisation', () => {
       registerOrganisation({
         organisationId: organisation.id,
         apiToken,
+        zoneDomain,
+        selectedOrganizationId,
         region,
       })
     ).resolves.toBeUndefined();
 
     expect(getUsers).toBeCalledTimes(1);
-    expect(getUsers).toBeCalledWith({ apiToken });
+    expect(getUsers).toBeCalledWith({ apiToken, zoneDomain, selectedOrganizationId });
 
     const [storedOrganisation] = await db
       .select()
@@ -103,12 +106,14 @@ describe('registerOrganisation', () => {
       registerOrganisation({
         organisationId: organisation.id,
         apiToken,
+        zoneDomain,
+        selectedOrganizationId,
         region,
       })
     ).resolves.toBeUndefined();
 
     expect(getUsers).toBeCalledTimes(1);
-    expect(getUsers).toBeCalledWith({ apiToken });
+    expect(getUsers).toBeCalledWith({ apiToken, zoneDomain, selectedOrganizationId });
 
     // check if the apiToken in the database is updated
     const [storedOrganisation] = await db

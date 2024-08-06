@@ -11,6 +11,8 @@ const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   apiToken: 'api-token',
   region: 'us-west-2',
+  zoneDomain: 'test-zone-domain',
+  selectedOrganizationId: 'test-id',
 };
 
 const setup = createInngestFunctionMock(removeOrganisation, 'make/app.uninstalled');

@@ -11,12 +11,18 @@ import { decrypt } from '@/common/crypto';
 import { getElbaClient } from '@/connectors/elba/client';
 import { env } from '@/common/env';
 
-const formatElbaUser = (user: MakeUser): User => ({
-  id: user.id,
-  displayName: user.user.name,
-  email: user.user.email,
-  role: user.access,
+const formatElbaUser = ({
+  user,
+  selectedOrganizationId,
+}: {
+  user: MakeUser;
+  selectedOrganizationId: string;
+}): User => ({
+  id: String(user.id),
+  displayName: user.name,
+  email: user.email,
   additionalEmails: [],
+  url: `https://eu2.make.com/${selectedOrganizationId}/team/users?offset=0&limit=50`,
 });
 
 export const syncUsers = inngest.createFunction(
@@ -48,6 +54,8 @@ export const syncUsers = inngest.createFunction(
     const [organisation] = await db
       .select({
         apiToken: organisationsTable.apiToken,
+        zoneDomain: organisationsTable.zoneDomain,
+        selectedOrganizationId: organisationsTable.selectedOrganizationId,
         region: organisationsTable.region,
       })
       .from(organisationsTable)
@@ -59,14 +67,19 @@ export const syncUsers = inngest.createFunction(
     const elba = getElbaClient({ organisationId, region: organisation.region });
 
     const apiToken = await decrypt(organisation.apiToken);
-
+    const zoneDomain = organisation.zoneDomain;
+    const selectedOrganizationId = organisation.selectedOrganizationId;
     const nextPage = await step.run('list-users', async () => {
       const result = await getUsers({
         apiToken,
+        zoneDomain,
+        selectedOrganizationId,
         page,
       });
 
-      const users = result.validUsers.map(formatElbaUser);
+      const users = result.validUsers.map((user) =>
+        formatElbaUser({ user, selectedOrganizationId })
+      );
 
       if (result.invalidUsers.length > 0) {
         logger.warn('Retrieved users contains invalid data', {
@@ -87,7 +100,7 @@ export const syncUsers = inngest.createFunction(
         name: 'make/users.sync.requested',
         data: {
           ...event.data,
-          page: nextPage,
+          page: String(nextPage),
         },
       });
       return {

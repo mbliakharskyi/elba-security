@@ -7,21 +7,22 @@ import { organisationsTable } from '@/database/schema';
 import { encrypt } from '@/common/crypto';
 import { syncUsers } from './sync-users';
 
-const nextPage = '1';
+const nextPage = 1;
+const region = 'us';
+const zoneDomain = 'eu2.make.com';
+const selectedOrganizationId = 'test-selected-organization-id';
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
-  apiToken: await encrypt('test-personal-token'),
-  accountId: '00000',
-  region: 'us',
+  apiToken: await encrypt('test-api-token'),
+  zoneDomain,
+  selectedOrganizationId,
+  region,
 };
 
 const users: usersConnector.MakeUser[] = Array.from({ length: 2 }, (_, i) => ({
-  id: `${i}`,
-  access: `owner`,
-  user: {
-    name: `username-${i}`,
-    email: `user-${i}@foo.bar`,
-  },
+  id: i,
+  name: `name-${i}`,
+  email: `user-${i}@foo.bar`,
 }));
 
 const syncStartedAt = Date.now();
@@ -29,8 +30,13 @@ const syncedBefore = Date.now();
 
 const setup = createInngestFunctionMock(syncUsers, 'make/users.sync.requested');
 
-describe('sync-users', () => {
+describe('synchronize-users', () => {
   test('should abort sync when organisation is not registered', async () => {
+    vi.spyOn(usersConnector, 'getUsers').mockResolvedValue({
+      validUsers: users,
+      invalidUsers: [],
+      nextPage: null,
+    });
     // setup the test without organisation entries in the database, the function cannot retrieve a token
     const [result, { step }] = setup({
       organisationId: organisation.id,
@@ -41,7 +47,7 @@ describe('sync-users', () => {
 
     // assert the function throws a NonRetriableError that will inform inngest to definitly cancel the event (no further retries)
     await expect(result).rejects.toBeInstanceOf(NonRetriableError);
-
+    expect(usersConnector.getUsers).toBeCalledTimes(0);
     // check that the function is not sending other event
     expect(step.sendEvent).toBeCalledTimes(0);
   });
@@ -49,7 +55,6 @@ describe('sync-users', () => {
   test('should continue the sync when the organization is registered', async () => {
     const elba = spyOnElba();
 
-    // setup the test with an organisation
     await db.insert(organisationsTable).values(organisation);
 
     // mock the getUser function that returns SaaS users page
@@ -63,7 +68,7 @@ describe('sync-users', () => {
       organisationId: organisation.id,
       isFirstSync: false,
       syncStartedAt,
-      page: nextPage,
+      page: String(nextPage),
     });
 
     await expect(result).resolves.toStrictEqual({ status: 'ongoing' });
@@ -73,17 +78,17 @@ describe('sync-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'username-0',
+          displayName: 'name-0',
           email: 'user-0@foo.bar',
           id: '0',
-          role: 'owner',
+          url: 'https://eu2.make.com/test-selected-organization-id/team/users?offset=0&limit=50',
         },
         {
           additionalEmails: [],
-          displayName: 'username-1',
+          displayName: 'name-1',
           email: 'user-1@foo.bar',
           id: '1',
-          role: 'owner',
+          url: 'https://eu2.make.com/test-selected-organization-id/team/users?offset=0&limit=50',
         },
       ],
     });
@@ -95,7 +100,7 @@ describe('sync-users', () => {
         organisationId: organisation.id,
         isFirstSync: false,
         syncStartedAt,
-        page: nextPage,
+        page: String(nextPage),
       },
     });
   });
@@ -125,17 +130,17 @@ describe('sync-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'username-0',
+          displayName: 'name-0',
           email: 'user-0@foo.bar',
           id: '0',
-          role: 'owner',
+          url: 'https://eu2.make.com/test-selected-organization-id/team/users?offset=0&limit=50',
         },
         {
           additionalEmails: [],
-          displayName: 'username-1',
+          displayName: 'name-1',
           email: 'user-1@foo.bar',
           id: '1',
-          role: 'owner',
+          url: 'https://eu2.make.com/test-selected-organization-id/team/users?offset=0&limit=50',
         },
       ],
     });
