@@ -38,30 +38,28 @@ export default function InstallPage() {
       <h1>Setup Make integration</h1>
       <InstructionsSteps>
         <InstructionsStep index={1}>
-          <h3>Create a service account</h3>
-          <p>1. On your Make account, Navigate to Tokens page</p>
+          <h3>Generate a API Token</h3>
           <p>
-            2. In service tab click <strong>Manage service accounts</strong>
+            1. Sign in to Make API and click your avatar at the bottom-left corner of the page and
+            Click <b>Profile</b>
           </p>
           <p>
-            3. Click on <strong>+</strong> to create a new service account.
+            2. Open the API tab and Click <b>Add token</b>
+          </p>
+          <p>3. Select the scopes you need for working with API resources.</p>
+          <p>
+            4. Click <b>Save</b> and Copy the token and input the key value in Elba:
           </p>
         </InstructionsStep>
         <InstructionsStep index={2}>
-          <h3>Generate an API Token</h3>
+          <h3>Obtain your zone domain</h3>
           <p>
-            1. Change the <strong>Workplace Role</strong> from <strong>None</strong> to{' '}
-            <strong>Admin</strong> & Save
+            1. Select <b>Organizations</b> from the sidebar of the page.
           </p>
           <p>
-            2. In the service account API token section, click on <strong>+</strong> to create a new
-            token.
+            2. Click on the <b>Variables</b> tab
           </p>
-          <p>
-            3. We encourage to leave the <strong>Expire Token</strong> checkbox unchecked as the
-            integration will be disconnected after token expiration.
-          </p>
-          <p>4. Copy the created token to the form bellow</p>
+          <p>3. Copy the Value displayed against the Zone Domain and input the value in Elba:</p>
         </InstructionsStep>
         <InstructionsStep index={3}>
           <h3>Connect Make</h3>
