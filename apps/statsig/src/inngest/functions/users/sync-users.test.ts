@@ -71,17 +71,17 @@ describe('sync-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'username-0',
-          email: 'user-0@foo.bar',
-          id: '0',
-          role: 'owner',
+          displayName: 'first-name-0 last-name-0',
+          email: 'user-email-0@alpha.com',
+          id: 'user-email-0@alpha.com',
+          role: 'member',
         },
         {
           additionalEmails: [],
-          displayName: 'username-1',
-          email: 'user-1@foo.bar',
-          id: '1',
-          role: 'owner',
+          displayName: 'first-name-1 last-name-1',
+          email: 'user-email-1@alpha.com',
+          id: 'user-email-1@alpha.com',
+          role: 'member',
         },
       ],
     });
@@ -123,17 +123,17 @@ describe('sync-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'username-0',
-          email: 'user-0@foo.bar',
-          id: '0',
-          role: 'owner',
+          displayName: 'first-name-0 last-name-0',
+          email: 'user-email-0@alpha.com',
+          id: 'user-email-0@alpha.com',
+          role: 'member',
         },
         {
           additionalEmails: [],
-          displayName: 'username-1',
-          email: 'user-1@foo.bar',
-          id: '1',
-          role: 'owner',
+          displayName: 'first-name-1 last-name-1',
+          email: 'user-email-1@alpha.com',
+          id: 'user-email-1@alpha.com',
+          role: 'member',
         },
       ],
     });
