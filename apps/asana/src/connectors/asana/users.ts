@@ -133,6 +133,6 @@ export const getOwnerId = async ({ accessToken }: { accessToken: string }) => {
   }
 
   return {
-    ownerId: String(result.data.data.gid),
+    ownerId: result.data.data.gid,
   };
 };
