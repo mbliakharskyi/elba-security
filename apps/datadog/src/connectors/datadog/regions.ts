@@ -41,7 +41,7 @@ export const getDatadogRegionAPIBaseURL = (region: string) => {
 export const getDatadogRegionURL = (region: string) => {
   const regionDomain = DATADOG_REGIONS_URLS[region as DatadogRegion];
   if (!regionDomain) {
-    throw new Error('Invalid Datadog region');
+    throw new Error('Invalid Datadog URL');
   }
 
   return `https://${regionDomain}`;
