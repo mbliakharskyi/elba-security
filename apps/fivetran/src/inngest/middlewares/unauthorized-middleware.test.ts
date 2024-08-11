@@ -10,6 +10,7 @@ const organisation = {
   apiKey: 'test-api-key',
   apiSecret: 'test-api-secret',
   region: 'us',
+  ownerId: 'test-owner-id',
 };
 
 describe('unauthorized middleware', () => {
