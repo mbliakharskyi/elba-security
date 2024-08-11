@@ -2,11 +2,11 @@ import type { User } from '@elba-security/sdk';
 import { eq } from 'drizzle-orm';
 import { NonRetriableError } from 'inngest';
 import { logger } from '@elba-security/logger';
-import { getUsers } from '@/connectors/users';
+import { getUsers } from '@/connectors/fivetran/users';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { inngest } from '@/inngest/client';
-import { type FivetranUser } from '@/connectors/users';
+import { type FivetranUser } from '@/connectors/fivetran/users';
 import { createElbaClient } from '@/connectors/elba/client';
 import { decrypt } from '@/common/crypto';
 

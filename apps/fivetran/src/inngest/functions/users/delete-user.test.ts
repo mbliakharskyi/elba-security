@@ -1,6 +1,6 @@
 import { expect, test, describe, beforeEach, vi } from 'vitest';
 import { createInngestFunctionMock } from '@elba-security/test-utils';
-import * as usersConnector from '@/connectors/users';
+import * as usersConnector from '@/connectors/fivetran/users';
 import { organisationsTable } from '@/database/schema';
 import { db } from '@/database/client';
 import * as crypto from '@/common/crypto';

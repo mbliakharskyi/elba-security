@@ -3,8 +3,8 @@ import { http } from 'msw';
 import { expect, test, describe, beforeEach } from 'vitest';
 import { server } from '@elba-security/test-utils';
 import { env } from '@/common/env';
+import { FivetranError } from '../common/error';
 import { type FivetranUser, getUsers, deleteUser } from './users';
-import { FivetranError } from './commons/error';
 
 const nextCursor = 'next-cursor';
 const apiKey = 'test-api-key';

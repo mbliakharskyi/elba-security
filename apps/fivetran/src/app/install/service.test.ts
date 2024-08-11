@@ -3,9 +3,9 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { inngest } from '@/inngest/client';
-import * as userConnector from '@/connectors/users';
-import type { FivetranUser } from '@/connectors/users';
-import { FivetranError } from '@/connectors/commons/error';
+import * as userConnector from '@/connectors/fivetran/users';
+import type { FivetranUser } from '@/connectors/fivetran/users';
+import { FivetranError } from '@/connectors/common/error';
 import { decrypt } from '@/common/crypto';
 import { registerOrganisation } from './service';
 

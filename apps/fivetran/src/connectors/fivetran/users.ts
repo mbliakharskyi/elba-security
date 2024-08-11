@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { env } from '@/common/env';
-import { FivetranError } from './commons/error';
+import { FivetranError } from '../common/error';
 
 const fivetranUserSchema = z.object({
   id: z.string(),
