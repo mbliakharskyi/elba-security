@@ -15,7 +15,8 @@ const formatElbaUser = (user: ZoomUser): User => ({
   displayName: user.display_name,
   email: user.email,
   additionalEmails: [],
-  isSuspendable: true,
+  isSuspendable: user.role_id !== '0' && user.role_id !== '1', // '0': owner, '1: admin'
+  url: `https://zoom.us/user/${user.id}/profile`,
 });
 
 export const syncUsers = inngest.createFunction(
