@@ -4,10 +4,12 @@ import { server } from '@elba-security/test-utils';
 import { env } from '@/common/env';
 import { HarvestError } from '../common/error';
 import type { HarvestUser } from './users';
-import { getUsers, deleteUser } from './users';
+import { getUsers, deleteUser, getOwnerId, getCompanyDomain } from './users';
 
 const validToken = 'token-1234';
 const userId = 'test-user-id';
+const ownerId = 100000;
+const companyDomain = 'test-company-domain';
 const endPage = 'https://api.harvestapp.com/v2/users?page=3&per_page=2000&ref=last';
 const nextPage =
   'https://api.harvestapp.com/v2/users?cursor=eyJhZnRlciI6eyJpZCI6NDAwN319&per_page=2000&ref=next_cursor';
@@ -87,6 +89,54 @@ describe('users connector', () => {
 
     test('should throw HarvestError when token is invalid', async () => {
       await expect(deleteUser({ accessToken: 'invalidToken', userId })).rejects.toBeInstanceOf(
+        HarvestError
+      );
+    });
+  });
+
+  describe('getOwnerId', () => {
+    beforeEach(() => {
+      server.use(
+        http.get<{ userId: string }>(`${env.HARVEST_API_BASE_URL}/users/me`, ({ request }) => {
+          if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
+            return new Response(undefined, { status: 401 });
+          }
+
+          return Response.json({ id: ownerId });
+        })
+      );
+    });
+
+    test('should return owner id successfully when token is valid', async () => {
+      await expect(getOwnerId({ accessToken: validToken })).resolves.not.toThrow();
+    });
+
+    test('should throw HarvestError when token is invalid', async () => {
+      await expect(getOwnerId({ accessToken: 'invalidToken' })).rejects.toBeInstanceOf(
+        HarvestError
+      );
+    });
+  });
+
+  describe('getCompanyDomain', () => {
+    beforeEach(() => {
+      server.use(
+        http.get<{ userId: string }>(`${env.HARVEST_API_BASE_URL}/company`, ({ request }) => {
+          if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
+            return new Response(undefined, { status: 401 });
+          }
+
+          return Response.json({ full_domain: companyDomain });
+        })
+      );
+    });
+
+    test('should return company domain successfully when token is valid', async () => {
+      await expect(getCompanyDomain({ accessToken: validToken })).resolves.not.toThrow();
+    });
+
+    test('should throw HarvestError when token is invalid', async () => {
+      await expect(getCompanyDomain({ accessToken: 'invalidToken' })).rejects.toBeInstanceOf(
         HarvestError
       );
     });
