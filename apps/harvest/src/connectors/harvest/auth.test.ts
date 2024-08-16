@@ -14,7 +14,7 @@ describe('auth connector', () => {
   describe('getToken', () => {
     beforeEach(() => {
       server.use(
-        http.post(`${env.HARVEST_APP_INSTALL_URL}/oauth_token`, async ({ request }) => {
+        http.post(`${env.HARVEST_APP_INSTALL_URL}/api/v2/oauth2/token`, async ({ request }) => {
           const body = await request.text();
           const searchParams = new URLSearchParams(body);
           const grantType = searchParams.get('grant_type');
@@ -49,7 +49,7 @@ describe('auth connector', () => {
   describe('getRefreshToken', () => {
     beforeEach(() => {
       server.use(
-        http.post(`${env.HARVEST_APP_INSTALL_URL}/oauth_token`, async ({ request }) => {
+        http.post(`${env.HARVEST_APP_INSTALL_URL}/api/v2/oauth2/token`, async ({ request }) => {
           const body = await request.text();
           const searchParams = new URLSearchParams(body);
 
@@ -62,6 +62,7 @@ describe('auth connector', () => {
 
           return Response.json({
             access_token: accessToken,
+            refresh_token: validRefreshToken,
             expires_in: expiresIn,
           });
         })
@@ -71,12 +72,13 @@ describe('auth connector', () => {
     test('should return the new access token when the refreshToken is valid', async () => {
       await expect(getRefreshToken(validRefreshToken)).resolves.toStrictEqual({
         accessToken,
+        refreshToken: validRefreshToken,
         expiresIn,
       });
     });
 
     test('should throw when the refreshToken is invalid', async () => {
-      await expect(getToken('wrong-refreshtoken')).rejects.toBeInstanceOf(HarvestError);
+      await expect(getRefreshToken('wrong-refreshtoken')).rejects.toBeInstanceOf(HarvestError);
     });
   });
 });

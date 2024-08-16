@@ -11,6 +11,8 @@ const organisation = {
   accessToken: 'access-token',
   refreshToken: 'refresh-token',
   region: 'us',
+  ownerId: 'test-owner-id',
+  companyDomain: 'test-company-domain',
 };
 
 describe('unauthorized middleware', () => {

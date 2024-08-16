@@ -1,6 +1,7 @@
 import { expect, test, describe, vi, beforeAll, afterAll } from 'vitest';
 import { eq } from 'drizzle-orm';
 import * as authConnector from '@/connectors/harvest/auth';
+import * as usersConnector from '@/connectors/harvest/users';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { inngest } from '@/inngest/client';
@@ -14,10 +15,20 @@ const refreshToken = 'some refresh token';
 const expiresIn = 60;
 const region = 'us';
 const now = new Date();
+const ownerId = 'test-owner-id';
+const companyDomain = 'test-company-domain';
 const getTokenData = {
   accessToken,
   refreshToken,
   expiresIn,
+};
+
+const getOwnerIdData = {
+  ownerId,
+};
+
+const getCompanyDomainData = {
+  companyDomain,
 };
 
 const organisation = {
@@ -25,6 +36,8 @@ const organisation = {
   accessToken,
   refreshToken,
   region,
+  ownerId,
+  companyDomain,
 };
 
 describe('setupOrganisation', () => {
@@ -40,6 +53,10 @@ describe('setupOrganisation', () => {
     // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
     const getToken = vi.spyOn(authConnector, 'getToken').mockResolvedValue(getTokenData);
+    const getOwnerId = vi.spyOn(usersConnector, 'getOwnerId').mockResolvedValue(getOwnerIdData);
+    const getCompanyDomain = vi
+      .spyOn(usersConnector, 'getCompanyDomain')
+      .mockResolvedValue(getCompanyDomainData);
 
     await expect(
       setupOrganisation({
@@ -51,6 +68,11 @@ describe('setupOrganisation', () => {
 
     expect(getToken).toBeCalledTimes(1);
     expect(getToken).toBeCalledWith(code);
+
+    expect(getOwnerId).toBeCalledTimes(1);
+    expect(getOwnerId).toBeCalledWith({ accessToken });
+    expect(getCompanyDomain).toBeCalledTimes(1);
+    expect(getCompanyDomain).toBeCalledWith({ accessToken });
 
     const [storedOrganisation] = await db
       .select()

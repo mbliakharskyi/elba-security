@@ -24,7 +24,8 @@ const organisation = {
   accessToken: encryptedTokens.accessToken,
   refreshToken: encryptedTokens.refreshToken,
   region: 'us',
-  cloudId: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
+  ownerId: 'test-owner-id',
+  companyDomain: 'test-company-domain',
 };
 const now = new Date();
 // current token expires in an hour

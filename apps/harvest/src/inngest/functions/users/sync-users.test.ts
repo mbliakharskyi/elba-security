@@ -12,16 +12,18 @@ const organisation = {
   accessToken: await encrypt('test-access-token'),
   refreshToken: await encrypt('test-refresh-token'),
   region: 'us',
+  ownerId: 'test-owner-id',
+  companyDomain: 'test-company-domain',
 };
 const syncStartedAt = Date.now();
 const syncedBefore = Date.now();
 const nextPage = '1';
 const users: usersConnector.HarvestUser[] = Array.from({ length: 2 }, (_, i) => ({
-  gid: `id-${i}`,
-  name: `name-${i}`,
+  id: i,
+  first_name: `first_name-${i}`,
+  last_name: `last_name-${i}`,
   email: `user-${i}@foo.bar`,
-  resource_type: 'user',
-  is_active: true,
+  access_roles: ['member'],
 }));
 
 const setup = createInngestFunctionMock(syncUsers, 'harvest/users.sync.requested');
@@ -84,17 +86,21 @@ describe('synchronize-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'name-0',
+          displayName: 'first_name-0 last_name-0',
           email: 'user-0@foo.bar',
-          id: 'id-0',
+          id: '0',
           isSuspendable: true,
+          role: 'member',
+          url: 'https://test-company-domain/people/0/edit',
         },
         {
           additionalEmails: [],
-          displayName: 'name-1',
+          displayName: 'first_name-1 last_name-1',
           email: 'user-1@foo.bar',
-          id: 'id-1',
+          id: '1',
           isSuspendable: true,
+          role: 'member',
+          url: 'https://test-company-domain/people/1/edit',
         },
       ],
     });
@@ -124,17 +130,21 @@ describe('synchronize-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'name-0',
+          displayName: 'first_name-0 last_name-0',
           email: 'user-0@foo.bar',
-          id: 'id-0',
+          id: '0',
           isSuspendable: true,
+          role: 'member',
+          url: 'https://test-company-domain/people/0/edit',
         },
         {
           additionalEmails: [],
-          displayName: 'name-1',
+          displayName: 'first_name-1 last_name-1',
           email: 'user-1@foo.bar',
-          id: 'id-1',
+          id: '1',
           isSuspendable: true,
+          role: 'member',
+          url: 'https://test-company-domain/people/1/edit',
         },
       ],
     });

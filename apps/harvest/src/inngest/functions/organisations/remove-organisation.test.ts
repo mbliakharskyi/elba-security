@@ -12,6 +12,8 @@ const organisation = {
   accessToken: 'access-token',
   refreshToken: 'refresh-token',
   region: 'us',
+  ownerId: 'test-owner-id',
+  companyDomain: 'test-company-domain',
 };
 
 const setup = createInngestFunctionMock(removeOrganisation, 'harvest/app.uninstalled');

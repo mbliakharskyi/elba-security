@@ -7,24 +7,23 @@ import type { HarvestUser } from './users';
 import { getUsers, deleteUser } from './users';
 
 const validToken = 'token-1234';
-const endPage = '3';
-const nextPage = '2';
 const userId = 'test-user-id';
-const workspaceId = '000000';
+const endPage = 'https://api.harvestapp.com/v2/users?page=3&per_page=2000&ref=last';
+const nextPage =
+  'https://api.harvestapp.com/v2/users?cursor=eyJhZnRlciI6eyJpZCI6NDAwN319&per_page=2000&ref=next_cursor';
 
 const validUsers: HarvestUser[] = Array.from({ length: 5 }, (_, i) => ({
-  gid: `gid-${i}`,
-  name: `first_name-${i}`,
+  id: i,
+  first_name: `first_name-${i}`,
+  last_name: `last_name-${i}`,
   email: `user-${i}@foo.bar`,
-  is_active: true,
-  resource_type: 'user',
+  access_roles: ['member'],
 }));
 
 const invalidUsers = [];
 
 describe('users connector', () => {
   describe('getUsers', () => {
-    // mock token API endpoint using msw
     beforeEach(() => {
       server.use(
         http.get(`${env.HARVEST_API_BASE_URL}/users`, ({ request }) => {
@@ -33,11 +32,10 @@ describe('users connector', () => {
           }
 
           const url = new URL(request.url);
-          const offset = url.searchParams.get('offset');
-          const responseData =
-            offset === endPage
-              ? { data: validUsers }
-              : { data: validUsers, next_page: { offset: nextPage } };
+          const cursor = url.searchParams.get('cursor');
+          const responseData = cursor
+            ? { users: validUsers, links: { next: nextPage } }
+            : { users: validUsers, links: { next: null } };
           return Response.json(responseData);
         })
       );
@@ -67,8 +65,8 @@ describe('users connector', () => {
   describe('deleteUser', () => {
     beforeEach(() => {
       server.use(
-        http.post<{ userId: string }>(
-          `${env.HARVEST_API_BASE_URL}/workspaces/:workspaceId/removeUser`,
+        http.patch<{ userId: string }>(
+          `${env.HARVEST_API_BASE_URL}/users/:userId`,
           ({ request }) => {
             if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
               return new Response(undefined, { status: 401 });
@@ -80,21 +78,17 @@ describe('users connector', () => {
     });
 
     test('should delete user successfully when token is valid', async () => {
-      await expect(
-        deleteUser({ accessToken: validToken, workspaceId, userId })
-      ).resolves.not.toThrow();
+      await expect(deleteUser({ accessToken: validToken, userId })).resolves.not.toThrow();
     });
 
     test('should not throw when the user is not found', async () => {
-      await expect(
-        deleteUser({ accessToken: validToken, workspaceId, userId })
-      ).resolves.toBeUndefined();
+      await expect(deleteUser({ accessToken: validToken, userId })).resolves.toBeUndefined();
     });
 
     test('should throw HarvestError when token is invalid', async () => {
-      await expect(
-        deleteUser({ accessToken: 'invalidToken', workspaceId, userId })
-      ).rejects.toBeInstanceOf(HarvestError);
+      await expect(deleteUser({ accessToken: 'invalidToken', userId })).rejects.toBeInstanceOf(
+        HarvestError
+      );
     });
   });
 });
