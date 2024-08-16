@@ -16,12 +16,22 @@ const formatElbaUserDisplayName = (user: HarvestUser) => {
   }
   return user.email;
 };
-const formatElbaUser = (user: HarvestUser): User => ({
+const formatElbaUser = ({
+  user,
+  ownerId,
+  companyDomain,
+}: {
+  user: HarvestUser;
+  ownerId: string;
+  companyDomain: string;
+}): User => ({
   id: String(user.id),
   displayName: formatElbaUserDisplayName(user),
   email: user.email,
   role: user.access_roles.includes('administrator') ? 'administrator' : 'member',
   additionalEmails: [],
+  url: `https://${companyDomain}/people/${user.id}/edit`,
+  isSuspendable: String(user.id) !== ownerId,
 });
 
 export const syncUsers = inngest.createFunction(
@@ -53,6 +63,8 @@ export const syncUsers = inngest.createFunction(
     const [organisation] = await db
       .select({
         accessToken: organisationsTable.accessToken,
+        ownerId: organisationsTable.ownerId,
+        companyDomain: organisationsTable.companyDomain,
         region: organisationsTable.region,
       })
       .from(organisationsTable)
@@ -63,11 +75,15 @@ export const syncUsers = inngest.createFunction(
 
     const elba = createElbaClient({ organisationId, region: organisation.region });
     const accessToken = await decrypt(organisation.accessToken);
+    const ownerId = organisation.ownerId;
+    const companyDomain = organisation.companyDomain;
 
     const nextPage = await step.run('list-users', async () => {
       const result = await getUsers({ accessToken, page });
 
-      const users = result.validUsers.map(formatElbaUser);
+      const users = result.validUsers.map((user) =>
+        formatElbaUser({ user, ownerId, companyDomain })
+      );
 
       if (result.invalidUsers.length > 0) {
         logger.warn('Retrieved users contains invalid data', {

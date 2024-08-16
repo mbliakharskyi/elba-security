@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { logger } from '@elba-security/logger';
 import { env } from '@/common/env';
 import { HarvestError } from '../common/error';
 
@@ -28,6 +29,14 @@ export type DeleteUsersParams = {
   accessToken: string;
   userId: string;
 };
+
+const ownerIdResponseSchema = z.object({
+  id: z.number(),
+});
+
+const companyDomainResponseSchema = z.object({
+  full_domain: z.string(),
+});
 
 export const getUsers = async ({ accessToken, page }: GetUsersParams) => {
   const url = new URL(`${env.HARVEST_API_BASE_URL}/users`);
@@ -63,7 +72,7 @@ export const getUsers = async ({ accessToken, page }: GetUsersParams) => {
   return {
     validUsers,
     invalidUsers,
-    nextPage: links.next ? links.next : null,
+    nextPage: links.next,
   };
 };
 
@@ -80,4 +89,58 @@ export const deleteUser = async ({ userId, accessToken }: DeleteUsersParams) => 
   if (!response.ok && response.status !== 404) {
     throw new HarvestError(`Could not delete user with Id: ${userId}`, { response });
   }
+};
+
+export const getOwnerId = async ({ accessToken }: { accessToken: string }) => {
+  const url = new URL(`${env.HARVEST_API_BASE_URL}/users/me`);
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new HarvestError('Could not retrieve owner id', { response });
+  }
+
+  const resData: unknown = await response.json();
+
+  const result = ownerIdResponseSchema.safeParse(resData);
+  if (!result.success) {
+    logger.error('Invalid Harvest owner id response', { resData });
+    throw new HarvestError('Invalid Harvest owner id response');
+  }
+
+  return {
+    ownerId: String(result.data.id),
+  };
+};
+
+export const getCompanyDomain = async ({ accessToken }: { accessToken: string }) => {
+  const url = new URL(`${env.HARVEST_API_BASE_URL}/company`);
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new HarvestError('Could not retrieve company domain', { response });
+  }
+
+  const resData: unknown = await response.json();
+
+  const result = companyDomainResponseSchema.safeParse(resData);
+  if (!result.success) {
+    logger.error('Invalid Harvest company domain response', { resData });
+    throw new HarvestError('Invalid Harvest company domain response');
+  }
+
+  return {
+    companyDomain: result.data.full_domain,
+  };
 };

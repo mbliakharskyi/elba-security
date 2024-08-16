@@ -18,7 +18,7 @@ export const env = z
     HARVEST_CLIENT_ID: z.string().min(1),
     HARVEST_CLIENT_SECRET: z.string().min(1),
     HARVEST_REDIRECT_URI: z.string().url(),
-    HARVEST_USERS_SYNC_BATCH_SIZE: zEnvInt().default(20),
+    HARVEST_USERS_SYNC_BATCH_SIZE: zEnvInt().default(2000),
     HARVEST_DELETE_USER_CONCURRENCY: zEnvInt().default(5),
     HARVEST_USERS_SYNC_CRON: z.string().default('0 0 * * *'),
   })
