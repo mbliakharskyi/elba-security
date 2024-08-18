@@ -86,6 +86,7 @@ describe('sync-users', () => {
           email: 'user-0@foo.bar',
           id: '0',
           isSuspendable: true,
+          url: 'https://dashboard.aircall.io/users/0/general',
         },
         {
           additionalEmails: [],
@@ -93,6 +94,7 @@ describe('sync-users', () => {
           email: 'user-1@foo.bar',
           id: '1',
           isSuspendable: true,
+          url: 'https://dashboard.aircall.io/users/1/general',
         },
       ],
     });
@@ -126,6 +128,7 @@ describe('sync-users', () => {
           email: 'user-0@foo.bar',
           id: '0',
           isSuspendable: true,
+          url: 'https://dashboard.aircall.io/users/0/general',
         },
         {
           additionalEmails: [],
@@ -133,6 +136,7 @@ describe('sync-users', () => {
           email: 'user-1@foo.bar',
           id: '1',
           isSuspendable: true,
+          url: 'https://dashboard.aircall.io/users/1/general',
         },
       ],
     });
