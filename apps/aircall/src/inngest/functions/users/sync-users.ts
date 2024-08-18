@@ -11,11 +11,12 @@ import { createElbaClient } from '@/connectors/elba/client';
 import { decrypt } from '@/common/crypto';
 
 const formatElbaUser = (user: AircallUser): User => ({
-  id: user.id.toString(),
+  id: String(user.id),
   displayName: user.name,
   email: user.email,
   additionalEmails: [],
   isSuspendable: true,
+  url: `https://dashboard.aircall.io/users/${user.id}/general`,
 });
 
 export const syncUsers = inngest.createFunction(
