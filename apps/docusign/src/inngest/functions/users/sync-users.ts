@@ -24,6 +24,7 @@ const formatElbaUser = (user: DocusignUser): User => ({
   role: user.permissionProfileName,
   email: user.email,
   additionalEmails: [],
+  isSuspendable: true,
   url: `https://apps.docusign.com/admin/edit-user/${user.userId}`, // Development base url:  https://apps-d.docusign.com
 });
 

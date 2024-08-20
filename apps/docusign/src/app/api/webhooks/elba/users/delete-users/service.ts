@@ -1,17 +1,19 @@
 import { inngest } from '@/inngest/client';
 
 export const deleteUsers = async ({
-  organisationId,
   userIds,
+  organisationId,
 }: {
-  organisationId: string;
   userIds: string[];
+  organisationId: string;
 }) => {
-  await inngest.send({
-    name: 'docusign/users.delete.requested',
-    data: {
-      organisationId,
-      userIds,
-    },
-  });
+  await inngest.send(
+    userIds.map((userId) => ({
+      name: 'docusign/users.delete.requested',
+      data: {
+        organisationId,
+        userId,
+      },
+    }))
+  );
 };

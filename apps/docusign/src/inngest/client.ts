@@ -3,8 +3,16 @@ import { logger } from '@elba-security/logger';
 import { rateLimitMiddleware } from './middlewares/rate-limit-middleware';
 
 export const inngest = new Inngest({
-  id: 'slack',
+  id: 'docusign',
   schemas: new EventSchemas().fromRecord<{
+    'docusign/users.sync.requested': {
+      data: {
+        organisationId: string;
+        isFirstSync: boolean;
+        syncStartedAt: number;
+        page: string | null;
+      };
+    };
     'docusign/app.installed': {
       data: {
         organisationId: string;
@@ -21,18 +29,10 @@ export const inngest = new Inngest({
         expiresAt: number;
       };
     };
-    'docusign/users.sync.requested': {
-      data: {
-        organisationId: string;
-        isFirstSync: boolean;
-        syncStartedAt: number;
-        page: string | null;
-      };
-    };
     'docusign/users.delete.requested': {
       data: {
         organisationId: string;
-        userIds: string[];
+        userId: string;
       };
     };
   }>(),

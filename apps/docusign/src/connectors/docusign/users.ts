@@ -22,7 +22,7 @@ export type GetUsersParams = {
   accessToken: string;
   accountId: string;
   apiBaseUri: string;
-  page: string | null;
+  page?: string | null;
 };
 
 export const getUsers = async ({ accessToken, accountId, apiBaseUri, page }: GetUsersParams) => {
@@ -76,9 +76,7 @@ type DeleteUsersParams = {
   apiBaseUri: string;
   accessToken: string;
   accountId: string;
-  users: {
-    userId: string;
-  }[];
+  userId: string;
 };
 
 const getUserSchema = z.object({
@@ -121,11 +119,11 @@ export const getUser = async ({
   };
 };
 
-export const deleteUsers = async ({
+export const deleteUser = async ({
   apiBaseUri,
   accessToken,
   accountId,
-  users,
+  userId,
 }: DeleteUsersParams) => {
   const url = new URL(`${apiBaseUri}/restapi/v2.1/accounts/${accountId}/users`);
 
@@ -136,7 +134,7 @@ export const deleteUsers = async ({
       Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify({
-      users,
+      users: [{ userId }],
     }),
   });
 

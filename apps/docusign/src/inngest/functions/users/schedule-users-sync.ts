@@ -5,7 +5,8 @@ import { inngest } from '../../client';
 
 export const scheduleUsersSync = inngest.createFunction(
   {
-    id: 'schedule-users-sync',
+    id: 'docusign-schedule-users-syncs',
+    retries: 5,
   },
   {
     cron: env.DOCUSIGN_USERS_SYNC_CRON,
