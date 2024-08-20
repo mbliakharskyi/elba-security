@@ -17,7 +17,6 @@ const validUsers: DocusignUser[] = Array.from({ length: 5 }, (_, i) => ({
   lastName: `lastName-${i}`,
   email: `user-${i}@foo.bar`,
   userType: 'CompanyUser',
-  userStatus: 'Active',
   permissionProfileName: i === 0 ? 'Account Administrator' : 'DocuSign Sender',
 }));
 
