@@ -11,9 +11,6 @@ import { env } from '@/common/env';
 export const syncSites = inngest.createFunction(
   {
     id: 'sharepoint-synchronize-data-protection-objects',
-    priority: {
-      run: 'event.data.isFirstSync ? 600 : 0',
-    },
     concurrency: {
       key: 'event.data.organisationId',
       limit: env.MICROSOFT_DATA_PROTECTION_SYNC_CONCURRENCY,
@@ -94,7 +91,7 @@ export const syncSites = inngest.createFunction(
       return { status: 'ongoing' };
     }
 
-    await step.run('elba-permissions-delete', async () => {
+    await step.run('delete-elba-objects-synced-before', async () => {
       const elba = createElbaClient({ organisationId, region: organisation.region });
 
       await elba.dataProtection.deleteObjects({
