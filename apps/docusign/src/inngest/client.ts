@@ -5,14 +5,6 @@ import { rateLimitMiddleware } from './middlewares/rate-limit-middleware';
 export const inngest = new Inngest({
   id: 'docusign',
   schemas: new EventSchemas().fromRecord<{
-    'docusign/users.sync.requested': {
-      data: {
-        organisationId: string;
-        isFirstSync: boolean;
-        syncStartedAt: number;
-        page: string | null;
-      };
-    };
     'docusign/app.installed': {
       data: {
         organisationId: string;
@@ -27,6 +19,14 @@ export const inngest = new Inngest({
       data: {
         organisationId: string;
         expiresAt: number;
+      };
+    };
+    'docusign/users.sync.requested': {
+      data: {
+        organisationId: string;
+        isFirstSync: boolean;
+        syncStartedAt: number;
+        page: string | null;
       };
     };
     'docusign/users.delete.requested': {

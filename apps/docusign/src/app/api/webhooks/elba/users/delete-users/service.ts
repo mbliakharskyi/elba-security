@@ -1,11 +1,11 @@
 import { inngest } from '@/inngest/client';
 
 export const deleteUsers = async ({
-  userIds,
   organisationId,
+  userIds,
 }: {
-  userIds: string[];
   organisationId: string;
+  userIds: string[];
 }) => {
   await inngest.send(
     userIds.map((userId) => ({
