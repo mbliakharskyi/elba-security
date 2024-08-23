@@ -2,14 +2,21 @@ import { expect, test, describe, beforeAll, vi, afterAll } from 'vitest';
 import { createInngestFunctionMock } from '@elba-security/test-utils';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
+import { encrypt } from '@/common/crypto';
 import { scheduleUsersSyncs } from './schedule-users-syncs';
+
+const newTokens = {
+  accessToken: 'new-access-token',
+  refreshToken: 'new-refresh-token',
+};
 
 export const organisations = [
   {
-    id: '00000000-0000-0000-0000-000000000001',
-    teamId: 'team-id',
-    accessToken: 'access-token',
+    id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
+    accessToken: await encrypt(newTokens.accessToken),
+    refreshToken: await encrypt(newTokens.refreshToken),
     region: 'us',
+    workspaceId: 'some-workspace-id',
   },
 ];
 
@@ -40,13 +47,14 @@ describe('schedule-users-syncs', () => {
     });
     expect(step.sendEvent).toBeCalledTimes(1);
     expect(step.sendEvent).toBeCalledWith(
-      'sync-organisations-users',
+      'sync-users',
       organisations.map(({ id }) => ({
         name: 'bitbucket/users.sync.requested',
         data: {
           organisationId: id,
           syncStartedAt: Date.now(),
           isFirstSync: true,
+          page: null,
         },
       }))
     );

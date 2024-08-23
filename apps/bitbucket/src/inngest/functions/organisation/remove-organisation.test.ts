@@ -10,7 +10,8 @@ import { removeOrganisation } from './remove-organisation';
 const organisation: Organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   accessToken: 'access_test_token',
-  teamId: 'team-id',
+  refreshToken: 'refresh-token',
+  workspaceId: 'workspace-id',
   region: 'us',
 };
 

@@ -3,87 +3,82 @@ import { describe, expect, test, beforeEach } from 'vitest';
 import { server } from '@elba-security/test-utils';
 import { env } from '@/common/env';
 import { BitbucketError } from '../common/error';
+import type { BitbucketUser } from './users';
 import { getUsers } from './users';
 
 const validToken = 'token-1234';
-const workspaceId = 'test-workspace-id';
-
-const usersApiResponse = [
-  {
-    user: {
-      id: 10,
-      username: 'test-username',
-      email: 'test-user-@foo.bar',
-      role: 1,
-      date_joined: '1721810909456',
-    },
+const workspaceId = '00000000-0000-0000-0000-000000000001';
+const nextUri = `${env.BITBUCKET_API_BASE_URL}/workspaces/${workspaceId}/members?page=5`;
+const endPosition = '5';
+const validUsers: BitbucketUser[] = Array.from({ length: 5 }, (_, i) => ({
+  user: {
+    uuid: `user-id-${i}`,
+    display_name: `user ${i}`,
   },
-];
-
-const validUsers = [
-  {
-    id: 10,
-    username: 'test-username',
-    email: 'test-user-@foo.bar',
-    role: 'owner',
+  workspace: {
+    slug: `test-workspace-name-${i}`,
   },
-];
+}));
 
 const invalidUsers = [];
 
-const roles = [
-  {
-    id: 1,
-    name: 'owner',
-  },
-  {
-    id: 2,
-    name: 'admin',
-  },
-  {
-    id: 3,
-    name: 'member',
-  },
-  {
-    id: 4,
-    name: 'guest',
-  },
-];
+describe('users connector', () => {
+  describe('getUsers', () => {
+    // mock token API endpoint using msw
+    beforeEach(() => {
+      server.use(
+        http.get(
+          `${env.BITBUCKET_API_BASE_URL}/workspaces/${workspaceId}/members`,
+          ({ request }) => {
+            if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
+              return new Response(undefined, { status: 401 });
+            }
 
-describe('getUsers', () => {
-  beforeEach(() => {
-    server.use(
-      http.get(`${env.BITBUCKET_API_BASE_URL}/workspace/${workspaceId}`, ({ request }) => {
-        if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
-          return new Response(undefined, { status: 401 });
-        }
-        return new Response(
-          JSON.stringify({
-            workspace: {
-              members: usersApiResponse,
-              roles,
-            },
-          }),
-          { status: 200 }
-        );
-      })
-    );
-  });
-
-  test('should fetch users when token is valid', async () => {
-    const result = await getUsers({
-      accessToken: validToken,
-      workspaceId,
+            const url = new URL(request.url);
+            const position = url.searchParams.get('page');
+            const returnData =
+              position !== endPosition
+                ? {
+                    values: validUsers,
+                    next: nextUri,
+                  }
+                : {
+                    values: validUsers,
+                  };
+            return Response.json(returnData);
+          }
+        )
+      );
     });
-    expect(result).toEqual({ validUsers, invalidUsers });
-  });
 
-  test('should throw BitbucketError when token is invalid', async () => {
-    await expect(
-      getUsers({
-        accessToken: 'invalidToken',
-        workspaceId,
-      })
-    ).rejects.toThrowError(BitbucketError);
+    test('should return users and nextPage when the token is valid and their is another page', async () => {
+      await expect(
+        getUsers({ accessToken: validToken, workspaceId, page: null })
+      ).resolves.toStrictEqual({
+        validUsers,
+        invalidUsers,
+        nextPage: nextUri,
+      });
+    });
+
+    test('should return users and no nextPage when the token is valid and their is no other page', async () => {
+      await expect(
+        getUsers({
+          accessToken: validToken,
+          workspaceId,
+          page: nextUri,
+        })
+      ).resolves.toStrictEqual({
+        validUsers,
+        invalidUsers,
+        nextPage: null,
+      });
+    });
+
+    test('should throws when the token is invalid', async () => {
+      await expect(getUsers({ accessToken: 'foo-bar', workspaceId })).rejects.toBeInstanceOf(
+        BitbucketError
+      );
+    });
   });
 });

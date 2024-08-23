@@ -13,14 +13,23 @@ const code = 'code';
 const region = 'us';
 const now = new Date();
 const accessToken = 'access-token';
+const refreshToken = 'refresh-token';
 const workspaceId = 'workspace-id';
 const workspaceName = 'test-workspace-name';
+const expiresIn = 60;
 
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   workspaceId,
   accessToken,
+  refreshToken,
   region,
+};
+
+const getTokenData = {
+  accessToken,
+  refreshToken,
+  expiresIn,
 };
 
 describe('setupOrganisation', () => {
@@ -33,7 +42,9 @@ describe('setupOrganisation', () => {
   });
 
   test('should setup organisation when the organisation id is valid and the organisation is not registered', async () => {
-    const getAccessToken = vi.spyOn(authConnector, 'getAccessToken').mockResolvedValue(accessToken);
+    const getAccessToken = vi
+      .spyOn(authConnector, 'getAccessToken')
+      .mockResolvedValue(getTokenData);
     const getWorkspaces = vi.spyOn(workspaceConnector, 'getWorkspaces').mockResolvedValue([
       {
         uuid: workspaceId,
@@ -78,12 +89,20 @@ describe('setupOrganisation', () => {
           organisationId: organisation.id,
           syncStartedAt: Date.now(),
           isFirstSync: true,
+          page: null,
         },
       },
       {
         name: 'bitbucket/app.installed',
         data: {
           organisationId: organisation.id,
+        },
+      },
+      {
+        name: 'bitbucket/token.refresh.requested',
+        data: {
+          organisationId: organisation.id,
+          expiresAt: now.getTime() + 60 * 1000,
         },
       },
     ]);
@@ -93,7 +112,9 @@ describe('setupOrganisation', () => {
     // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
 
-    const getAccessToken = vi.spyOn(authConnector, 'getAccessToken').mockResolvedValue(accessToken);
+    const getAccessToken = vi
+      .spyOn(authConnector, 'getAccessToken')
+      .mockResolvedValue(getTokenData);
 
     await db.insert(organisationsTable).values(organisation);
 
@@ -127,12 +148,20 @@ describe('setupOrganisation', () => {
           organisationId: organisation.id,
           syncStartedAt: Date.now(),
           isFirstSync: true,
+          page: null,
         },
       },
       {
         name: 'bitbucket/app.installed',
         data: {
           organisationId: organisation.id,
+        },
+      },
+      {
+        name: 'bitbucket/token.refresh.requested',
+        data: {
+          organisationId: organisation.id,
+          expiresAt: now.getTime() + 60 * 1000,
         },
       },
     ]);

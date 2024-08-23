@@ -1,94 +1,112 @@
 import { expect, test, describe, vi } from 'vitest';
-import { createInngestFunctionMock, spyOnElba } from '@elba-security/test-utils';
+import { createInngestFunctionMock } from '@elba-security/test-utils';
 import { NonRetriableError } from 'inngest';
 import * as usersConnector from '@/connectors/bitbucket/users';
-import { db } from '@/database/client';
-import * as crypto from '@/common/crypto';
-import { env } from '@/common/env';
 import { organisationsTable } from '@/database/schema';
+import { db } from '@/database/client';
+import { encrypt } from '@/common/crypto';
 import { syncUsers } from './sync-users';
 
-const region = 'us';
-const accessToken = 'access-token';
-const organisationId = '00000000-0000-0000-0000-000000000001';
-const teamId = 'test-id';
+const newTokens = {
+  accessToken: 'new-access-token',
+  refreshToken: 'new-refresh-token',
+};
+
+const encryptedTokens = {
+  accessToken: await encrypt(newTokens.accessToken),
+  refreshToken: await encrypt(newTokens.refreshToken),
+};
 
 const organisation = {
-  id: organisationId,
-  accessToken,
-  teamId,
-  region,
+  id: '00000000-0000-0000-0000-000000000001',
+  accessToken: encryptedTokens.accessToken,
+  refreshToken: encryptedTokens.refreshToken,
+  workspaceId: '00000000-0000-0000-0000-000000000010',
+  region: 'us',
 };
-const validUsers: usersConnector.BitbucketUser[] = [
-  {
-    id: 10,
-    username: 'test-username',
-    email: 'test-user-@foo.bar',
-    role: 'test-role',
-  },
-];
+const syncStartedAt = Date.now();
 
-const invalidUsers = [];
-
-const elbaUsers = [
-  {
-    id: '10',
-    role: 'test-role',
-    additionalEmails: [],
-    authMethod: undefined,
-    displayName: 'test-username',
-    email: 'test-user-@foo.bar',
-    isSuspendable: true,
-    url: 'https://app.bitbucket.com/test-id/settings/team/test-id/users',
+const users: usersConnector.BitbucketUser[] = Array.from({ length: 5 }, (_, i) => ({
+  user: {
+    uuid: `user-id-${i}`,
+    display_name: `user ${i}`,
   },
-];
+  workspace: {
+    slug: `test-workspace-name-${i}`,
+  },
+}));
 
 const setup = createInngestFunctionMock(syncUsers, 'bitbucket/users.sync.requested');
 
-describe('sync-users', () => {
+describe('syncUsers', () => {
   test('should abort sync when organisation is not registered', async () => {
+    vi.spyOn(usersConnector, 'getUsers').mockResolvedValue({
+      validUsers: users,
+      invalidUsers: [],
+      nextPage: '',
+    });
+
     const [result, { step }] = setup({
       organisationId: organisation.id,
-      syncStartedAt: new Date().getTime(),
       isFirstSync: false,
+      syncStartedAt: Date.now(),
+      page: null,
     });
+
     await expect(result).rejects.toBeInstanceOf(NonRetriableError);
+
+    expect(usersConnector.getUsers).toBeCalledTimes(0);
+
     expect(step.sendEvent).toBeCalledTimes(0);
   });
 
-  test('should sync when organisation is registered', async () => {
-    const elba = spyOnElba();
-
+  test('should continue the sync when there is a next page', async () => {
     await db.insert(organisationsTable).values(organisation);
 
-    // @ts-expect-error -- this is a mock
-    vi.spyOn(crypto, 'decrypt').mockResolvedValue(undefined);
+    vi.spyOn(usersConnector, 'getUsers').mockResolvedValue({
+      validUsers: users,
+      invalidUsers: [],
+      nextPage: 'some page',
+    });
+
+    const [result, { step }] = setup({
+      organisationId: organisation.id,
+      isFirstSync: false,
+      syncStartedAt,
+      page: 'some after',
+    });
+
+    await expect(result).resolves.toStrictEqual({ status: 'ongoing' });
+    expect(step.sendEvent).toBeCalledTimes(1);
+    expect(step.sendEvent).toBeCalledWith('sync-users', {
+      name: 'bitbucket/users.sync.requested',
+      data: {
+        organisationId: organisation.id,
+        isFirstSync: false,
+        syncStartedAt,
+        page: 'some page',
+      },
+    });
+  });
+
+  test('should finalize the sync when there is a no next page', async () => {
+    await db.insert(organisationsTable).values(organisation);
 
     vi.spyOn(usersConnector, 'getUsers').mockResolvedValue({
-      validUsers,
-      invalidUsers,
+      validUsers: users,
+      invalidUsers: [],
+      nextPage: '',
     });
-    const [result] = setup({
+
+    const [result, { step }] = setup({
       organisationId: organisation.id,
-      syncStartedAt: new Date().getTime(),
       isFirstSync: false,
+      syncStartedAt,
+      page: null,
     });
 
     await expect(result).resolves.toStrictEqual({ status: 'completed' });
 
-    expect(crypto.decrypt).toBeCalledTimes(1);
-    expect(crypto.decrypt).toBeCalledWith(organisation.accessToken);
-
-    expect(elba).toBeCalledTimes(1);
-    expect(elba).toBeCalledWith({
-      apiKey: env.ELBA_API_KEY,
-      baseUrl: env.ELBA_API_BASE_URL,
-      organisationId,
-      region: 'us',
-    });
-
-    const elbaInstance = elba.mock.results[0]?.value;
-    expect(elbaInstance?.users.update).toBeCalledTimes(1);
-    expect(elbaInstance?.users.update).toBeCalledWith({ users: elbaUsers });
+    expect(step.sendEvent).toBeCalledTimes(0);
   });
 });

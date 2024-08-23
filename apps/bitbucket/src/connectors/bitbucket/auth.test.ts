@@ -7,24 +7,34 @@ import { getAccessToken } from './auth';
 
 const validAuthCode = 'valid-code';
 const accessToken = 'access-token';
+const refreshToken = 'refresh-token';
+const expiresIn = 1234;
 
 describe('getAccessToken', () => {
   beforeEach(() => {
     server.use(
-      http.post(`${env.BITBUCKET_API_BASE_URL}/oauth/token`, async ({ request }) => {
+      http.post(`${env.BITBUCKET_APP_INSTALL_URL}/access_token`, async ({ request }) => {
         const body = await request.text();
         const searchParams = new URLSearchParams(body);
         const code = searchParams.get('code');
         if (code !== validAuthCode) {
           return new Response(undefined, { status: 401 });
         }
-        return new Response(JSON.stringify({ access_token: accessToken }), { status: 200 });
+        return Response.json({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          expires_in: expiresIn,
+        });
       })
     );
   });
 
   test('should not throw when authorization code is valid', async () => {
-    await expect(getAccessToken(validAuthCode)).resolves.toStrictEqual(accessToken);
+    await expect(getAccessToken(validAuthCode)).resolves.toStrictEqual({
+      accessToken,
+      refreshToken,
+      expiresIn,
+    });
   });
 
   test('should throw an error when authorization code is invalid', async () => {
