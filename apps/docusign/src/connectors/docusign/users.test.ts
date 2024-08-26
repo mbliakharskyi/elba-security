@@ -3,7 +3,7 @@ import { describe, expect, test, beforeEach } from 'vitest';
 import { server } from '@elba-security/test-utils';
 import { DocusignError } from '../common/error';
 import type { DocusignUser } from './users';
-import { getUsers, deleteUser } from './users';
+import { getUsers, deleteUsers } from './users';
 
 const validToken = 'token-1234';
 const API_BASE_URI = 'https://demo.docusign.net';
@@ -100,19 +100,19 @@ describe('users connector', () => {
 
     test('should delete user successfully when token is valid', async () => {
       await expect(
-        deleteUser({ accessToken: validToken, accountId, apiBaseUri: API_BASE_URI, userId })
+        deleteUsers({ accessToken: validToken, accountId, apiBaseUri: API_BASE_URI, userId })
       ).resolves.not.toThrow();
     });
 
     test('should not throw when the user is not found', async () => {
       await expect(
-        deleteUser({ accessToken: validToken, accountId, apiBaseUri: API_BASE_URI, userId })
+        deleteUsers({ accessToken: validToken, accountId, apiBaseUri: API_BASE_URI, userId })
       ).resolves.toBeUndefined();
     });
 
     test('should throw DocusignError when token is invalid', async () => {
       await expect(
-        deleteUser({ accessToken: 'foo-bar', accountId, apiBaseUri: API_BASE_URI, userId })
+        deleteUsers({ accessToken: 'foo-bar', accountId, apiBaseUri: API_BASE_URI, userId })
       ).rejects.toBeInstanceOf(DocusignError);
     });
   });

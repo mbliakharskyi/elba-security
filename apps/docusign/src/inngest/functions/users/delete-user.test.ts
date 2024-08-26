@@ -4,9 +4,9 @@ import * as usersConnector from '@/connectors/docusign/users';
 import { organisationsTable } from '@/database/schema';
 import { encrypt } from '@/common/crypto';
 import { db } from '@/database/client';
-import { deleteUser } from './delete-user';
+import { deleteUsers } from './delete-user';
 
-const userId = 'user-id-1';
+const userIds = ['user-id-1', 'user-id-2'];
 const accessToken = 'test-access-token';
 const refreshToken = 'test- refresh-token';
 const apiBaseUri = 'https://api.docusign.net';
@@ -20,7 +20,7 @@ const organisation = {
   region: 'us',
 };
 
-const setup = createInngestFunctionMock(deleteUser, 'docusign/users.delete.requested');
+const setup = createInngestFunctionMock(deleteUsers, 'docusign/users.delete.requested');
 
 describe('deleteUser', () => {
   beforeEach(() => {
@@ -28,16 +28,16 @@ describe('deleteUser', () => {
   });
 
   test('should delete user', async () => {
-    vi.spyOn(usersConnector, 'deleteUser').mockResolvedValueOnce();
+    vi.spyOn(usersConnector, 'deleteUsers').mockResolvedValueOnce();
     await db.insert(organisationsTable).values(organisation);
 
-    const [result] = setup({ userId, organisationId: organisation.id });
+    const [result] = setup({ organisationId: organisation.id, userIds });
 
     await expect(result).resolves.toStrictEqual(undefined);
 
-    expect(usersConnector.deleteUser).toBeCalledTimes(1);
-    expect(usersConnector.deleteUser).toBeCalledWith({
-      userId,
+    expect(usersConnector.deleteUsers).toBeCalledTimes(1);
+    expect(usersConnector.deleteUsers).toBeCalledWith({
+      users: userIds.map((userId) => ({ userId })),
       accessToken,
       accountId,
       apiBaseUri,

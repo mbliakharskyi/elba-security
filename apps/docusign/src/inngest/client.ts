@@ -32,7 +32,7 @@ export const inngest = new Inngest({
     'docusign/users.delete.requested': {
       data: {
         organisationId: string;
-        userId: string;
+        userIds: string[];
       };
     };
   }>(),

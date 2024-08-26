@@ -7,13 +7,11 @@ export const deleteUsers = async ({
   organisationId: string;
   userIds: string[];
 }) => {
-  await inngest.send(
-    userIds.map((userId) => ({
-      name: 'docusign/users.delete.requested',
-      data: {
-        organisationId,
-        userId,
-      },
-    }))
-  );
+  await inngest.send({
+    name: 'docusign/users.delete.requested',
+    data: {
+      organisationId,
+      userIds,
+    },
+  });
 };

@@ -3,11 +3,11 @@ import { NonRetriableError } from 'inngest';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { inngest } from '@/inngest/client';
-import { deleteUser as deleteDocusignUser } from '@/connectors/docusign/users';
+import { deleteUsers as deleteDocusignUsers } from '@/connectors/docusign/users';
 import { decrypt } from '@/common/crypto';
 import { env } from '@/common/env';
 
-export const deleteUser = inngest.createFunction(
+export const deleteUsers = inngest.createFunction(
   {
     id: 'docusign-delete-users',
     concurrency: {
@@ -18,7 +18,7 @@ export const deleteUser = inngest.createFunction(
   },
   { event: 'docusign/users.delete.requested' },
   async ({ event }) => {
-    const { userId, organisationId } = event.data;
+    const { organisationId, userIds } = event.data;
 
     const [organisation] = await db
       .select({
@@ -30,14 +30,15 @@ export const deleteUser = inngest.createFunction(
       .where(eq(organisationsTable.id, organisationId));
 
     if (!organisation) {
-      throw new NonRetriableError(`Could not retrieve ${userId}`);
+      throw new NonRetriableError(`Could not retrieve organisation`);
     }
+
     const accessToken = await decrypt(organisation.accessToken);
 
-    await deleteDocusignUser({
-      userId,
+    await deleteDocusignUsers({
       accessToken,
       apiBaseUri: organisation.apiBaseUri,
+      users: userIds.map((userId) => ({ userId })),
       accountId: organisation.accountId,
     });
   }

@@ -76,7 +76,9 @@ type DeleteUsersParams = {
   apiBaseUri: string;
   accessToken: string;
   accountId: string;
-  userId: string;
+  users: {
+    userId: string;
+  }[];
 };
 
 const getUserSchema = z.object({
@@ -119,11 +121,11 @@ export const getUser = async ({
   };
 };
 
-export const deleteUser = async ({
+export const deleteUsers = async ({
   apiBaseUri,
   accessToken,
   accountId,
-  userId,
+  users,
 }: DeleteUsersParams) => {
   const url = new URL(`${apiBaseUri}/restapi/v2.1/accounts/${accountId}/users`);
 
@@ -134,7 +136,7 @@ export const deleteUser = async ({
       Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify({
-      users: [{ userId }],
+      users,
     }),
   });
 
