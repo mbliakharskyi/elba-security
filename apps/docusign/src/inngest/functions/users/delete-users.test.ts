@@ -4,7 +4,7 @@ import * as usersConnector from '@/connectors/docusign/users';
 import { organisationsTable } from '@/database/schema';
 import { encrypt } from '@/common/crypto';
 import { db } from '@/database/client';
-import { deleteUsers } from './delete-user';
+import { deleteUsers } from './delete-users';
 
 const userIds = ['user-id-1', 'user-id-2'];
 const accessToken = 'test-access-token';
