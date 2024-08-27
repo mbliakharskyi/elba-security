@@ -20,7 +20,9 @@ const formatElbaUser = (user: ZoomUser): User => ({
   displayName: user.display_name,
   email: user.email,
   additionalEmails: [],
-  isSuspendable: user.role_id !== ZoomUserRole.Owner && user.role_id !== ZoomUserRole.Admin,
+  isSuspendable:
+    (user.role_id as ZoomUserRole) !== ZoomUserRole.Owner &&
+    (user.role_id as ZoomUserRole) !== ZoomUserRole.Admin,
   url: `https://zoom.us/user/${user.id}/profile`,
 });
 
