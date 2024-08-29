@@ -1,7 +1,7 @@
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { getToken } from '@/connectors/aircall/auth';
-import { getAuthUserId } from '@/connectors/aircall/auth-user-id';
+import { getAuthUser } from '@/connectors/aircall/users';
 import { inngest } from '@/inngest/client';
 import { encrypt } from '@/common/crypto';
 
@@ -17,7 +17,7 @@ export const setupOrganisation = async ({
   region,
 }: SetupOrganisationParams) => {
   const { accessToken } = await getToken(code);
-  const { authUserId } = await getAuthUserId({ accessToken });
+  const { authUserId } = await getAuthUser(accessToken);
 
   const encryptedToken = await encrypt(accessToken);
 
