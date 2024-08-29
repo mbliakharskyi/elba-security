@@ -78,7 +78,7 @@ describe('auth connector', () => {
     });
 
     test('should throw when the refreshToken is invalid', async () => {
-      await expect(getToken('wrong-refreshtoken')).rejects.toBeInstanceOf(FrontappError);
+      await expect(getRefreshToken('wrong-refreshtoken')).rejects.toBeInstanceOf(FrontappError);
     });
   });
 });
