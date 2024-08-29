@@ -1,6 +1,7 @@
 import { expect, test, describe, vi, beforeAll, afterAll } from 'vitest';
 import { eq } from 'drizzle-orm';
 import * as authConnector from '@/connectors/aircall/auth';
+import * as authUserIdConnector from '@/connectors/aircall/auth-user-id';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { inngest } from '@/inngest/client';
@@ -16,9 +17,16 @@ const getTokenData = {
   accessToken,
 };
 
+const authUserId = 12345;
+
+const getAuthUserIdData = {
+  authUserId: String(authUserId),
+};
+
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   accessToken,
+  authUserId: String(authUserId),
   region,
 };
 
@@ -35,6 +43,10 @@ describe('setupOrganisation', () => {
     // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
     const getToken = vi.spyOn(authConnector, 'getToken').mockResolvedValue(getTokenData);
+    const getAuthUserId = vi
+      .spyOn(authUserIdConnector, 'getAuthUserId')
+      .mockResolvedValue(getAuthUserIdData);
+
     await expect(
       setupOrganisation({
         organisationId: organisation.id,
@@ -45,6 +57,9 @@ describe('setupOrganisation', () => {
 
     expect(getToken).toBeCalledTimes(1);
     expect(getToken).toBeCalledWith(code);
+
+    expect(getAuthUserId).toBeCalledTimes(1);
+    expect(getAuthUserId).toBeCalledWith({ accessToken });
 
     const [storedOrganisation] = await db
       .select()
@@ -81,6 +96,9 @@ describe('setupOrganisation', () => {
 
     await db.insert(organisationsTable).values(organisation);
     const getToken = vi.spyOn(authConnector, 'getToken').mockResolvedValue(getTokenData);
+    const getAuthUserId = vi
+      .spyOn(authUserIdConnector, 'getAuthUserId')
+      .mockResolvedValue(getAuthUserIdData);
 
     await expect(
       setupOrganisation({
@@ -92,6 +110,9 @@ describe('setupOrganisation', () => {
 
     expect(getToken).toBeCalledTimes(1);
     expect(getToken).toBeCalledWith(code);
+
+    expect(getAuthUserId).toBeCalledTimes(1);
+    expect(getAuthUserId).toBeCalledWith({ accessToken });
 
     const [storedOrganisation] = await db
       .select()

@@ -7,10 +7,12 @@ import { organisationsTable } from '@/database/schema';
 import { encrypt } from '@/common/crypto';
 import { syncUsers } from './sync-users';
 
+const authUserId = 12345;
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   accessToken: await encrypt('test-access-token'),
   region: 'us',
+  authUserId: String(authUserId),
 };
 
 const syncStartedAt = Date.now();
