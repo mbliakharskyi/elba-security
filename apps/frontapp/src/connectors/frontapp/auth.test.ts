@@ -8,8 +8,7 @@ import { getToken, getRefreshToken } from './auth';
 const validCode = '1234';
 const accessToken = 'access-token-1234';
 const validRefreshToken = 'valid-refresh-token';
-const organization = 'some-organization';
-const expiresIn = 1234;
+const expiresIn = 1234454512;
 
 describe('auth connector', () => {
   describe('getToken', () => {
@@ -28,8 +27,7 @@ describe('auth connector', () => {
           return Response.json({
             access_token: accessToken,
             refresh_token: validRefreshToken,
-            expires_in: expiresIn,
-            organization,
+            expires_at: expiresIn,
           });
         })
       );
@@ -40,7 +38,6 @@ describe('auth connector', () => {
         accessToken,
         refreshToken: validRefreshToken,
         expiresIn,
-        organizationUri: organization,
       });
     });
 
@@ -66,8 +63,7 @@ describe('auth connector', () => {
           return Response.json({
             access_token: accessToken,
             refresh_token: validRefreshToken,
-            organization,
-            expires_in: expiresIn,
+            expires_at: expiresIn,
           });
         })
       );

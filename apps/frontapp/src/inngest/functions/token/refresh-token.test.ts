@@ -24,13 +24,9 @@ const organisation = {
   accessToken: encryptedTokens.accessToken,
   refreshToken: encryptedTokens.refreshToken,
   region: 'us',
-  organizationUri: 'some-org-uri',
 };
 const now = new Date();
-// current token expires in an hour
-const expiresAt = now.getTime() + 60 * 1000;
-// next token duration
-const expiresIn = 60 * 1000;
+const expiresAt = 1724974786875;
 
 const setup = createInngestFunctionMock(refreshToken, 'frontapp/token.refresh.requested');
 
@@ -46,7 +42,7 @@ describe('refresh-token', () => {
   test('should abort sync when organisation is not registered', async () => {
     vi.spyOn(authConnector, 'getRefreshToken').mockResolvedValue({
       ...newTokens,
-      expiresIn,
+      expiresIn: expiresAt,
     });
 
     const [result, { step }] = setup({
@@ -66,7 +62,7 @@ describe('refresh-token', () => {
 
     vi.spyOn(authConnector, 'getRefreshToken').mockResolvedValue({
       ...newTokens,
-      expiresIn,
+      expiresIn: expiresAt,
     });
 
     const [result, { step }] = setup({
@@ -98,7 +94,7 @@ describe('refresh-token', () => {
       name: 'frontapp/token.refresh.requested',
       data: {
         organisationId: organisation.id,
-        expiresAt: now.getTime() + expiresIn * 1000,
+        expiresAt: new Date(expiresAt * 1000).getTime(),
       },
     });
   });

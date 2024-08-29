@@ -20,12 +20,12 @@ const organisation = {
 };
 
 const users: usersConnector.FrontappUser[] = Array.from({ length: 2 }, (_, i) => ({
-  uri: `https://test-uri/organization_memberships/00000000-0000-0000-0000-00000000009${i}`,
-  user: {
-    name: `name-${i}`,
-    email: `user-${i}@foo.bar`,
-  },
-  role: 'user',
+  id: `id-${i}`,
+  email: `user-${i}@foo.bar`,
+  first_name: `first_name-${i}`,
+  last_name: `last_name-${i}`,
+  is_admin: false,
+  is_blocked: false,
 }));
 
 const setup = createInngestFunctionMock(syncUsers, 'frontapp/users.sync.requested');
@@ -88,19 +88,19 @@ describe('sync-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'name-0',
+          displayName: 'first_name-0 last_name-0',
           email: 'user-0@foo.bar',
-          id: '00000000-0000-0000-0000-000000000090',
-          role: 'user',
-          isSuspendable: true,
+          id: 'id-0',
+          role: 'member',
+          url: 'https://app.frontapp.com/settings/global/teammates',
         },
         {
           additionalEmails: [],
-          displayName: 'name-1',
+          displayName: 'first_name-1 last_name-1',
           email: 'user-1@foo.bar',
-          role: 'user',
-          id: '00000000-0000-0000-0000-000000000091',
-          isSuspendable: true,
+          id: 'id-1',
+          role: 'member',
+          url: 'https://app.frontapp.com/settings/global/teammates',
         },
       ],
     });
@@ -130,19 +130,19 @@ describe('sync-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'name-0',
+          displayName: 'first_name-0 last_name-0',
           email: 'user-0@foo.bar',
-          role: 'user',
-          id: '00000000-0000-0000-0000-000000000090',
-          isSuspendable: true,
+          id: 'id-0',
+          role: 'member',
+          url: 'https://app.frontapp.com/settings/global/teammates',
         },
         {
           additionalEmails: [],
-          displayName: 'name-1',
+          displayName: 'first_name-1 last_name-1',
           email: 'user-1@foo.bar',
-          role: 'user',
-          id: '00000000-0000-0000-0000-000000000091',
-          isSuspendable: true,
+          id: 'id-1',
+          role: 'member',
+          url: 'https://app.frontapp.com/settings/global/teammates',
         },
       ],
     });

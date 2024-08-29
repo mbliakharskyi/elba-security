@@ -11,21 +11,19 @@ import { setupOrganisation } from './service';
 const code = 'some-code';
 const accessToken = 'some token';
 const refreshToken = 'some refresh token';
-const expiresIn = 60;
+const expiresIn = 1982222457;
 const region = 'us';
 const now = new Date();
 const getTokenData = {
   accessToken,
   refreshToken,
   expiresIn,
-  organizationUri: 'some organization_uri',
 };
 
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   accessToken,
   refreshToken,
-  organizationUri: 'some organization_uri',
   region,
 };
 
@@ -85,7 +83,7 @@ describe('setupOrganisation', () => {
         name: 'frontapp/token.refresh.requested',
         data: {
           organisationId: organisation.id,
-          expiresAt: now.getTime() + 60 * 1000,
+          expiresAt: new Date(expiresIn * 1000).getTime(),
         },
       },
     ]);
@@ -138,7 +136,7 @@ describe('setupOrganisation', () => {
         name: 'frontapp/token.refresh.requested',
         data: {
           organisationId: organisation.id,
-          expiresAt: now.getTime() + 60 * 1000,
+          expiresAt: new Date(expiresIn * 1000).getTime(),
         },
       },
     ]);
