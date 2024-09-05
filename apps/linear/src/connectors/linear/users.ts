@@ -25,9 +25,9 @@ const linearResponseSchema = z.object({
   }),
 });
 
-const authUserIdResponseSchema = z.object({
+const authUserResponseSchema = z.object({
   data: z.object({
-    viewer: z.object({
+    user: z.object({
       id: z.string(),
     }),
     organization: z.object({
@@ -133,10 +133,17 @@ export const deleteUser = async ({ userId, accessToken }: DeleteUsersParams) => 
   }
 };
 
-export const getAuthUser = async (accessToken) => {
+export const getAuthUser = async (accessToken: string) => {
   const query = {
     query: `
-      query { viewer { id } organization { urlKey } }
+      query {
+        user(id: "me") {
+          id
+        }
+        organization {
+          urlKey
+        }
+      }
     `,
   };
 
@@ -156,14 +163,14 @@ export const getAuthUser = async (accessToken) => {
 
   const resData: unknown = await response.json();
 
-  const result = authUserIdResponseSchema.safeParse(resData);
+  const result = authUserResponseSchema.safeParse(resData);
   if (!result.success) {
     logger.error('Invalid Linear auth-user id response', { resData });
     throw new LinearError('Invalid Linear auth-user id response');
   }
 
   return {
-    authUserId: result.data.data.viewer.id,
+    authUserId: result.data.data.user.id,
     workspaceUrlKey: result.data.data.organization.urlKey,
   };
 };
