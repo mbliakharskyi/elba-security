@@ -11,7 +11,7 @@ const organisation = {
   id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
   accessToken: await encrypt('test-access-token'),
   refreshToken: await encrypt('test-refresh-token'),
-  ownerId: 'test-owner-id',
+  authUserId: 'test-auth-user-id',
   region: 'us',
 };
 const syncStartedAt = Date.now();

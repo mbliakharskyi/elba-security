@@ -4,7 +4,7 @@ import { organisationsTable } from '@/database/schema';
 import { getToken } from '@/connectors/box/auth';
 import { inngest } from '@/inngest/client';
 import { encrypt } from '@/common/crypto';
-import { getOwnerId } from '../../connectors/box/users';
+import { getAuthUser } from '../../connectors/box/users';
 
 type SetupOrganisationParams = {
   organisationId: string;
@@ -18,7 +18,7 @@ export const setupOrganisation = async ({
   region,
 }: SetupOrganisationParams) => {
   const { accessToken, refreshToken, expiresIn } = await getToken(code);
-  const { ownerId } = await getOwnerId({ accessToken });
+  const { authUserId } = await getAuthUser({ accessToken });
 
   const encryptedAccessToken = await encrypt(accessToken);
   const encryptedRefreshToken = await encrypt(refreshToken);
@@ -29,7 +29,7 @@ export const setupOrganisation = async ({
       id: organisationId,
       accessToken: encryptedAccessToken,
       refreshToken: encryptedRefreshToken,
-      ownerId,
+      authUserId,
       region,
     })
     .onConflictDoUpdate({
@@ -37,7 +37,7 @@ export const setupOrganisation = async ({
       set: {
         accessToken: encryptedAccessToken,
         refreshToken: encryptedRefreshToken,
-        ownerId,
+        authUserId,
       },
     });
 

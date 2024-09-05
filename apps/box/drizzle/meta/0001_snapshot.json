@@ -1,6 +1,6 @@
 {
-  "id": "c9d52117-9523-49ba-a68e-dfe651aacbbb",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "94e5bfe8-fc56-4bb4-a406-d4df309cd46d",
+  "prevId": "c9d52117-9523-49ba-a68e-dfe651aacbbb",
   "version": "5",
   "dialect": "pg",
   "tables": {
@@ -22,6 +22,12 @@
         },
         "refresh_token": {
           "name": "refresh_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "auth-user_id": {
+          "name": "auth-user_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true

@@ -9,13 +9,13 @@ import { deleteUser } from './delete-user';
 const userId = 'user-id-1';
 const accessToken = 'test-access-token';
 const refreshToken = 'test-refresh-token';
-const ownerId = 'test-owner-id';
+const authUserId = 'test-auth-user-id';
 
 const organisation = {
   id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
   accessToken: await encrypt(accessToken),
   refreshToken: await encrypt(refreshToken),
-  ownerId,
+  authUserId,
   region: 'us',
 };
 

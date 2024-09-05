@@ -14,7 +14,7 @@ const accessToken = 'some token';
 const refreshToken = 'some refresh token';
 const expiresIn = 60;
 const region = 'us';
-const ownerId = 'test-owner-id';
+const authUserId = 'test-auth-user-id';
 const now = new Date();
 const getTokenData = {
   accessToken,
@@ -26,10 +26,10 @@ const organisation = {
   id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
   accessToken,
   refreshToken,
-  ownerId,
+  authUserId,
   region,
 };
-const getOwnerIdData = { ownerId };
+const getAuthUserData = { authUserId };
 
 describe('setupOrganisation', () => {
   beforeAll(() => {
@@ -46,7 +46,7 @@ describe('setupOrganisation', () => {
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
     // mock the getToken function to return a predefined token
     const getToken = vi.spyOn(authConnector, 'getToken').mockResolvedValue(getTokenData);
-    const getOwnerId = vi.spyOn(userConnector, 'getOwnerId').mockResolvedValue(getOwnerIdData);
+    const getAuthUser = vi.spyOn(userConnector, 'getAuthUser').mockResolvedValue(getAuthUserData);
 
     // assert the function resolves without returning a value
     await expect(
@@ -60,8 +60,8 @@ describe('setupOrganisation', () => {
     // check if getToken was called correctly
     expect(getToken).toBeCalledTimes(1);
     expect(getToken).toBeCalledWith(code);
-    expect(getOwnerId).toBeCalledTimes(1);
-    expect(getOwnerId).toBeCalledWith({ accessToken });
+    expect(getAuthUser).toBeCalledTimes(1);
+    expect(getAuthUser).toBeCalledWith({ accessToken });
     // verify the organisation token is set in the database
     const [storedOrganisation] = await db
       .select()
@@ -111,7 +111,7 @@ describe('setupOrganisation', () => {
 
     // mock getToken as above
     const getToken = vi.spyOn(authConnector, 'getToken').mockResolvedValue(getTokenData);
-    const getOwnerId = vi.spyOn(userConnector, 'getOwnerId').mockResolvedValue(getOwnerIdData);
+    const getAuthUser = vi.spyOn(userConnector, 'getAuthUser').mockResolvedValue(getAuthUserData);
 
     // assert the function resolves without returning a value
     await expect(
@@ -125,8 +125,8 @@ describe('setupOrganisation', () => {
     // verify getToken usage
     expect(getToken).toBeCalledTimes(1);
     expect(getToken).toBeCalledWith(code);
-    expect(getOwnerId).toBeCalledTimes(1);
-    expect(getOwnerId).toBeCalledWith({ accessToken });
+    expect(getAuthUser).toBeCalledTimes(1);
+    expect(getAuthUser).toBeCalledWith({ accessToken });
     // check if the token in the database is updated
     const [storedOrganisation] = await db
       .select()

@@ -29,7 +29,7 @@ export type DeleteUserParams = {
   accessToken: string;
 };
 
-const ownerIdResponseSchema = z.object({
+const authUserIdResponseSchema = z.object({
   id: z.string(),
 });
 
@@ -97,7 +97,7 @@ export const deleteUser = async ({ userId, accessToken }: DeleteUserParams) => {
   }
 };
 
-export const getOwnerId = async ({ accessToken }: { accessToken: string }) => {
+export const getAuthUser = async ({ accessToken }: { accessToken: string }) => {
   const url = new URL(`${env.BOX_API_BASE_URL}/2.0/users/me`);
 
   const response = await fetch(url.toString(), {
@@ -109,18 +109,18 @@ export const getOwnerId = async ({ accessToken }: { accessToken: string }) => {
   });
 
   if (!response.ok) {
-    throw new BoxError('Could not retrieve owner id', { response });
+    throw new BoxError('Could not retrieve auth-user id', { response });
   }
 
   const resData: unknown = await response.json();
 
-  const result = ownerIdResponseSchema.safeParse(resData);
+  const result = authUserIdResponseSchema.safeParse(resData);
   if (!result.success) {
-    logger.error('Invalid Box owner id response', { resData });
-    throw new BoxError('Invalid Box owner id response');
+    logger.error('Invalid Box auth-user id response', { resData });
+    throw new BoxError('Invalid Box auth-user id response');
   }
 
   return {
-    ownerId: String(result.data.id),
+    authUserId: String(result.data.id),
   };
 };
