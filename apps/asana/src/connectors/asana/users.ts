@@ -33,7 +33,7 @@ export type DeleteUsersParams = {
   workspaceId: string;
 };
 
-const ownerIdResponseSchema = z.object({
+const authUserIdResponseSchema = z.object({
   data: z.object({
     gid: z.string(),
   }),
@@ -109,7 +109,7 @@ export const deleteUser = async ({ userId, workspaceId, accessToken }: DeleteUse
   }
 };
 
-export const getOwnerId = async ({ accessToken }: { accessToken: string }) => {
+export const getAuthUser = async ({ accessToken }: { accessToken: string }) => {
   const url = new URL(`${env.ASANA_API_BASE_URL}/users/me`);
 
   const response = await fetch(url.toString(), {
@@ -121,18 +121,18 @@ export const getOwnerId = async ({ accessToken }: { accessToken: string }) => {
   });
 
   if (!response.ok) {
-    throw new AsanaError('Could not retrieve owner id', { response });
+    throw new AsanaError('Could not retrieve auth-user id', { response });
   }
 
   const resData: unknown = await response.json();
 
-  const result = ownerIdResponseSchema.safeParse(resData);
+  const result = authUserIdResponseSchema.safeParse(resData);
   if (!result.success) {
-    logger.error('Invalid Asana owner id response', { resData });
-    throw new AsanaError('Invalid Asana owner id response');
+    logger.error('Invalid Asana auth-user id response', { resData });
+    throw new AsanaError('Invalid Asana auth-user id response');
   }
 
   return {
-    ownerId: result.data.data.gid,
+    authUserId: result.data.data.gid,
   };
 };

@@ -10,12 +10,12 @@ import { decrypt } from '@/common/crypto';
 import { type AsanaUser } from '@/connectors/asana/users';
 import { createElbaClient } from '@/connectors/elba/client';
 
-const formatElbaUser = ({ user, ownerId }: { user: AsanaUser; ownerId: string }): User => ({
+const formatElbaUser = ({ user, authUserId }: { user: AsanaUser; authUserId: string }): User => ({
   id: user.gid,
   displayName: user.name,
   email: user.email,
   additionalEmails: [],
-  isSuspendable: user.gid !== ownerId,
+  isSuspendable: user.gid !== authUserId,
 });
 
 export const syncUsers = inngest.createFunction(
@@ -47,7 +47,7 @@ export const syncUsers = inngest.createFunction(
     const [organisation] = await db
       .select({
         token: organisationsTable.accessToken,
-        ownerId: organisationsTable.ownerId,
+        authUserId: organisationsTable.authUserId,
         region: organisationsTable.region,
       })
       .from(organisationsTable)
@@ -58,12 +58,12 @@ export const syncUsers = inngest.createFunction(
 
     const elba = createElbaClient({ organisationId, region: organisation.region });
     const token = await decrypt(organisation.token);
-    const ownerId = organisation.ownerId;
+    const authUserId = organisation.authUserId;
 
     const nextPage = await step.run('list-users', async () => {
       const result = await getUsers({ accessToken: token, page });
 
-      const users = result.validUsers.map((user) => formatElbaUser({ user, ownerId }));
+      const users = result.validUsers.map((user) => formatElbaUser({ user, authUserId }));
 
       if (result.invalidUsers.length > 0) {
         logger.warn('Retrieved users contains invalid data', {
