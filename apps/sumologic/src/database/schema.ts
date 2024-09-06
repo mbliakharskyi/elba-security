@@ -5,7 +5,7 @@ export const organisationsTable = pgTable('organisations', {
   accessId: text('access_id').notNull(),
   accessKey: text('access_key').notNull(),
   sourceRegion: text('source_region').notNull(),
-  ownerId: text('owner_id').notNull(),
+  authUserId: text('auth_user_id').notNull(),
   region: text('region').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });

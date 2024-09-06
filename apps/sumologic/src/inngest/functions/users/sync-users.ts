@@ -24,18 +24,18 @@ const formatElbaUserDisplayName = (user: SumologicUser) => {
 const formatElbaUser = ({
   user,
   sourceRegion,
-  ownerId,
+  authUserId,
 }: {
   user: SumologicUser;
   sourceRegion: string;
-  ownerId: string;
+  authUserId: string;
 }): User => ({
   id: user.id,
   displayName: formatElbaUserDisplayName(user),
   email: user.email,
   authMethod: formatElbaUserAuthMethod(user),
   additionalEmails: [],
-  isSuspendable: user.id !== ownerId,
+  isSuspendable: user.id !== authUserId,
   url: `https://service.${sourceRegion}.sumologic.com/ui/#/manage/users`,
 });
 
@@ -70,7 +70,7 @@ export const syncUsers = inngest.createFunction(
         accessId: organisationsTable.accessId,
         accessKey: organisationsTable.accessKey,
         sourceRegion: organisationsTable.sourceRegion,
-        ownerId: organisationsTable.ownerId,
+        authUserId: organisationsTable.authUserId,
         region: organisationsTable.region,
       })
       .from(organisationsTable)
@@ -86,7 +86,7 @@ export const syncUsers = inngest.createFunction(
     });
 
     const decryptedAccessId = await decrypt(organisation.accessId);
-    const ownerId = organisation.ownerId;
+    const authUserId = organisation.authUserId;
     const sourceRegion = organisation.sourceRegion;
 
     const nextPage = await step.run('list-users', async () => {
@@ -99,7 +99,7 @@ export const syncUsers = inngest.createFunction(
 
       const users = result.validUsers
         .filter(({ isActive }) => isActive)
-        .map((user) => formatElbaUser({ user, sourceRegion, ownerId }));
+        .map((user) => formatElbaUser({ user, sourceRegion, authUserId }));
 
       if (result.invalidUsers.length > 0) {
         logger.warn('Retrieved users contains invalid data', {

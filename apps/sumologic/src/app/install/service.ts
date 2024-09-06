@@ -1,5 +1,5 @@
 import { encrypt } from '@/common/crypto';
-import { getOwnerId } from '../../connectors/sumologic/users';
+import { getAuthUser } from '../../connectors/sumologic/users';
 import { db } from '../../database/client';
 import { organisationsTable } from '../../database/schema';
 import { inngest } from '../../inngest/client';
@@ -18,7 +18,7 @@ export const registerOrganisation = async ({
   sourceRegion,
   region,
 }: SetupOrganisationParams) => {
-  const { ownerId } = await getOwnerId({ accessId, accessKey, sourceRegion });
+  const { authUserId } = await getAuthUser({ accessId, accessKey, sourceRegion });
 
   const encodedAccessId = await encrypt(accessId);
 
@@ -30,7 +30,7 @@ export const registerOrganisation = async ({
       accessId: encodedAccessId,
       accessKey,
       sourceRegion,
-      ownerId,
+      authUserId,
     })
     .onConflictDoUpdate({
       target: organisationsTable.id,
@@ -39,7 +39,7 @@ export const registerOrganisation = async ({
         accessId: encodedAccessId,
         accessKey,
         sourceRegion,
-        ownerId,
+        authUserId,
       },
     });
 

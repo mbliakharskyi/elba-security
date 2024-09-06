@@ -11,14 +11,14 @@ import { removeOrganisation } from './remove-organisation';
 const accessId = 'test-access-token';
 const accessKey = 'test-accessKey';
 const sourceRegion = 'EU';
-const ownerId = 'test-owner-id';
+const authUserId = 'test-owner-id';
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   accessId: await encrypt(accessId),
   region: 'us',
   accessKey,
   sourceRegion,
-  ownerId,
+  authUserId,
 };
 const setup = createInngestFunctionMock(removeOrganisation, 'sumologic/app.uninstalled');
 

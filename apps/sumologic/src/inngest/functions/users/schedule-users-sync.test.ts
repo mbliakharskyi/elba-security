@@ -14,7 +14,7 @@ export const organisations = Array.from({ length: 5 }, (_, i) => ({
   accessKey: 'test-accessKey',
   sourceRegion: 'EU',
   region: `us`,
-  ownerId: 'test-owner-id',
+  authUserId: 'test-owner-id',
 }));
 
 describe('schedule-users-sync', () => {

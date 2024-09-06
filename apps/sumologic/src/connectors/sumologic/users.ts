@@ -19,7 +19,7 @@ const sumologicResponseSchema = z.object({
   next: z.string().nullable(),
 });
 
-const sumologicOwnerIdResponseSchema = z.string();
+const sumologicAuthUserIdResponseSchema = z.string();
 export type GetUsersParams = {
   accessId: string;
   accessKey: string;
@@ -38,7 +38,7 @@ export type DeleteUsersParams = {
   sourceRegion: string;
 };
 
-export type GetOwnerIdParams = {
+export type GetAuthUserParams = {
   accessId: string;
   accessKey: string;
   sourceRegion: string;
@@ -129,7 +129,7 @@ export const deleteUser = async ({
   }
 };
 
-export const getOwnerId = async ({ accessId, accessKey, sourceRegion }: GetOwnerIdParams) => {
+export const getAuthUser = async ({ accessId, accessKey, sourceRegion }: GetAuthUserParams) => {
   const encodedKey = Buffer.from(`${accessId}:${accessKey}`).toString('base64');
 
   const url = new URL(`https://api.${sourceRegion}.sumologic.com/api/v1/account/accountOwner`);
@@ -147,14 +147,14 @@ export const getOwnerId = async ({ accessId, accessKey, sourceRegion }: GetOwner
 
   const resData: unknown = await response.json();
 
-  const result = sumologicOwnerIdResponseSchema.safeParse(resData);
+  const result = sumologicAuthUserIdResponseSchema.safeParse(resData);
   if (!result.success) {
     logger.error('Invalid Sumologic owner id response', { resData });
     throw new SumologicError('Invalid Sumologic owner id response');
   }
 
   return {
-    ownerId: result.data,
+    authUserId: result.data,
   };
 };
 

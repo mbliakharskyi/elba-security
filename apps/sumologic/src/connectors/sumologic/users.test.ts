@@ -3,7 +3,7 @@ import { describe, expect, test, beforeEach } from 'vitest';
 import { server } from '@elba-security/test-utils';
 import { SumologicError } from '../common/error';
 import type { SumologicUser } from './users';
-import { getUsers, deleteUser, getOwnerId, getUserDetail } from './users';
+import { getUsers, deleteUser, getAuthUser, getUserDetail } from './users';
 
 const validAccessId = 'accessId-1234';
 const validAccessKey = 'accessKey-1234';
@@ -159,7 +159,7 @@ describe('users connector', () => {
     });
   });
 
-  describe('getOwnerId', () => {
+  describe('getAuthUser', () => {
     beforeEach(() => {
       server.use(
         http.get(
@@ -179,23 +179,23 @@ describe('users connector', () => {
 
     test('should return owner id when the access id and access key are valid', async () => {
       await expect(
-        getOwnerId({
+        getAuthUser({
           accessId: validAccessId,
           accessKey: validAccessKey,
           sourceRegion,
         })
-      ).resolves.toStrictEqual({ ownerId: userId });
+      ).resolves.toStrictEqual({ authUserId: userId });
     });
 
     test('should throws when the Access ID is invalid', async () => {
       await expect(
-        getOwnerId({ accessId: 'foo-bar', accessKey: validAccessKey, sourceRegion })
+        getAuthUser({ accessId: 'foo-bar', accessKey: validAccessKey, sourceRegion })
       ).rejects.toBeInstanceOf(SumologicError);
     });
 
     test('should throws when the Access Key is invalid', async () => {
       await expect(
-        getOwnerId({ accessId: validAccessId, accessKey: 'foo-bar', sourceRegion })
+        getAuthUser({ accessId: validAccessId, accessKey: 'foo-bar', sourceRegion })
       ).rejects.toBeInstanceOf(SumologicError);
     });
   });
