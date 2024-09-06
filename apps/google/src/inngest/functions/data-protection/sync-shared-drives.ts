@@ -67,7 +67,6 @@ export const syncDataProtectionSharedDrives = inngest.createFunction(
           const managerPermissions = await listAllGoogleSharedDriveManagerPermissions({
             auth: authClient,
             fileId: sharedDriveId,
-            useDomainAdminAccess: true,
             pageSize: 100, // Set pageSize to max value
           });
 
@@ -158,31 +157,30 @@ export const syncDataProtectionSharedDrives = inngest.createFunction(
     }
 
     if (sharedDrives.length) {
-      const eventsToWait = sharedDrives.map(({ sharedDriveId, managerUserId }) =>
-        step.waitForEvent(`sync-shared-drive-${sharedDriveId}-completed`, {
-          event: 'google/data_protection.sync.drive.completed',
-          if: `async.data.organisationId == '${organisationId}' && async.data.managerUserId == '${managerUserId}' && async.data.driveId == '${sharedDriveId}'`,
-          timeout: '1day',
-        })
-      );
-
-      await step.sendEvent(
-        'sync-shared-drives',
-        sharedDrives.map(({ sharedDriveId, managerUserId, managerEmail }) => ({
-          name: 'google/data_protection.sync.drive.requested',
-          data: {
-            driveId: sharedDriveId,
-            isFirstSync,
-            managerEmail,
-            managerUserId,
-            organisationId,
-            pageToken: null,
-            region,
-          },
-        }))
-      );
-
-      await Promise.all(eventsToWait);
+      await Promise.all([
+        ...sharedDrives.map(({ sharedDriveId, managerUserId }) =>
+          step.waitForEvent(`sync-shared-drive-${sharedDriveId}-completed`, {
+            event: 'google/data_protection.sync.drive.completed',
+            if: `async.data.organisationId == '${organisationId}' && async.data.managerUserId == '${managerUserId}' && async.data.driveId == '${sharedDriveId}'`,
+            timeout: '30 days',
+          })
+        ),
+        step.sendEvent(
+          'sync-shared-drives',
+          sharedDrives.map(({ sharedDriveId, managerUserId, managerEmail }) => ({
+            name: 'google/data_protection.sync.drive.requested',
+            data: {
+              driveId: sharedDriveId,
+              isFirstSync,
+              managerEmail,
+              managerUserId,
+              organisationId,
+              pageToken: null,
+              region,
+            },
+          }))
+        ),
+      ]);
     }
 
     if (nextPage) {
