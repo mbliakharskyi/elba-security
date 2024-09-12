@@ -13,7 +13,7 @@ export const env = z
     DATABASE_URL: z.string().min(1),
     DATABASE_PROXY_PORT: zEnvInt().optional(),
     VERCEL_ENV: z.string().min(1).optional(),
-    fifteenFIVE_API_BASE_URL: z.string().default('https://api.15five.com'),
+    FIFTEENFIVE_API_BASE_URL: z.string().default('https://api.15five.com'),
     fifteenFIVE_USERS_SYNC_CRON: z.string().default('0 0 * * *'),
     fifteenFIVE_USERS_DELETE_CONCURRENCY: zEnvInt().default(5),
     fifteenFIVE_USERS_SYNC_BATCH_SIZE: zEnvInt().default(100),

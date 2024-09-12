@@ -27,7 +27,7 @@ export type DeleteUsersParams = {
 };
 
 export const getUsers = async ({ apiKey, nextPageUrl }: GetUsersParams) => {
-  const endpoint = new URL(`${env.fifteenFIVE_API_BASE_URL}/api/public/user`);
+  const endpoint = new URL(`${env.FIFTEENFIVE_API_BASE_URL}/api/public/user`);
   endpoint.searchParams.append('page_size', String(env.fifteenFIVE_USERS_SYNC_BATCH_SIZE));
   endpoint.searchParams.append('is_active', 'true');
 
@@ -68,13 +68,17 @@ export const getUsers = async ({ apiKey, nextPageUrl }: GetUsersParams) => {
 };
 
 export const deleteUser = async ({ userId, apiKey }: DeleteUsersParams) => {
-  const url = new URL(`${env.fifteenFIVE_API_BASE_URL}/api/public/user?${userId}`);
+  const url = new URL(`${env.FIFTEENFIVE_API_BASE_URL}/api/public/user/${userId}`);
+
   const response = await fetch(url, {
-    method: 'DELETE',
+    method: 'put',
     headers: {
       'Content-Type': 'application/json',
       Authorization: apiKey,
     },
+    body: JSON.stringify({
+      is_active: false,
+    }),
   });
 
   if (!response.ok && response.status !== 404) {

@@ -21,7 +21,7 @@ describe('users connector', () => {
   describe('getUsers', () => {
     beforeEach(() => {
       server.use(
-        http.get(`${env.fifteenFIVE_API_BASE_URL}/api/public/user`, ({ request }) => {
+        http.get(`${env.FIFTEENFIVE_API_BASE_URL}/api/public/user`, ({ request }) => {
           if (request.headers.get('Authorization') !== apiKey) {
             return new Response(undefined, { status: 401 });
           }
@@ -71,8 +71,8 @@ describe('users connector', () => {
   describe('deleteUser', () => {
     beforeEach(() => {
       server.use(
-        http.delete<{ userId: string; apiKey: string }>(
-          `${env.fifteenFIVE_API_BASE_URL}/api/public/user`,
+        http.put<{ userId: string }>(
+          `${env.FIFTEENFIVE_API_BASE_URL}/api/public/user/:userId`,
           ({ request, params }) => {
             if (request.headers.get('Authorization') !== apiKey) {
               return new Response(undefined, { status: 401 });
@@ -92,7 +92,7 @@ describe('users connector', () => {
     });
 
     test('should not throw when the user is not found', async () => {
-      await expect(deleteUser({ apiKey, userId: 'invalid-user-id' })).resolves.toBeUndefined();
+      await expect(deleteUser({ apiKey, userId })).resolves.toBeUndefined();
     });
 
     test('should throw FifteenFiveError when apiKey is invalid', async () => {
