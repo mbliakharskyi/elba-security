@@ -1,41 +1,40 @@
 import { subMinutes } from 'date-fns/subMinutes';
-import { addSeconds } from 'date-fns/addSeconds';
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { NonRetriableError } from 'inngest';
 import { failureRetry } from '@elba-security/inngest';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { inngest } from '@/inngest/client';
-import { getRefreshToken } from '@/connectors/zoom/auth';
+import { getRefreshToken } from '@/connectors/frontapp/auth';
 import { encrypt, decrypt } from '@/common/crypto';
 import { unauthorizedMiddleware } from '@/inngest/middlewares/unauthorized-middleware';
 
 export const refreshToken = inngest.createFunction(
   {
-    id: 'zoom-refresh-token',
+    id: 'frontapp-refresh-token',
     concurrency: {
       key: 'event.data.organisationId',
       limit: 1,
     },
     cancelOn: [
       {
-        event: 'zoom/app.installed',
+        event: 'frontapp/app.installed',
         match: 'data.organisationId',
       },
       {
-        event: 'zoom/app.uninstalled',
+        event: 'frontapp/app.uninstalled',
         match: 'data.organisationId',
       },
     ],
-    retries: 5,
     onFailure: failureRetry(),
     middleware: [unauthorizedMiddleware],
+    retries: 5,
   },
-  { event: 'zoom/token.refresh.requested' },
+  { event: 'frontapp/token.refresh.requested' },
   async ({ event, step }) => {
     const { organisationId, expiresAt } = event.data;
 
-    await step.sleepUntil('wait-before-expiration', subMinutes(new Date(expiresAt), 10));
+    await step.sleepUntil('wait-before-expiration', subMinutes(new Date(expiresAt), 15));
 
     const nextExpiresAt = await step.run('refresh-token', async () => {
       const [organisation] = await db
@@ -43,7 +42,7 @@ export const refreshToken = inngest.createFunction(
           refreshToken: organisationsTable.refreshToken,
         })
         .from(organisationsTable)
-        .where(and(eq(organisationsTable.id, organisationId)));
+        .where(eq(organisationsTable.id, organisationId));
 
       if (!organisation) {
         throw new NonRetriableError(`Could not retrieve organisation with id=${organisationId}`);
@@ -68,14 +67,14 @@ export const refreshToken = inngest.createFunction(
         })
         .where(eq(organisationsTable.id, organisationId));
 
-      return addSeconds(new Date(), expiresIn);
+      return expiresIn;
     });
 
     await step.sendEvent('next-refresh', {
-      name: 'zoom/token.refresh.requested',
+      name: 'frontapp/token.refresh.requested',
       data: {
         organisationId,
-        expiresAt: new Date(nextExpiresAt).getTime(),
+        expiresAt: new Date(nextExpiresAt * 1000).getTime(),
       },
     });
   }
