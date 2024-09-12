@@ -5,7 +5,7 @@ import { env } from '@/common/env';
 import { FifteenFiveError } from '../common/error';
 import { type FifteenFiveUser, getUsers, deleteUser } from './users';
 
-const nextCursor = 'next-nextPageUrl';
+const nextCursor = 'https://api.15five.com/api/public/user/?is_active=true&page=2&page_size=1';
 const apiKey = 'test-api-key';
 const userId = 'test-user-id';
 const validUsers: FifteenFiveUser[] = Array.from({ length: 2 }, (_, i) => ({
@@ -21,27 +21,21 @@ describe('users connector', () => {
   describe('getUsers', () => {
     beforeEach(() => {
       server.use(
-        http.get(`${env.fifteenFIVE_API_BASE_URL}/users`, ({ request }) => {
+        http.get(`${env.fifteenFIVE_API_BASE_URL}/api/public/user`, ({ request }) => {
           if (request.headers.get('Authorization') !== apiKey) {
             return new Response(undefined, { status: 401 });
           }
 
           const url = new URL(request.url);
-          const nextPageUrl = url.searchParams.get('pagination.nextPageUrl');
-          const returnData = nextPageUrl
+          const page = url.searchParams.get('page');
+          const returnData = page
             ? {
-                data: {
-                  users: validUsers,
-                  pagination: {
-                    next: nextCursor,
-                  },
-                },
+                results: validUsers,
+                next: nextCursor,
               }
             : {
-                data: {
-                  users: validUsers,
-                  pagination: {},
-                },
+                results: validUsers,
+                next: null,
               };
           return Response.json(returnData);
         })
@@ -78,9 +72,9 @@ describe('users connector', () => {
     beforeEach(() => {
       server.use(
         http.delete<{ userId: string; apiKey: string }>(
-          `${env.fifteenFIVE_API_BASE_URL}/users`,
+          `${env.fifteenFIVE_API_BASE_URL}/api/public/user`,
           ({ request, params }) => {
-            if (request.headers.get('Authorization') !== `Bearer ${apiKey}`) {
+            if (request.headers.get('Authorization') !== apiKey) {
               return new Response(undefined, { status: 401 });
             }
 

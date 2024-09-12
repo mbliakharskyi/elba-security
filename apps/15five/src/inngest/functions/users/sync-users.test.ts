@@ -67,17 +67,19 @@ describe('sync-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'name-0',
+          displayName: 'first_name-0 last_name-0',
           email: 'user-0@foo.bar',
           id: '0',
           isSuspendable: true,
+          url: 'https://my.15five.com/account/settings/0/',
         },
         {
           additionalEmails: [],
-          displayName: 'name-1',
+          displayName: 'first_name-1 last_name-1',
           email: 'user-1@foo.bar',
           id: '1',
           isSuspendable: true,
+          url: 'https://my.15five.com/account/settings/1/',
         },
       ],
     });
@@ -119,17 +121,19 @@ describe('sync-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'name-0',
+          displayName: 'first_name-0 last_name-0',
           email: 'user-0@foo.bar',
           id: '0',
           isSuspendable: true,
+          url: 'https://my.15five.com/account/settings/0/',
         },
         {
           additionalEmails: [],
-          displayName: 'name-1',
+          displayName: 'first_name-1 last_name-1',
           email: 'user-1@foo.bar',
           id: '1',
           isSuspendable: true,
+          url: 'https://my.15five.com/account/settings/1/',
         },
       ],
     });
