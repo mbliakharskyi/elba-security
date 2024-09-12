@@ -24,27 +24,28 @@ export default function InstallPage() {
 
   return (
     <>
-      <h1>Setup fifteenFive integration</h1>
+      <h1>Setup 15five integration</h1>
       <InstructionsSteps>
         <InstructionsStep index={1}>
-          <h3>Create Token</h3>
-          <p>In the fifteenFive Dashboard, use the menu (left) and navigate to the Settings</p>
+          <h3>Create API Key</h3>
+          <p>In the 15five Dashboard, navigate to the Settings on the top-right corner</p>
           <p>
-            you can see Workspace Setting, click on it, and then click on the{' '}
-            <strong>Create Token Button</strong>
+            you can see Company setting, click on the <strong>Integration</strong>
           </p>
           <p>
-            After completing the Description input field, Copy the Token and paste them in the
-            fields below. You will not be able to see the Token again. Make sure to save them in a
-            secure place.
+            After enabling <strong>Public API</strong>, Create the <strong>API Key</strong>.
+          </p>
+          <p>
+            Copy the <strong>API Key</strong> and paste them in the fields below. Make sure to save
+            them in a secure place.
           </p>
         </InstructionsStep>
         <InstructionsStep index={2}>
-          <h3>Connect fifteenFive</h3>
+          <h3>Connect 15five</h3>
           <Form action={formAction}>
             <FormField isInvalid={Boolean(state.errors?.apiKey?.at(0))}>
-              <FormLabel>Token</FormLabel>
-              <Input minLength={1} name="apiKey" placeholder="Paste Your Token" type="text" />
+              <FormLabel>API Key</FormLabel>
+              <Input minLength={1} name="apiKey" placeholder="Paste Your API Key" type="text" />
               {state.errors?.apiKey?.at(0) ? (
                 <FormErrorMessage>{state.errors.apiKey.at(0)}</FormErrorMessage>
               ) : null}

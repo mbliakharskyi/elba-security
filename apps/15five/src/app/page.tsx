@@ -1,3 +1,3 @@
 export default function Home() {
-  return <main>Elba x fifteenFive</main>;
+  return <main>Elba x FifteenFive</main>;
 }
