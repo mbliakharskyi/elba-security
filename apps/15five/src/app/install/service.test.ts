@@ -4,7 +4,7 @@ import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { inngest } from '@/inngest/client';
 import * as userConnector from '@/connectors/fifteenfive/users';
-import type { fifteenFiveUser } from '@/connectors/fifteenfive/users';
+import type { FifteenFiveUser } from '@/connectors/fifteenfive/users';
 import { FifteenFiveError } from '@/connectors/common/error';
 import { decrypt } from '@/common/crypto';
 import { registerOrganisation } from './service';
@@ -13,9 +13,10 @@ const apiKey = 'test-api-key';
 const region = 'us';
 const now = new Date();
 
-const validUsers: fifteenFiveUser[] = Array.from({ length: 2 }, (_, i) => ({
-  id: `${i}`,
-  name: `name-${i}`,
+const validUsers: FifteenFiveUser[] = Array.from({ length: 2 }, (_, i) => ({
+  id: i,
+  first_name: `first_name-${i}`,
+  last_name: `last_name-${i}`,
   email: `user${i}@foo.bar`,
 }));
 
