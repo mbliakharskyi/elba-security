@@ -24,12 +24,6 @@ export const inngest = new Inngest({
         organisationId: string;
       };
     };
-    'fifteenfive/users.delete.requested': {
-      data: {
-        userId: string;
-        organisationId: string;
-      };
-    };
   }>(),
   middleware: [rateLimitMiddleware, unauthorizedMiddleware],
   logger,
