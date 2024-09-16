@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { unstable_noStore } from 'next/cache'; // eslint-disable-line camelcase -- next sucks
 import { env } from '@/common/env';
 import { FifteenFiveError } from '@/connectors/common/error';
+import { checkUserWithEmail } from '@/connectors/fifteenfive/users';
 import { registerOrganisation } from './service';
 
 const formSchema = z.object({
@@ -14,12 +15,16 @@ const formSchema = z.object({
   apiKey: z.string().min(1, {
     message: 'apiKey is required',
   }),
+  email: z.string().min(1, {
+    message: 'email is required',
+  }),
   region: z.string().min(1),
 });
 
 export type FormState = {
   errors?: {
     apiKey?: string[] | undefined;
+    email?: string[] | undefined;
   };
 };
 
@@ -29,6 +34,7 @@ export const install = async (_: FormState, formData: FormData): Promise<FormSta
   try {
     const result = formSchema.safeParse({
       apiKey: formData.get('apiKey'),
+      email: formData.get('email'),
       organisationId: formData.get('organisationId'),
       region,
     });
@@ -50,6 +56,19 @@ export const install = async (_: FormState, formData: FormData): Promise<FormSta
 
       return {
         errors: fieldErrors,
+      };
+    }
+
+    const apiKey = result.data.apiKey;
+    const email = result.data.email;
+
+    const { isValidEmail } = await checkUserWithEmail({ apiKey, email });
+
+    if (!isValidEmail) {
+      return {
+        errors: {
+          email: ['The email is not valid'],
+        },
       };
     }
 

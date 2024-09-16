@@ -1,5 +1,5 @@
 {
-  "id": "a270fd03-9d47-41a7-a6eb-e0405f99dc1c",
+  "id": "7cc36eb2-66e0-4928-9228-acdfa17fe02c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "5",
   "dialect": "pg",
@@ -16,6 +16,12 @@
         },
         "api_key": {
           "name": "api_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
           "type": "text",
           "primaryKey": false,
           "notNull": true

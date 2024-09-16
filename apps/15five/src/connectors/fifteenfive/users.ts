@@ -26,6 +26,11 @@ export type DeleteUsersParams = {
   apiKey: string;
 };
 
+export type CheckUserWithEmailParams = {
+  apiKey: string;
+  email: string;
+};
+
 export const getUsers = async ({ apiKey, nextPageUrl }: GetUsersParams) => {
   const endpoint = new URL(`${env.FIFTEENFIVE_API_BASE_URL}/api/public/user`);
   endpoint.searchParams.append('page_size', String(env.fifteenFIVE_USERS_SYNC_BATCH_SIZE));
@@ -84,4 +89,29 @@ export const deleteUser = async ({ userId, apiKey }: DeleteUsersParams) => {
   if (!response.ok && response.status !== 404) {
     throw new FifteenFiveError(`Could not delete user with Id: ${userId}`, { response });
   }
+};
+
+export const checkUserWithEmail = async ({ apiKey, email }: CheckUserWithEmailParams) => {
+  const endpoint = new URL(`${env.FIFTEENFIVE_API_BASE_URL}/api/public/user`);
+  endpoint.searchParams.append('is_admin', 'true');
+  endpoint.searchParams.append('email', email);
+
+  const response = await fetch(endpoint.toString(), {
+    method: 'GET',
+    headers: {
+      Authorization: apiKey,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new FifteenFiveError('API request failed', { response });
+  }
+
+  const resData: unknown = await response.json();
+
+  const { results } = fifteenfiveResponseSchema.parse(resData);
+  return {
+    isValidEmail: results.length > 0,
+  };
 };
