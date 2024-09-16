@@ -3,11 +3,12 @@ import { expect, test, describe, beforeEach } from 'vitest';
 import { server } from '@elba-security/test-utils';
 import { env } from '@/common/env';
 import { FifteenFiveError } from '../common/error';
-import { type FifteenFiveUser, getUsers, deleteUser } from './users';
+import { type FifteenFiveUser, getUsers, deleteUser, checkUserWithEmail } from './users';
 
 const nextCursor = 'https://api.15five.com/api/public/user/?is_active=true&page=2&page_size=1';
 const apiKey = 'test-api-key';
 const userId = 'test-user-id';
+const ownerEmail = 'test-owner-email';
 const validUsers: FifteenFiveUser[] = Array.from({ length: 2 }, (_, i) => ({
   id: i,
   first_name: `first_name-${i}`,
@@ -99,6 +100,47 @@ describe('users connector', () => {
       await expect(deleteUser({ apiKey: 'invalidKey', userId })).rejects.toBeInstanceOf(
         FifteenFiveError
       );
+    });
+  });
+
+  describe('checkUserWithEmail', () => {
+    beforeEach(() => {
+      server.use(
+        http.get(`${env.FIFTEENFIVE_API_BASE_URL}/api/public/user`, ({ request }) => {
+          if (request.headers.get('Authorization') !== apiKey) {
+            return new Response(undefined, { status: 401 });
+          }
+
+          const url = new URL(request.url);
+          const email = url.searchParams.get('email');
+          const returnData = {
+            results: email === ownerEmail ? validUsers : [],
+            next: null,
+          };
+          return Response.json(returnData);
+        })
+      );
+    });
+
+    test('should return true when the apiKey is valid and the email is the one of the owner', async () => {
+      await expect(checkUserWithEmail({ apiKey, email: ownerEmail })).resolves.toStrictEqual({
+        isValidEmail: true,
+      });
+    });
+
+    test('should return false and no nextPage when the apiKey is valid and their is no other page', async () => {
+      await expect(checkUserWithEmail({ apiKey, email: 'invalid-email' })).resolves.toStrictEqual({
+        isValidEmail: false,
+      });
+    });
+
+    test('should throws when the apiKey is invalid', async () => {
+      await expect(
+        checkUserWithEmail({
+          apiKey: 'foo-id',
+          email: ownerEmail,
+        })
+      ).rejects.toBeInstanceOf(FifteenFiveError);
     });
   });
 });

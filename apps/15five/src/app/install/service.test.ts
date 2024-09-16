@@ -10,6 +10,7 @@ import { decrypt } from '@/common/crypto';
 import { registerOrganisation } from './service';
 
 const apiKey = 'test-api-key';
+const email = 'test-owner-email';
 const region = 'us';
 const now = new Date();
 
@@ -30,6 +31,7 @@ const getUsersData = {
 const mockOrganisation = {
   id: '00000000-0000-0000-0000-000000000001',
   apiKey,
+  email,
   region,
 };
 
@@ -51,6 +53,7 @@ describe('registerOrganisation', () => {
       registerOrganisation({
         organisationId: mockOrganisation.id,
         apiKey,
+        email,
         region,
       })
     ).resolves.toBeUndefined();
@@ -106,6 +109,7 @@ describe('registerOrganisation', () => {
       registerOrganisation({
         organisationId: mockOrganisation.id,
         apiKey,
+        email,
         region,
       })
     ).resolves.toBeUndefined();

@@ -11,6 +11,7 @@ const nextPage = '1';
 const organisation = {
   id: '45a76301-f1dd-4a77-b12f-9d7d3fca3c90',
   apiKey: 'test-api-key',
+  email: 'test-owner-email',
   region: 'us',
 };
 
