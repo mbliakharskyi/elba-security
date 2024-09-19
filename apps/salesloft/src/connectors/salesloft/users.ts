@@ -5,8 +5,6 @@ import { SalesloftError } from '../common/error';
 const salesloftUserSchema = z.object({
   id: z.number(),
   name: z.string(),
-  first_name: z.string(),
-  last_name: z.string(),
   email: z.string(),
 });
 
@@ -72,18 +70,4 @@ export const getUsers = async ({ accessToken, page }: GetUsersParams) => {
     invalidUsers,
     nextPage: nextPage ? String(nextPage) : null,
   };
-};
-
-export const deleteUser = async ({ userId, accessToken }: DeleteUsersParams) => {
-  const response = await fetch(`${env.SALESLOFT_API_BASE_URL}/organization_memberships/${userId}`, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-
-  if (!response.ok && response.status !== 404) {
-    throw new SalesloftError(`Could not delete user with Id: ${userId}`, { response });
-  }
 };
