@@ -7,8 +7,8 @@ import type { SalesloftUser } from './users';
 import { getUsers } from './users';
 
 const validToken = 'token-1234';
-const endPageToken = '3';
-const nextPageToken = '2';
+const endPageToken = 3;
+const nextPageToken = 2;
 
 const validUsers: SalesloftUser[] = Array.from({ length: 5 }, (_, i) => ({
   id: i,
@@ -22,17 +22,17 @@ describe('users connector', () => {
   describe('getUsers', () => {
     beforeEach(() => {
       server.use(
-        http.get(`${env.SALESLOFT_API_BASE_URL}/organization_memberships`, ({ request }) => {
+        http.get(`${env.SALESLOFT_API_BASE_URL}/v2/users`, ({ request }) => {
           if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
             return new Response(undefined, { status: 401 });
           }
 
           const url = new URL(request.url);
-          const pageToken = url.searchParams.get('page_token');
+          const pageToken = url.searchParams.get('page') ?? '0';
           const responseData = {
-            collection: validUsers,
-            pagination: {
-              next_page_token: pageToken === endPageToken ? null : nextPageToken,
+            data: validUsers,
+            metadata: {
+              paging: { next_page: pageToken === String(endPageToken) ? null : nextPageToken },
             },
           };
           return Response.json(responseData);
@@ -42,17 +42,17 @@ describe('users connector', () => {
 
     test('should return users and nextPage when the token is valid and their is another page', async () => {
       await expect(
-        getUsers({ accessToken: validToken, page: nextPageToken })
+        getUsers({ accessToken: validToken, page: String(nextPageToken) })
       ).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
-        nextPage: nextPageToken,
+        nextPage: String(nextPageToken),
       });
     });
 
     test('should return users and no nextPage when the token is valid and their is no other page', async () => {
       await expect(
-        getUsers({ accessToken: validToken, page: endPageToken })
+        getUsers({ accessToken: validToken, page: String(endPageToken) })
       ).resolves.toStrictEqual({
         validUsers,
         invalidUsers,

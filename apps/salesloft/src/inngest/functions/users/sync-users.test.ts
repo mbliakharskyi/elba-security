@@ -18,16 +18,10 @@ const organisation = {
   region: 'us',
 };
 
-const roles = ['owner', 'admin', 'user'];
-
 const users: usersConnector.SalesloftUser[] = Array.from({ length: 3 }, (_, i) => ({
-  uri: `https://test-uri/organization_memberships/00000000-0000-0000-0000-00000000009${i}`,
-  role: roles[i] ?? 'user',
-  user: {
-    name: `name-${i}`,
-    email: `user-${i}@foo.bar`,
-    uri: `https://test-uri/users/00000000-0000-0000-0000-00000000009${i}`,
-  },
+  id: i,
+  name: `name-${i}`,
+  email: `user-${i}@foo.bar`,
 }));
 
 const setup = createInngestFunctionMock(syncUsers, 'salesloft/users.sync.requested');
@@ -92,28 +86,25 @@ describe('sync-users', () => {
           additionalEmails: [],
           displayName: 'name-0',
           email: 'user-0@foo.bar',
-          id: '00000000-0000-0000-0000-000000000090',
-          role: 'owner',
-          isSuspendable: false,
-          url: 'https://salesloft.com/app/admin/users',
+          id: '0',
+          isSuspendable: true,
+          url: 'https://app.salesloft.com/app/settings/users/active',
         },
         {
           additionalEmails: [],
           displayName: 'name-1',
           email: 'user-1@foo.bar',
-          role: 'admin',
-          id: '00000000-0000-0000-0000-000000000091',
-          isSuspendable: false,
-          url: 'https://salesloft.com/app/admin/users',
+          id: '1',
+          isSuspendable: true,
+          url: 'https://app.salesloft.com/app/settings/users/active',
         },
         {
           additionalEmails: [],
           displayName: 'name-2',
           email: 'user-2@foo.bar',
-          role: 'user',
-          id: '00000000-0000-0000-0000-000000000092',
+          id: '2',
           isSuspendable: true,
-          url: 'https://salesloft.com/app/admin/users',
+          url: 'https://app.salesloft.com/app/settings/users/active',
         },
       ],
     });
@@ -145,28 +136,25 @@ describe('sync-users', () => {
           additionalEmails: [],
           displayName: 'name-0',
           email: 'user-0@foo.bar',
-          role: 'owner',
-          id: '00000000-0000-0000-0000-000000000090',
-          isSuspendable: false,
-          url: 'https://salesloft.com/app/admin/users',
+          id: '0',
+          isSuspendable: true,
+          url: 'https://app.salesloft.com/app/settings/users/active',
         },
         {
           additionalEmails: [],
           displayName: 'name-1',
           email: 'user-1@foo.bar',
-          role: 'admin',
-          id: '00000000-0000-0000-0000-000000000091',
-          isSuspendable: false,
-          url: 'https://salesloft.com/app/admin/users',
+          id: '1',
+          isSuspendable: true,
+          url: 'https://app.salesloft.com/app/settings/users/active',
         },
         {
           additionalEmails: [],
           displayName: 'name-2',
           email: 'user-2@foo.bar',
-          role: 'user',
-          id: '00000000-0000-0000-0000-000000000092',
+          id: '2',
           isSuspendable: true,
-          url: 'https://salesloft.com/app/admin/users',
+          url: 'https://app.salesloft.com/app/settings/users/active',
         },
       ],
     });
