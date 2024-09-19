@@ -18,10 +18,10 @@ export const rateLimitMiddleware = new InngestMiddleware({
             }
 
             if (error.response?.status === 429) {
+              const retryAfterHeader = error.response.headers.get('x-ratelimit-limit-minute');
               let retryAfter = 60;
-              const retryAfterHeader = error.response.headers.get('x-ratelimit-reset');
               if (retryAfterHeader) {
-                retryAfter = parseInt(retryAfterHeader, 10);
+                retryAfter = parseInt(retryAfterHeader, 10) * 60;
               }
               return {
                 ...context,
