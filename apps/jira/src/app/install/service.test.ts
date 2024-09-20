@@ -11,7 +11,7 @@ const apiToken = 'test-apiToken';
 const domain = 'test-domain';
 const email = 'test@email';
 const region = 'us';
-const ownerId = 'test-owner-id';
+const authUserId = 'test-authUser-id';
 const now = new Date();
 
 const organisation = {
@@ -20,10 +20,10 @@ const organisation = {
   domain,
   email,
   region,
-  ownerId,
+  authUserId,
 };
 
-const getOwnerIdData = { ownerId };
+const getAuthUserData = { authUserId };
 
 describe('registerOrganisation', () => {
   beforeAll(() => {
@@ -36,8 +36,8 @@ describe('registerOrganisation', () => {
   test('should setup organisation when the organisation id is valid and the organisation is not registered', async () => {
     // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
-    // mocked the getOwnerId function
-    const getOwnerId = vi.spyOn(userConnector, 'getOwnerId').mockResolvedValue(getOwnerIdData);
+    // mocked the getAuthUser function
+    const getAuthUser = vi.spyOn(userConnector, 'getAuthUser').mockResolvedValue(getAuthUserData);
     vi.spyOn(crypto, 'encrypt').mockResolvedValue(apiToken);
     await expect(
       registerOrganisation({
@@ -48,8 +48,8 @@ describe('registerOrganisation', () => {
         region,
       })
     ).resolves.toBeUndefined();
-    expect(getOwnerId).toBeCalledTimes(1);
-    expect(getOwnerId).toBeCalledWith({ apiToken, domain, email });
+    expect(getAuthUser).toBeCalledTimes(1);
+    expect(getAuthUser).toBeCalledWith({ apiToken, domain, email });
 
     await expect(
       db.select().from(organisationsTable).where(eq(organisationsTable.id, organisation.id))
@@ -59,7 +59,7 @@ describe('registerOrganisation', () => {
         domain,
         email,
         region,
-        ownerId,
+        authUserId,
       },
     ]);
     expect(send).toBeCalledTimes(1);
@@ -86,8 +86,8 @@ describe('registerOrganisation', () => {
   test('should setup organisation when the organisation id is valid and the organisation is already registered', async () => {
     // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
-    // mocked the getOwnerId function
-    const getOwnerId = vi.spyOn(userConnector, 'getOwnerId').mockResolvedValue(getOwnerIdData);
+    // mocked the getAuthUser function
+    const getAuthUser = vi.spyOn(userConnector, 'getAuthUser').mockResolvedValue(getAuthUserData);
     // pre-insert an organisation to simulate an existing entry
     await db.insert(organisationsTable).values(organisation);
     await expect(
@@ -100,8 +100,8 @@ describe('registerOrganisation', () => {
       })
     ).resolves.toBeUndefined();
 
-    expect(getOwnerId).toBeCalledTimes(1);
-    expect(getOwnerId).toBeCalledWith({ apiToken, domain, email });
+    expect(getAuthUser).toBeCalledTimes(1);
+    expect(getAuthUser).toBeCalledWith({ apiToken, domain, email });
 
     // check if the apiToken in the database is updated
     await expect(
@@ -140,8 +140,8 @@ describe('registerOrganisation', () => {
   test('should not setup the organisation when the organisation id is invalid', async () => {
     // @ts-expect-error -- this is a mock
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
-    // mocked the getOwnerId function
-    vi.spyOn(userConnector, 'getOwnerId').mockResolvedValue(getOwnerIdData);
+    // mocked the getAuthUser function
+    vi.spyOn(userConnector, 'getAuthUser').mockResolvedValue(getAuthUserData);
     const wrongId = 'xfdhg-dsf';
     const error = new Error(`invalid input syntax for type uuid: "${wrongId}"`);
 

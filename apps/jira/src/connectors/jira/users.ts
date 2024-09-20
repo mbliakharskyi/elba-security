@@ -29,13 +29,13 @@ export type DeleteUsersParams = {
   apiToken: string;
 };
 
-export type GetOwnerIdParams = {
+export type GetAuthUserParams = {
   domain: string;
   email: string;
   apiToken: string;
 };
 
-const ownerIdResponseSchema = z.object({
+const authUserIdResponseSchema = z.object({
   accountId: z.string(),
 });
 
@@ -103,7 +103,7 @@ export const deleteUser = async ({ apiToken, domain, email, userId }: DeleteUser
   }
 };
 
-export const getOwnerId = async ({ apiToken, domain, email }: GetOwnerIdParams) => {
+export const getAuthUser = async ({ apiToken, domain, email }: GetAuthUserParams) => {
   const url = new URL(`https://${domain}.atlassian.net/rest/api/3/myself`);
   const encodedToken = btoa(`${email}:${apiToken}`);
 
@@ -116,18 +116,18 @@ export const getOwnerId = async ({ apiToken, domain, email }: GetOwnerIdParams) 
   });
 
   if (!response.ok) {
-    throw new JiraError('Could not retrieve owner id', { response });
+    throw new JiraError('Could not retrieve authUser id', { response });
   }
 
   const resData: unknown = await response.json();
 
-  const result = ownerIdResponseSchema.safeParse(resData);
+  const result = authUserIdResponseSchema.safeParse(resData);
   if (!result.success) {
-    logger.error('Invalid Jira owner id response', { resData });
-    throw new JiraError('Invalid Jira owner id response');
+    logger.error('Invalid Jira authUser id response', { resData });
+    throw new JiraError('Invalid Jira authUser id response');
   }
 
   return {
-    ownerId: String(result.data.accountId),
+    authUserId: String(result.data.accountId),
   };
 };

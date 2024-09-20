@@ -1,5 +1,5 @@
 import { encrypt } from '@/common/crypto';
-import { getOwnerId } from '../../connectors/jira/users';
+import { getAuthUser } from '../../connectors/jira/users';
 import { db } from '../../database/client';
 import { organisationsTable } from '../../database/schema';
 import { inngest } from '../../inngest/client';
@@ -18,13 +18,13 @@ export const registerOrganisation = async ({
   email,
   region,
 }: SetupOrganisationParams) => {
-  const { ownerId } = await getOwnerId({ apiToken, domain, email });
+  const { authUserId } = await getAuthUser({ apiToken, domain, email });
 
   const encodedtoken = await encrypt(apiToken);
 
   await db
     .insert(organisationsTable)
-    .values({ id: organisationId, region, apiToken: encodedtoken, domain, email, ownerId })
+    .values({ id: organisationId, region, apiToken: encodedtoken, domain, email, authUserId })
     .onConflictDoUpdate({
       target: organisationsTable.id,
       set: {
@@ -32,7 +32,7 @@ export const registerOrganisation = async ({
         apiToken: encodedtoken,
         domain,
         email,
-        ownerId,
+        authUserId,
       },
     });
 

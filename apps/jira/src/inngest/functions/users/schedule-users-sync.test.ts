@@ -14,7 +14,7 @@ export const organisations = Array.from({ length: 5 }, (_, i) => ({
   domain: 'test-domain',
   email: 'test-email',
   region: `us`,
-  ownerId: 'test-owner-id',
+  authUserId: 'test-authUser-id',
 }));
 
 describe('schedule-users-sync', () => {
