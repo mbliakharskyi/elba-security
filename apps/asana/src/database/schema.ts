@@ -7,4 +7,5 @@ export const organisationsTable = pgTable('organisations', {
   accessToken: text('access_token').notNull(),
   authUserId: text('auth-user_id').notNull(),
   refreshToken: text('refresh_token').notNull(),
+  authUserId: text('auth_user_id').notNull(),
 });

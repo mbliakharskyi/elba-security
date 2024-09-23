@@ -2,6 +2,7 @@ import { addSeconds } from 'date-fns/addSeconds';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { getToken } from '@/connectors/asana/auth';
+import { getAuthUser } from '@/connectors/asana/users';
 import { inngest } from '@/inngest/client';
 import { encrypt } from '@/common/crypto';
 

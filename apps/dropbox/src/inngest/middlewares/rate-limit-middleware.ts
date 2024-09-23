@@ -1,5 +1,5 @@
-import { DropboxResponseError } from 'dropbox';
 import { InngestMiddleware, RetryAfterError } from 'inngest';
+import { DropboxError } from '@/connectors/common/error';
 
 export const rateLimitMiddleware = new InngestMiddleware({
   name: 'rate-limit',
@@ -13,22 +13,20 @@ export const rateLimitMiddleware = new InngestMiddleware({
               ...context
             } = ctx;
 
-            if (
-              error instanceof DropboxResponseError &&
-              error.error.error['.tag'] === 'too_many_requests'
-            ) {
-              const { error: innerError } = error;
-              const {
-                error: { retry_after: retryAfter },
-              } = innerError;
+            if (!(error instanceof DropboxError)) {
+              return;
+            }
+
+            if (error.response.status === 429) {
+              const retryAfter = error.response.headers.get('retry-after') || 60;
 
               return {
                 ...context,
                 result: {
                   ...result,
                   error: new RetryAfterError(
-                    `Dropbox rate limit reached by '${fn.name}'`,
-                    Number(retryAfter) * 1000,
+                    `Rate limit exceeded for '${fn.name}'. Retry after ${retryAfter} seconds.`,
+                    `${retryAfter}s`,
                     {
                       cause: error,
                     }

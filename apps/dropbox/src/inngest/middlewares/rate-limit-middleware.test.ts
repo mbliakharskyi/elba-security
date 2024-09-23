@@ -1,12 +1,10 @@
 import { describe, expect, test } from 'vitest';
 import { RetryAfterError } from 'inngest';
+import { DropboxError } from '@/connectors/common/error';
 import { rateLimitMiddleware } from './rate-limit-middleware';
-import { DropboxResponseError } from 'dropbox';
-
-const RETRY_AFTER = '300';
 
 describe('rate-limit middleware', () => {
-  test('should not transform the output when there are no errors', () => {
+  test('should not transform the output when their is no error', () => {
     expect(
       rateLimitMiddleware
         .init()
@@ -18,18 +16,7 @@ describe('rate-limit middleware', () => {
     ).toBeUndefined();
   });
 
-  test('should not transform the output when the error is not about Dropbox rate limit', () => {
-    const generalError = new DropboxResponseError(
-      403,
-      {},
-      {
-        error_summary: 'other/...',
-        error: {
-          '.tag': 'other',
-        },
-      }
-    );
-
+  test('should not transform the output when the error is not about Doppler rate limit', () => {
     expect(
       rateLimitMiddleware
         .init()
@@ -37,24 +24,20 @@ describe('rate-limit middleware', () => {
         .onFunctionRun({ fn: { name: 'foo' } })
         .transformOutput({
           result: {
-            error: generalError,
+            error: new Error('foo bar'),
           },
         })
     ).toBeUndefined();
   });
 
-  test('should transform the output error to RetryAfterError when the error is about Dropbox rate limit', () => {
-    const rateLimitError = new DropboxResponseError(
-      429,
-      {},
-      {
-        error_summary: 'too_many_requests/...',
-        error: {
-          '.tag': 'too_many_requests',
-          retry_after: RETRY_AFTER,
-        },
-      }
-    );
+  test('should transform the output error to RetryAfterError when the error is about Doppler rate limit', async () => {
+    const rateLimitError = await DropboxError.fromResponse('foo bar', {
+      // @ts-expect-error this is a mock
+      response: {
+        status: 429,
+        headers: new Headers({ 'retry-after': '10' }),
+      },
+    });
 
     const context = {
       foo: 'bar',
@@ -73,7 +56,7 @@ describe('rate-limit middleware', () => {
       .onFunctionRun({ fn: { name: 'foo' } })
       .transformOutput(context);
     expect(result?.result.error).toBeInstanceOf(RetryAfterError);
-    expect(result?.result.error.retryAfter).toStrictEqual(RETRY_AFTER);
+    expect(result?.result.error.retryAfter).toStrictEqual('10');
     expect(result).toMatchObject({
       foo: 'bar',
       baz: {

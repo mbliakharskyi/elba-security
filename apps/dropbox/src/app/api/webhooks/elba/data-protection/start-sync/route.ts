@@ -1,16 +1,13 @@
 import { NextResponse } from 'next/server';
-import { startSync } from './service';
 import { parseWebhookEventData } from '@elba-security/sdk';
+import { startDataProtectionSync } from './service';
 
 export async function POST(request: Request) {
   const data: unknown = await request.json();
 
-  const { organisationId } = await parseWebhookEventData(
-    'data_protection.start_sync_requested',
-    data
-  );
+  const { organisationId } = parseWebhookEventData('data_protection.start_sync_requested', data);
 
-  await startSync(organisationId);
+  await startDataProtectionSync(organisationId);
 
   return new NextResponse();
 }

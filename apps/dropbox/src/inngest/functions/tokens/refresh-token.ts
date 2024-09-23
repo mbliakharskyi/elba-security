@@ -1,57 +1,13 @@
-import { getOrganisationRefreshToken, updateDropboxTokens } from './data';
-import { InputArgWithTrigger } from '@/inngest/types';
-import subMinutes from 'date-fns/subMinutes';
-import { FunctionHandler, inngest } from '@/inngest/client';
-import { DBXAuth } from '@/connectors';
 import { NonRetriableError } from 'inngest';
-import { encrypt } from '@/common/crypto';
-import { env } from '@/env';
-
-const handler: FunctionHandler = async ({
-  event,
-  step,
-}: InputArgWithTrigger<'dropbox/token.refresh.requested'>) => {
-  const { organisationId, expiresAt } = event.data;
-
-  await step.sleepUntil('wait-before-expiration', subMinutes(new Date(expiresAt), 30));
-
-  const nextExpiresAt = await step.run('fetch-refresh-token', async () => {
-    const [organisation] = await getOrganisationRefreshToken(organisationId);
-
-    if (!organisation) {
-      new NonRetriableError(
-        `Not able to get the token details for the organisation with ID: ${organisationId}`
-      );
-    }
-
-    const dbxAuth = new DBXAuth({
-      refreshToken: organisation!.refreshToken,
-    });
-
-    const { access_token: accessToken, expires_at: expiresAt } = await dbxAuth.refreshAccessToken();
-
-    const tokenDetails = {
-      organisationId,
-      accessToken: await encrypt(accessToken),
-    };
-
-    await updateDropboxTokens(tokenDetails);
-
-    return expiresAt;
-  });
-
-  await step.sendEvent('refresh-token', {
-    name: 'dropbox/token.refresh.requested',
-    data: {
-      organisationId,
-      expiresAt: new Date(nextExpiresAt).getTime(),
-    },
-  });
-
-  return {
-    status: 'completed',
-  };
-};
+import { eq } from 'drizzle-orm';
+import { addSeconds, subMinutes } from 'date-fns';
+import { failureRetry } from '@elba-security/inngest';
+import { inngest } from '@/inngest/client';
+import { decrypt, encrypt } from '@/common/crypto';
+import { db } from '@/database/client';
+import { organisationsTable } from '@/database/schema';
+import { getRefreshToken } from '@/connectors/dropbox/auth';
+import { unauthorizedMiddleware } from '@/inngest/middlewares/unauthorized-middleware';
 
 export const refreshToken = inngest.createFunction(
   {
@@ -62,16 +18,58 @@ export const refreshToken = inngest.createFunction(
     },
     cancelOn: [
       {
-        event: `dropbox/app.install.requested`,
+        event: `dropbox/app.installed`,
         match: 'data.organisationId',
       },
       {
-        event: `dropbox/app.uninstall.requested`,
+        event: `dropbox/app.uninstalled`,
         match: 'data.organisationId',
       },
     ],
-    retries: env.DROPBOX_TOKEN_REFRESH_RETRIES,
+    onFailure: failureRetry(),
+    middleware: [unauthorizedMiddleware],
+    retries: 5,
   },
   { event: 'dropbox/token.refresh.requested' },
-  handler
+  async ({ event, step }) => {
+    const { organisationId, expiresAt } = event.data;
+
+    await step.sleepUntil('wait-before-expiration', subMinutes(new Date(expiresAt), 30));
+    const [organisation] = await db
+      .select({
+        refreshToken: organisationsTable.refreshToken,
+      })
+      .from(organisationsTable)
+      .where(eq(organisationsTable.id, organisationId));
+
+    if (!organisation) {
+      throw new NonRetriableError(`Could not retrieve organisation with id=${organisationId}`);
+    }
+
+    const nextExpiresIn = await step.run('get-refresh-token', async () => {
+      const decryptedAccessToken = await decrypt(organisation.refreshToken);
+
+      const { accessToken: newAccessToken, expiresIn } =
+        await getRefreshToken(decryptedAccessToken);
+
+      const encryptedAccessToken = await encrypt(newAccessToken);
+
+      await db
+        .update(organisationsTable)
+        .set({
+          accessToken: encryptedAccessToken,
+        })
+        .where(eq(organisationsTable.id, organisationId));
+
+      return expiresIn;
+    });
+
+    await step.sendEvent('next-refresh', {
+      name: 'dropbox/token.refresh.requested',
+      data: {
+        organisationId,
+        expiresAt: addSeconds(new Date(), nextExpiresIn).getTime(),
+      },
+    });
+  }
 );

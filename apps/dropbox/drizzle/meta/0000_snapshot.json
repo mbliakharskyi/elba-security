@@ -1,5 +1,5 @@
 {
-  "id": "a119ac9d-1184-4746-a8a7-c246c35f7cc2",
+  "id": "b188927a-0f87-47ae-af74-cb0031993d21",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "5",
   "dialect": "pg",
@@ -38,25 +38,18 @@
           "primaryKey": false,
           "notNull": true
         },
+        "region": {
+          "name": "region",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "region": {
-          "name": "region",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
         }
       },
       "indexes": {},
@@ -106,14 +99,21 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "shared_links_organisation_id_organisations_id_fk": {
+          "name": "shared_links_organisation_id_organisations_id_fk",
+          "tableFrom": "shared_links",
+          "tableTo": "organisations",
+          "columnsFrom": ["organisation_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "restrict"
+        }
+      },
       "compositePrimaryKeys": {
         "shared_links_url_path_lower_pk": {
           "name": "shared_links_url_path_lower_pk",
-          "columns": [
-            "url",
-            "path_lower"
-          ]
+          "columns": ["url", "path_lower"]
         }
       },
       "uniqueConstraints": {}

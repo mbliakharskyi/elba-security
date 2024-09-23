@@ -1,57 +1,10 @@
-import { FunctionHandler, inngest } from '@/inngest/client';
-import { getOrganisationAccessDetails } from '../common/data';
-import { InputArgWithTrigger } from '@/inngest/types';
-import { DBXApps } from '@/connectors/dropbox/dbx-apps';
-import { getElba } from '@/connectors';
+import { inngest } from '@/inngest/client';
 import { decrypt } from '@/common/crypto';
-import { env } from '@/env';
-import { NonRetriableError } from 'inngest';
-
-const handler: FunctionHandler = async ({
-  event,
-}: InputArgWithTrigger<'dropbox/third_party_apps.refresh_objects.requested'>) => {
-  const { organisationId, userId, appId } = event.data;
-
-  const [organisation] = await getOrganisationAccessDetails(organisationId);
-
-  if (!organisation) {
-    throw new NonRetriableError(`Organisation not found with id=${organisationId}`);
-  }
-
-  const { accessToken, region } = organisation;
-
-  const token = await decrypt(accessToken);
-
-  const dbxAppsFetcher = new DBXApps({
-    accessToken: token,
-  });
-
-  const elba = getElba({
-    organisationId,
-    region,
-  });
-
-  const { apps } = await dbxAppsFetcher.fetchTeamMemberThirdPartyApps(userId);
-
-  const hasRequestedApp = apps?.some((app) => app.id === appId);
-
-  if (!apps.length || !hasRequestedApp) {
-    await elba.thirdPartyApps.deleteObjects({
-      ids: [
-        {
-          userId,
-          appId,
-        },
-      ],
-    });
-
-    if (!apps.length) return;
-  }
-
-  await elba.thirdPartyApps.updateObjects({
-    apps,
-  });
-};
+import { env } from '@/common/env';
+import { getOrganisation } from '@/database/organisations';
+import { createElbaClient } from '@/connectors/elba/client';
+import { getMemberLinkedApps } from '@/connectors/dropbox/apps';
+import { formatThirdPartyObjects } from '@/connectors/elba/third-party-apps';
 
 export const refreshThirdPartyAppsObject = inngest.createFunction(
   {
@@ -59,12 +12,57 @@ export const refreshThirdPartyAppsObject = inngest.createFunction(
     priority: {
       run: 'event.data.isFirstSync ? 600 : 0',
     },
-    retries: env.DROPBOX_TPA_REFRESH_OBJECT_RETRIES,
+    retries: 5,
     concurrency: {
       limit: env.DROPBOX_TPA_REFRESH_OBJECT_CONCURRENCY,
       key: 'event.data.organisationId',
     },
   },
   { event: 'dropbox/third_party_apps.refresh_objects.requested' },
-  handler
+  async ({ step, event }) => {
+    const { organisationId, appId, userId } = event.data;
+
+    const organisation = await getOrganisation(organisationId);
+
+    const elba = createElbaClient({ organisationId, region: organisation.region });
+    const accessToken = await decrypt(organisation.accessToken);
+
+    await step.run('list-apps', async () => {
+      const { apps } = await getMemberLinkedApps({
+        accessToken,
+        teamMemberId: userId,
+      });
+
+      const formattedApps = Array.from(
+        formatThirdPartyObjects([
+          {
+            team_member_id: userId,
+            linked_api_apps: apps,
+          },
+        ]).values()
+      );
+
+      const hasRequestedApp = formattedApps.some((app) => app.id === appId);
+
+      if (!apps.length || !hasRequestedApp) {
+        await elba.thirdPartyApps.deleteObjects({
+          ids: [
+            {
+              userId,
+              appId,
+            },
+          ],
+        });
+        // Abort refresh when the user does not have any linked apps
+        // but it should be refreshed if the user has other linked apps even if the requested app is not found
+        if (!apps.length) return;
+      }
+
+      if (formattedApps.length > 0) {
+        await elba.thirdPartyApps.updateObjects({
+          apps: formattedApps,
+        });
+      }
+    });
+  }
 );
