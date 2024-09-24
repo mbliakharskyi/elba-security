@@ -3,18 +3,25 @@ import { createInngestFunctionMock, spyOnElba } from '@elba-security/test-utils'
 import { NonRetriableError } from 'inngest';
 import { eq } from 'drizzle-orm';
 import { db } from '@/database/client';
-import { env } from '@/env';
+import { organisationsTable } from '@/database/schema';
+import { env } from '@/common/env';
 import { removeOrganisation } from './remove-organisation';
-import { organisations } from '@/database';
-import { insertOrganisations } from '@/test-utils/token';
-const organisationId = '00000000-0000-0000-0000-000000000001';
 
-const setup = createInngestFunctionMock(removeOrganisation, 'dropbox/elba_app.uninstall.requested');
+const organisation = {
+  id: '00000000-0000-0000-0000-000000000001',
+  accessToken: 'access-token',
+  refreshToken: 'refresh-token',
+  adminTeamMemberId: 'admin-team-member-id',
+  rootNamespaceId: 'root-namespace-id',
+  region: 'us',
+};
+
+const setup = createInngestFunctionMock(removeOrganisation, 'dropbox/app.uninstalled');
 
 describe('remove-organisation', () => {
   test("should not remove given organisation when it's not registered", async () => {
     const elba = spyOnElba();
-    const [result] = setup({ organisationId });
+    const [result] = setup({ organisationId: organisation.id });
 
     await expect(result).rejects.toBeInstanceOf(NonRetriableError);
 
@@ -23,16 +30,16 @@ describe('remove-organisation', () => {
 
   test("should remove given organisation when it's registered", async () => {
     const elba = spyOnElba();
-    await insertOrganisations();
+    await db.insert(organisationsTable).values(organisation);
 
-    const [result] = setup({ organisationId });
+    const [result] = setup({ organisationId: organisation.id });
 
     await expect(result).resolves.toBeUndefined();
 
     expect(elba).toBeCalledTimes(1);
     expect(elba).toBeCalledWith({
-      organisationId,
-      region: 'eu',
+      organisationId: organisation.id,
+      region: organisation.region,
       apiKey: env.ELBA_API_KEY,
       baseUrl: env.ELBA_API_BASE_URL,
     });
@@ -44,7 +51,7 @@ describe('remove-organisation', () => {
     });
 
     await expect(
-      db.select().from(organisations).where(eq(organisations.organisationId, organisationId))
+      db.select().from(organisationsTable).where(eq(organisationsTable.id, organisation.id))
     ).resolves.toHaveLength(0);
   });
 });

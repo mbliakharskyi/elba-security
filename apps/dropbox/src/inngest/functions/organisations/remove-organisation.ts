@@ -1,41 +1,47 @@
 import { eq } from 'drizzle-orm';
-import { Elba } from '@elba-security/sdk';
 import { NonRetriableError } from 'inngest';
 import { db } from '@/database/client';
-import { env } from '@/env';
-import { inngest } from '../../client';
-import { organisations } from '@/database';
+import { organisationsTable } from '@/database/schema';
+import { createElbaClient } from '@/connectors/elba/client';
+import { inngest } from '@/inngest/client';
 
 export const removeOrganisation = inngest.createFunction(
   {
     id: 'dropbox-remove-organisation',
-    retries: env.DROPBOX_REMOVE_ORGANISATION_MAX_RETRY,
+    priority: {
+      run: '600',
+    },
+    retries: 5,
+    cancelOn: [
+      {
+        event: 'dropbox/app.installed',
+        match: 'data.organisationId',
+      },
+    ],
   },
   {
-    event: 'dropbox/app.uninstall.requested',
+    event: 'dropbox/app.uninstalled',
   },
   async ({ event }) => {
     const { organisationId } = event.data;
     const [organisation] = await db
       .select({
-        region: organisations.region,
+        region: organisationsTable.region,
       })
-      .from(organisations)
-      .where(eq(organisations.organisationId, organisationId));
+      .from(organisationsTable)
+      .where(eq(organisationsTable.id, organisationId));
 
     if (!organisation) {
       throw new NonRetriableError(`Could not retrieve organisation with id=${organisationId}`);
     }
 
-    const elba = new Elba({
+    const elba = createElbaClient({
       organisationId,
       region: organisation.region,
-      apiKey: env.ELBA_API_KEY,
-      baseUrl: env.ELBA_API_BASE_URL,
     });
 
     await elba.connectionStatus.update({ hasError: true });
 
-    await db.delete(organisations).where(eq(organisations.organisationId, organisationId));
+    await db.delete(organisationsTable).where(eq(organisationsTable.id, organisationId));
   }
 );

@@ -1,99 +1,108 @@
-import { expect, test, describe, vi, beforeEach, afterAll } from 'vitest';
-import { refreshToken } from './refresh-token';
-import { DropboxResponseError } from 'dropbox';
+import { expect, test, describe, vi, beforeAll, afterAll } from 'vitest';
 import { createInngestFunctionMock } from '@elba-security/test-utils';
-import addSeconds from 'date-fns/addSeconds';
-import { insertOrganisations } from '@/test-utils/token';
-import * as crypto from '@/common/crypto';
-import subMinutes from 'date-fns/subMinutes';
+import { NonRetriableError } from 'inngest';
+import { eq } from 'drizzle-orm';
+import { db } from '@/database/client';
+import { organisationsTable } from '@/database/schema';
+import { encrypt, decrypt } from '@/common/crypto';
+import * as authConnector from '@/connectors/dropbox/auth';
+import { refreshToken } from './refresh-token';
 
-const TOKEN_GENERATED_AT = '2023-03-13T16:19:20.818Z';
-const TOKEN_WILL_EXPIRE_IN = 14400;
-const TOKEN_EXPIRES_AT = addSeconds(new Date(TOKEN_GENERATED_AT), TOKEN_WILL_EXPIRE_IN);
-const organisationId = '00000000-0000-0000-0000-000000000001';
+const newTokens = {
+  accessToken: 'new-access-token',
+  refreshToken: 'new-refresh-token',
+};
+
+const encryptedTokens = {
+  accessToken: await encrypt(newTokens.accessToken),
+  refreshToken: await encrypt(newTokens.refreshToken),
+};
+
+const organisation = {
+  id: '00000000-0000-0000-0000-000000000001',
+  accessToken: encryptedTokens.accessToken,
+  refreshToken: encryptedTokens.refreshToken,
+  adminTeamMemberId: 'admin-team-member-id',
+  rootNamespaceId: 'root-namespace-id',
+  region: 'us',
+};
+
+const now = new Date();
+// current token expires in an 4 hour
+const expiresIn = 14400; // in seconds
+
+const expiresAt = now.getTime() + expiresIn * 1000;
 
 const setup = createInngestFunctionMock(refreshToken, 'dropbox/token.refresh.requested');
 
-const mocks = vi.hoisted(() => {
-  return {
-    refreshAccessToken: vi.fn(),
-  };
-});
-
-vi.mock('@/connectors/dropbox/dbx-auth', () => {
-  return {
-    DBXAuth: vi.fn().mockImplementation(() => {
-      return {
-        refreshAccessToken: mocks.refreshAccessToken,
-      };
-    }),
-  };
-});
-
-describe('refreshToken', () => {
-  beforeEach(async () => {
-    vi.setSystemTime(TOKEN_GENERATED_AT);
-    vi.clearAllMocks();
-    await insertOrganisations();
-    vi.spyOn(crypto, 'decrypt').mockResolvedValue('token');
+describe('refresh-token', () => {
+  beforeAll(() => {
+    vi.setSystemTime(now);
   });
 
   afterAll(() => {
     vi.useRealTimers();
   });
 
-  test('should delete the organisations and call elba to notify', async () => {
-    vi.spyOn(crypto, 'encrypt').mockResolvedValue('encrypted-token');
-    mocks.refreshAccessToken.mockRejectedValueOnce(
-      new DropboxResponseError(
-        401,
-        {},
-        {
-          error_summary: 'user_suspended/...',
-          error: {
-            '.tag': 'user_suspended',
-          },
-        }
-      )
-    );
-
-    const [result] = setup({
-      organisationId,
-    });
-
-    await expect(result).rejects.toBeInstanceOf(DropboxResponseError);
-  });
-
-  test('should refresh tokens for the available organisation', async () => {
-    vi.spyOn(crypto, 'encrypt').mockResolvedValue('encrypted-token');
-
-    mocks.refreshAccessToken.mockResolvedValueOnce({
-      access_token: 'test-access-token-0',
-      expires_at: TOKEN_EXPIRES_AT,
+  test('should abort sync when organisation is not registered', async () => {
+    vi.spyOn(authConnector, 'getRefreshToken').mockResolvedValue({
+      ...newTokens,
+      expiresIn,
     });
 
     const [result, { step }] = setup({
-      organisationId,
-      expiresAt: TOKEN_EXPIRES_AT.getTime(),
+      organisationId: organisation.id,
+      expiresAt,
     });
 
-    await expect(result).resolves.toStrictEqual({
-      status: 'completed',
+    await expect(result).rejects.toBeInstanceOf(NonRetriableError);
+
+    expect(authConnector.getRefreshToken).toBeCalledTimes(0);
+
+    expect(step.sendEvent).toBeCalledTimes(0);
+  });
+
+  test('should update encrypted tokens and schedule the next refresh', async () => {
+    vi.setSystemTime(now);
+    await db.insert(organisationsTable).values(organisation);
+
+    vi.spyOn(authConnector, 'getRefreshToken').mockResolvedValue({
+      ...newTokens,
+      expiresIn,
     });
 
-    expect(crypto.encrypt).toBeCalledTimes(1);
-    expect(crypto.encrypt).toBeCalledWith('test-access-token-0');
-    expect(step.sleepUntil).toBeCalledTimes(1);
-    expect(step.sleepUntil).toBeCalledWith(
-      'wait-before-expiration',
-      subMinutes(new Date(TOKEN_EXPIRES_AT), 30)
+    const [result, { step }] = setup({
+      organisationId: organisation.id,
+      expiresAt,
+    });
+
+    await expect(result).resolves.toBe(undefined);
+
+    const [updatedOrganisation] = await db
+      .select({
+        accessToken: organisationsTable.accessToken,
+        refreshToken: organisationsTable.refreshToken,
+      })
+      .from(organisationsTable)
+      .where(eq(organisationsTable.id, organisation.id));
+
+    if (!updatedOrganisation) {
+      throw new Error('Organisation not found');
+    }
+
+    await expect(decrypt(updatedOrganisation.refreshToken)).resolves.toEqual(
+      newTokens.refreshToken
     );
+
+    expect(authConnector.getRefreshToken).toBeCalledTimes(1);
+    expect(authConnector.getRefreshToken).toBeCalledWith(newTokens.refreshToken);
+
     expect(step.sendEvent).toBeCalledTimes(1);
-    expect(step.sendEvent).toBeCalledWith('refresh-token', {
+    expect(step.sendEvent).toBeCalledWith('next-refresh', {
       name: 'dropbox/token.refresh.requested',
       data: {
-        organisationId,
-        expiresAt: TOKEN_EXPIRES_AT.getTime(),
+        organisationId: organisation.id,
+        expiresAt,
       },
     });
   });

@@ -1,15 +1,13 @@
 import { InngestMiddleware, NonRetriableError } from 'inngest';
 import { z } from 'zod';
-import { DropboxResponseError } from 'dropbox';
+import { DropboxError } from '@/connectors/common/error';
 
-const apiRequiredDataSchema = z.object({
+const requiredDataSchema = z.object({
   organisationId: z.string().uuid(),
-  region: z.string(),
 });
 
-const hasApiRequiredDataProperties = (
-  data: unknown
-): data is z.infer<typeof apiRequiredDataSchema> => apiRequiredDataSchema.safeParse(data).success;
+const hasRequiredDataProperties = (data: unknown): data is z.infer<typeof requiredDataSchema> =>
+  requiredDataSchema.safeParse(data).success;
 
 export const unauthorizedMiddleware = new InngestMiddleware({
   name: 'unauthorized',
@@ -28,28 +26,31 @@ export const unauthorizedMiddleware = new InngestMiddleware({
               ...context
             } = ctx;
 
-            if (error instanceof DropboxResponseError && error.status === 401) {
-              if (hasApiRequiredDataProperties(data)) {
-                await client.send({
-                  name: 'dropbox/elba_app.uninstall.requested',
-                  data: {
-                    organisationId: data.organisationId,
-                  },
-                });
-              }
-              return {
-                ...context,
-                result: {
-                  ...result,
-                  error: new NonRetriableError(
-                    `Dropbox return an unauthorized status code for ${fn.name}`,
-                    {
-                      cause: error,
-                    }
-                  ),
-                },
-              };
+            if (!(error instanceof DropboxError) || error.response.status !== 401) {
+              return;
             }
+
+            if (hasRequiredDataProperties(data)) {
+              await client.send({
+                name: 'dropbox/app.uninstalled',
+                data: {
+                  organisationId: data.organisationId,
+                },
+              });
+            }
+
+            return {
+              ...context,
+              result: {
+                ...result,
+                error: new NonRetriableError(
+                  `Dropbox returned an unauthorized status code for '${fn.name}'`,
+                  {
+                    cause: error,
+                  }
+                ),
+              },
+            };
           },
         };
       },

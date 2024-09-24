@@ -1,68 +1,10 @@
-import { FunctionHandler, inngest } from '@/inngest/client';
-import { getOrganisationAccessDetails } from '../common/data';
-import { InputArgWithTrigger } from '@/inngest/types';
-import { DBXApps } from '@/connectors/dropbox/dbx-apps';
-import { getElba } from '@/connectors';
 import { decrypt } from '@/common/crypto';
-import { env } from '@/env';
-import { NonRetriableError } from 'inngest';
-
-const handler: FunctionHandler = async ({
-  event,
-  step,
-}: InputArgWithTrigger<'dropbox/third_party_apps.sync_page.requested'>) => {
-  const { organisationId, cursor, syncStartedAt } = event.data;
-
-  const [organisation] = await getOrganisationAccessDetails(organisationId);
-
-  if (!organisation) {
-    throw new NonRetriableError(
-      `Access token not found for organisation with ID: ${organisationId}`
-    );
-  }
-
-  const { accessToken, region } = organisation;
-  const token = await decrypt(accessToken);
-
-  const dbx = new DBXApps({
-    accessToken: token,
-  });
-
-  const elba = getElba({
-    organisationId,
-    region,
-  });
-
-  const result = await step.run('third-party-apps-sync-initialize', async () => {
-    const { apps, ...rest } = await dbx.fetchTeamMembersThirdPartyApps(cursor);
-
-    if (!apps?.length) {
-      return rest;
-    }
-
-    await elba.thirdPartyApps.updateObjects({
-      apps,
-    });
-
-    return rest;
-  });
-
-  if (result?.hasMore) {
-    return await step.sendEvent('third-party-apps-run-sync-jobs', {
-      name: 'dropbox/third_party_apps.sync_page.requested',
-      data: {
-        ...event.data,
-        cursor: result.nextCursor,
-      },
-    });
-  }
-
-  await step.run('third-party-apps-sync-finalize', async () => {
-    return elba.thirdPartyApps.deleteObjects({
-      syncedBefore: new Date(syncStartedAt).toISOString(),
-    });
-  });
-};
+import { env } from '@/common/env';
+import { getLinkedApps } from '@/connectors/dropbox/apps';
+import { createElbaClient } from '@/connectors/elba/client';
+import { formatThirdPartyObjects } from '@/connectors/elba/third-party-apps';
+import { getOrganisation } from '@/database/organisations';
+import { inngest } from '@/inngest/client';
 
 export const syncApps = inngest.createFunction(
   {
@@ -72,20 +14,64 @@ export const syncApps = inngest.createFunction(
     },
     cancelOn: [
       {
-        event: 'dropbox/app.install.requested',
+        event: 'dropbox/app.installed',
         match: 'data.organisationId',
       },
       {
-        event: 'dropbox/app.uninstall.requested',
+        event: 'dropbox/app.uninstalled',
         match: 'data.organisationId',
       },
     ],
-    retries: env.DROPBOX_TPA_SYNC_RETRIES,
+    retries: 5,
     concurrency: {
       limit: env.DROPBOX_TPA_SYNC_CONCURRENCY,
       key: 'event.data.organisationId',
     },
   },
-  { event: 'dropbox/third_party_apps.sync_page.requested' },
-  handler
+  { event: 'dropbox/third_party_apps.sync.requested' },
+  async ({ event, step }) => {
+    const { organisationId, cursor, syncStartedAt } = event.data;
+
+    const organisation = await getOrganisation(organisationId);
+
+    const elba = createElbaClient({ organisationId, region: organisation.region });
+    const accessToken = await decrypt(organisation.accessToken);
+
+    const nextCursor = await step.run('list-apps', async () => {
+      const { apps, ...rest } = await getLinkedApps({
+        accessToken,
+        cursor,
+      });
+
+      const formattedApps = Array.from(formatThirdPartyObjects(apps).values());
+
+      if (formattedApps.length > 0) {
+        await elba.thirdPartyApps.updateObjects({
+          apps: formattedApps,
+        });
+      }
+
+      return rest.nextCursor;
+    });
+
+    if (nextCursor) {
+      await step.sendEvent('list-next-page-apps', {
+        name: 'dropbox/third_party_apps.sync.requested',
+        data: {
+          ...event.data,
+          cursor: nextCursor,
+        },
+      });
+
+      return {
+        status: 'ongoing',
+      };
+    }
+
+    await step.run('third-party-apps-sync-finalize', async () => {
+      return elba.thirdPartyApps.deleteObjects({
+        syncedBefore: new Date(syncStartedAt).toISOString(),
+      });
+    });
+  }
 );

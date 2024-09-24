@@ -11,9 +11,6 @@ import { env } from '@/common/env';
 export const syncSites = inngest.createFunction(
   {
     id: 'sharepoint-synchronize-data-protection-objects',
-    priority: {
-      run: 'event.data.isFirstSync ? 600 : 0',
-    },
     concurrency: {
       key: 'event.data.organisationId',
       limit: env.MICROSOFT_DATA_PROTECTION_SYNC_CONCURRENCY,
@@ -56,28 +53,27 @@ export const syncSites = inngest.createFunction(
     });
 
     if (siteIds.length) {
-      const eventsWait = siteIds.map((id) =>
-        step.waitForEvent(`wait-for-drives-complete-${id}`, {
-          event: 'sharepoint/drives.sync.completed',
-          timeout: '30d',
-          if: `async.data.organisationId == '${organisationId}' && async.data.siteId == '${id}'`,
-        })
-      );
-
-      await step.sendEvent(
-        'drives-sync-triggered',
-        siteIds.map((id) => ({
-          name: 'sharepoint/drives.sync.triggered',
-          data: {
-            siteId: id,
-            isFirstSync,
-            skipToken: null,
-            organisationId,
-          },
-        }))
-      );
-
-      await Promise.all(eventsWait);
+      await Promise.all([
+        ...siteIds.map((id) =>
+          step.waitForEvent(`wait-for-drives-complete-${id}`, {
+            event: 'sharepoint/drives.sync.completed',
+            timeout: '30d',
+            if: `async.data.organisationId == '${organisationId}' && async.data.siteId == '${id}'`,
+          })
+        ),
+        step.sendEvent(
+          'drives-sync-triggered',
+          siteIds.map((id) => ({
+            name: 'sharepoint/drives.sync.triggered',
+            data: {
+              siteId: id,
+              isFirstSync,
+              skipToken: null,
+              organisationId,
+            },
+          }))
+        ),
+      ]);
     }
 
     if (nextSkipToken) {
@@ -94,7 +90,7 @@ export const syncSites = inngest.createFunction(
       return { status: 'ongoing' };
     }
 
-    await step.run('elba-permissions-delete', async () => {
+    await step.run('delete-elba-objects-synced-before', async () => {
       const elba = createElbaClient({ organisationId, region: organisation.region });
 
       await elba.dataProtection.deleteObjects({

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Elba x SaaS',
-  description: 'Elba dropbox integration',
+  title: 'Elba x Dropbox',
+  description: 'Official Elba x Dropbox documentation',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

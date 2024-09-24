@@ -1,35 +1,39 @@
-import { redirectOnError } from '@/common/utils';
-import { DBXAuth } from '@/connectors';
-import { logger } from '@elba-security/logger';
+import { ElbaInstallRedirectResponse } from '@elba-security/nextjs';
 import { cookies } from 'next/headers';
-import { NextResponse, type NextRequest } from 'next/server';
+import { redirect } from 'next/navigation';
+import { type NextRequest } from 'next/server';
+import { env } from '@/common/env';
 
+export const preferredRegion = 'fra1';
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
+export function GET(request: NextRequest) {
   const organisationId = request.nextUrl.searchParams.get('organisation_id');
   const region = request.nextUrl.searchParams.get('region');
 
-  try {
-    if (!organisationId || !region) {
-      return redirectOnError(region, 'internal_error');
-    }
-
-    cookies().set('state', organisationId);
-    cookies().set('organisation_id', organisationId);
-    cookies().set('region', region);
-    const dbxAuth = new DBXAuth();
-    const authUrl = await dbxAuth.getAuthUrl({ state: organisationId });
-
-    if (!authUrl) {
-      return redirectOnError(region, 'internal_error');
-    }
-
-    return NextResponse.redirect(String(authUrl));
-  } catch (error) {
-    logger.warn('Could not redirect user to Dropbox app install url', {
-      error,
+  if (!organisationId || !region) {
+    return new ElbaInstallRedirectResponse({
+      error: 'internal_error',
+      region,
+      sourceId: env.ELBA_SOURCE_ID,
+      baseUrl: env.ELBA_REDIRECT_URL,
     });
-    return redirectOnError(region, 'internal_error');
   }
+
+  const state = crypto.randomUUID();
+
+  cookies().set('organisation_id', organisationId);
+  cookies().set('region', region);
+  cookies().set('state', state);
+
+  const redirectUrl = new URL(env.DROPBOX_APP_INSTALL_URL);
+  redirectUrl.searchParams.append('client_id', env.DROPBOX_CLIENT_ID);
+  redirectUrl.searchParams.append('redirect_uri', env.DROPBOX_REDIRECT_URI);
+  redirectUrl.searchParams.append('token_access_type', 'offline');
+  redirectUrl.searchParams.append('response_type', 'code');
+  redirectUrl.searchParams.append('state', state);
+  redirectUrl.searchParams.append('token_access_type', 'offline');
+
+  redirect(redirectUrl.toString());
 }

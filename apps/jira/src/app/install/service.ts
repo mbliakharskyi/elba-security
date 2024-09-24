@@ -1,8 +1,8 @@
 import { encrypt } from '@/common/crypto';
-import { getAuthUser } from '../../connectors/jira/users';
-import { db } from '../../database/client';
-import { organisationsTable } from '../../database/schema';
-import { inngest } from '../../inngest/client';
+import { getUsers } from '@/connectors/jira/users';
+import { db } from '@/database/client';
+import { organisationsTable } from '@/database/schema';
+import { inngest } from '@/inngest/client';
 
 type SetupOrganisationParams = {
   organisationId: string;

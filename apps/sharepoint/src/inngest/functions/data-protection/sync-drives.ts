@@ -10,9 +10,6 @@ import { env } from '@/common/env';
 export const syncDrives = inngest.createFunction(
   {
     id: 'sharepoint-sync-drives',
-    priority: {
-      run: 'event.data.isFirstSync ? 600 : 0',
-    },
     concurrency: {
       key: 'event.data.organisationId',
       limit: env.MICROSOFT_DATA_PROTECTION_SYNC_CONCURRENCY,
@@ -65,31 +62,28 @@ export const syncDrives = inngest.createFunction(
     });
 
     if (driveIds.length) {
-      const eventsWait = driveIds.map((id) =>
-        step.waitForEvent(`wait-for-items-complete-${id}`, {
-          event: 'sharepoint/items.sync.completed',
-          timeout: '30d',
-          if: `async.data.organisationId == '${organisationId}' && async.data.driveId == '${id}' && async.data.folderId == null`,
-        })
-      );
-
-      await step.sendEvent(
-        'items-sync-triggered',
-        driveIds.map((id) => ({
-          name: 'sharepoint/items.sync.triggered',
-          data: {
-            siteId,
-            driveId: id,
-            isFirstSync,
-            folderId: null,
-            permissionIds: [],
-            skipToken: null,
-            organisationId,
-          },
-        }))
-      );
-
-      await Promise.all(eventsWait);
+      await Promise.all([
+        ...driveIds.map((id) =>
+          step.waitForEvent(`wait-for-items-complete-${id}`, {
+            event: 'sharepoint/items.sync.completed',
+            timeout: '30d',
+            if: `async.data.organisationId == '${organisationId}' && async.data.driveId == '${id}'`,
+          })
+        ),
+        step.sendEvent(
+          'items-sync-triggered',
+          driveIds.map((id) => ({
+            name: 'sharepoint/items.sync.triggered',
+            data: {
+              siteId,
+              driveId: id,
+              isFirstSync,
+              skipToken: null,
+              organisationId,
+            },
+          }))
+        ),
+      ]);
     }
 
     if (nextSkipToken) {

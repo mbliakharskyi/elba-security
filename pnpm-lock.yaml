@@ -823,6 +823,9 @@ importers:
       '@elba-security/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@elba-security/inngest':
+        specifier: workspace:*
+        version: link:../../packages/inngest
       '@elba-security/logger':
         specifier: workspace:*
         version: link:../../packages/logger
@@ -838,15 +841,15 @@ importers:
       '@elba-security/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      '@neondatabase/serverless':
+        specifier: 0.9.4
+        version: 0.9.4
       date-fns:
-        specifier: ^2.30.0
-        version: 2.30.0
+        specifier: ^3.2.0
+        version: 3.3.1
       drizzle-orm:
         specifier: ^0.29.4
         version: 0.29.4(@neondatabase/serverless@0.9.4)(@types/react@18.2.79)(postgres@3.4.4)(react@18.2.0)
-      dropbox:
-        specifier: ^10.34.0
-        version: 10.34.0(@types/node-fetch@2.6.11)
       inngest:
         specifier: 3.22.2
         version: 3.22.2(hono@4.3.2)(next@14.2.4)(typescript@5.5.3)
@@ -880,7 +883,7 @@ importers:
         version: 14.2.4
       '@types/node':
         specifier: ^20
-        version: 20.11.16
+        version: 20.14.2
       '@types/react':
         specifier: ^18
         version: 18.2.79
@@ -895,7 +898,7 @@ importers:
         version: 0.20.18
       eslint:
         specifier: ^8
-        version: 8.53.0
+        version: 8.57.0
       inngest-cli:
         specifier: ^0.29.1
         version: 0.29.1
@@ -913,7 +916,7 @@ importers:
         version: 5.5.3
       vitest:
         specifier: 1.6.0
-        version: 1.6.0(@edge-runtime/vm@3.2.0)(@types/node@20.11.16)
+        version: 1.6.0(@edge-runtime/vm@3.2.0)(@types/node@20.14.2)
 
   apps/fivetran:
     dependencies:
@@ -993,6 +996,103 @@ importers:
       eslint:
         specifier: ^8
         version: 8.53.0
+      inngest-cli:
+        specifier: ^0.29.1
+        version: 0.29.1
+      msw:
+        specifier: ^2.3.1
+        version: 2.3.1(typescript@5.5.3)
+      postgres:
+        specifier: ^3.4.4
+        version: 3.4.4
+      testcontainers:
+        specifier: ^10.10.0
+        version: 10.10.0
+      typescript:
+        specifier: ^5.5.2
+        version: 5.5.3
+      vitest:
+        specifier: 1.6.0
+        version: 1.6.0(@edge-runtime/vm@3.2.0)(@types/node@20.14.2)
+
+  apps/front:
+    dependencies:
+      '@elba-security/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@elba-security/inngest':
+        specifier: workspace:*
+        version: link:../../packages/inngest
+      '@elba-security/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
+      '@elba-security/nextjs':
+        specifier: workspace:*
+        version: link:../../packages/nextjs
+      '@elba-security/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
+      '@elba-security/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
+      '@neondatabase/serverless':
+        specifier: 0.9.4
+        version: 0.9.4
+      date-fns:
+        specifier: ^3.2.0
+        version: 3.3.1
+      drizzle-orm:
+        specifier: ^0.29.4
+        version: 0.29.4(@neondatabase/serverless@0.9.4)(@types/react@18.2.79)(postgres@3.4.4)(react@18.2.0)
+      inngest:
+        specifier: 3.22.2
+        version: 3.22.2(hono@4.3.2)(next@14.2.4)(typescript@5.5.3)
+      next:
+        specifier: 14.2.4
+        version: 14.2.4(react-dom@18.2.0)(react@18.2.0)
+      react:
+        specifier: ^18
+        version: 18.2.0
+      react-dom:
+        specifier: ^18
+        version: 18.2.0(react@18.2.0)
+      zod:
+        specifier: ^3.23.8
+        version: 3.23.8
+    devDependencies:
+      '@edge-runtime/vm':
+        specifier: ^3.2.0
+        version: 3.2.0
+      '@elba-security/eslint-config-custom':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config-custom
+      '@elba-security/test-utils':
+        specifier: workspace:*
+        version: link:../../packages/test-utils
+      '@elba-security/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      '@next/eslint-plugin-next':
+        specifier: ^14.2.4
+        version: 14.2.4
+      '@types/node':
+        specifier: ^20
+        version: 20.14.2
+      '@types/react':
+        specifier: ^18
+        version: 18.2.79
+      '@types/react-dom':
+        specifier: ^18
+        version: 18.2.25
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.4.5
+      drizzle-kit:
+        specifier: ^0.20.6
+        version: 0.20.18
+      eslint:
+        specifier: ^8
+        version: 8.57.0
       inngest-cli:
         specifier: ^0.29.1
         version: 0.29.1
@@ -1217,6 +1317,103 @@ importers:
       vitest:
         specifier: 1.6.0
         version: 1.6.0(@edge-runtime/vm@3.2.0)(@types/node@20.11.16)
+
+  apps/harvest:
+    dependencies:
+      '@elba-security/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@elba-security/inngest':
+        specifier: workspace:*
+        version: link:../../packages/inngest
+      '@elba-security/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
+      '@elba-security/nextjs':
+        specifier: workspace:*
+        version: link:../../packages/nextjs
+      '@elba-security/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
+      '@elba-security/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
+      '@neondatabase/serverless':
+        specifier: 0.9.4
+        version: 0.9.4
+      date-fns:
+        specifier: ^3.2.0
+        version: 3.3.1
+      drizzle-orm:
+        specifier: ^0.29.4
+        version: 0.29.4(@neondatabase/serverless@0.9.4)(@types/react@18.2.79)(postgres@3.4.4)(react@18.2.0)
+      inngest:
+        specifier: 3.22.2
+        version: 3.22.2(hono@4.3.2)(next@14.2.4)(typescript@5.5.3)
+      next:
+        specifier: 14.2.4
+        version: 14.2.4(react-dom@18.2.0)(react@18.2.0)
+      react:
+        specifier: ^18
+        version: 18.2.0
+      react-dom:
+        specifier: ^18
+        version: 18.2.0(react@18.2.0)
+      zod:
+        specifier: ^3.23.8
+        version: 3.23.8
+    devDependencies:
+      '@edge-runtime/vm':
+        specifier: ^3.2.0
+        version: 3.2.0
+      '@elba-security/eslint-config-custom':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config-custom
+      '@elba-security/test-utils':
+        specifier: workspace:*
+        version: link:../../packages/test-utils
+      '@elba-security/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      '@next/eslint-plugin-next':
+        specifier: ^14.2.4
+        version: 14.2.4
+      '@types/node':
+        specifier: ^20
+        version: 20.14.2
+      '@types/react':
+        specifier: ^18
+        version: 18.2.79
+      '@types/react-dom':
+        specifier: ^18
+        version: 18.2.25
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.4.5
+      drizzle-kit:
+        specifier: ^0.20.6
+        version: 0.20.18
+      eslint:
+        specifier: ^8
+        version: 8.57.0
+      inngest-cli:
+        specifier: ^0.29.1
+        version: 0.29.1
+      msw:
+        specifier: ^2.3.1
+        version: 2.3.1(typescript@5.5.3)
+      postgres:
+        specifier: ^3.4.4
+        version: 3.4.4
+      testcontainers:
+        specifier: ^10.10.0
+        version: 10.10.0
+      typescript:
+        specifier: ^5.5.2
+        version: 5.5.3
+      vitest:
+        specifier: 1.6.0
+        version: 1.6.0(@edge-runtime/vm@3.2.0)(@types/node@20.14.2)
 
   apps/intercom:
     dependencies:
@@ -1702,6 +1899,106 @@ importers:
       vitest:
         specifier: 1.6.0
         version: 1.6.0(@edge-runtime/vm@3.2.0)(@types/node@20.11.16)
+
+  apps/onedrive:
+    dependencies:
+      '@elba-security/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@elba-security/design-system':
+        specifier: workspace:*
+        version: link:../../packages/design-system
+      '@elba-security/inngest':
+        specifier: workspace:*
+        version: link:../../packages/inngest
+      '@elba-security/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
+      '@elba-security/nextjs':
+        specifier: workspace:*
+        version: link:../../packages/nextjs
+      '@elba-security/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
+      '@elba-security/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
+      '@neondatabase/serverless':
+        specifier: 0.9.4
+        version: 0.9.4
+      date-fns:
+        specifier: ^3.2.0
+        version: 3.3.1
+      drizzle-orm:
+        specifier: ^0.29.4
+        version: 0.29.4(@neondatabase/serverless@0.9.4)(@types/react@18.2.79)(postgres@3.4.4)(react@18.2.0)
+      inngest:
+        specifier: 3.22.2
+        version: 3.22.2(hono@4.3.2)(next@14.2.4)(typescript@5.5.3)
+      next:
+        specifier: 14.2.4
+        version: 14.2.4(react-dom@18.2.0)(react@18.2.0)
+      react:
+        specifier: ^18
+        version: 18.2.0
+      react-dom:
+        specifier: ^18
+        version: 18.2.0(react@18.2.0)
+      zod:
+        specifier: ^3.23.8
+        version: 3.23.8
+    devDependencies:
+      '@edge-runtime/vm':
+        specifier: ^3.2.0
+        version: 3.2.0
+      '@elba-security/eslint-config-custom':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config-custom
+      '@elba-security/test-utils':
+        specifier: workspace:*
+        version: link:../../packages/test-utils
+      '@elba-security/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      '@next/eslint-plugin-next':
+        specifier: ^14.2.4
+        version: 14.2.4
+      '@types/node':
+        specifier: ^20
+        version: 20.14.2
+      '@types/react':
+        specifier: ^18
+        version: 18.2.79
+      '@types/react-dom':
+        specifier: ^18
+        version: 18.2.25
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.4.5
+      drizzle-kit:
+        specifier: ^0.20.6
+        version: 0.20.18
+      eslint:
+        specifier: ^8
+        version: 8.57.0
+      inngest-cli:
+        specifier: ^0.29.1
+        version: 0.29.1
+      msw:
+        specifier: ^2.3.1
+        version: 2.3.1(typescript@5.5.3)
+      postgres:
+        specifier: ^3.4.4
+        version: 3.4.4
+      testcontainers:
+        specifier: ^10.10.0
+        version: 10.10.0
+      typescript:
+        specifier: ^5.5.2
+        version: 5.5.3
+      vitest:
+        specifier: 1.6.0
+        version: 1.6.0(@edge-runtime/vm@3.2.0)(@types/node@20.14.2)
 
   apps/openai:
     dependencies:
@@ -2425,8 +2722,8 @@ importers:
         specifier: ^8
         version: 8.53.0
       hono:
-        specifier: ^4.4.10
-        version: 4.4.10
+        specifier: 4.3.2
+        version: 4.3.2
       tsx:
         specifier: ^3.12.2
         version: 3.14.0
@@ -2928,6 +3225,7 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       regenerator-runtime: 0.14.0
+    dev: true
 
   /@babel/template@7.24.7:
     resolution: {integrity: sha512-jYqfPrU9JTF0PmPy1tLYHW4Mp4KlgxJD9l2nP9fD6yT/ICi554DmrWBAEYpIelzjHf1msDP3PxJIRt/nFNfBig==}
@@ -4585,13 +4883,6 @@ packages:
       '@types/node': 20.14.2
     dev: true
 
-  /@types/node-fetch@2.6.11:
-    resolution: {integrity: sha512-24xFj9R5+rfQJLRyM56qh+wnVSYhyXC2tkoBndtY0U+vubqNsYXGjufB2nn8Q6gt0LrARwL6UBtMCSVCwl4B1g==}
-    dependencies:
-      '@types/node': 20.14.2
-      form-data: 4.0.0
-    dev: false
-
   /@types/node@18.19.30:
     resolution: {integrity: sha512-453z1zPuJLVDbyahaa1sSD5C2sht6ZpHp5rgJNs+H8YGqhluCXcuOUmBYsAo0Tos0cHySJ3lVUGbGgLlqIkpyg==}
     dependencies:
@@ -4841,7 +5132,7 @@ packages:
       debug: 4.3.5
       globby: 11.1.0
       is-glob: 4.0.3
-      semver: 7.5.4
+      semver: 7.6.2
       tsutils: 3.21.0(typescript@5.5.3)
       typescript: 5.5.3
     transitivePeerDependencies:
@@ -4884,7 +5175,7 @@ packages:
       '@typescript-eslint/typescript-estree': 5.62.0(typescript@5.5.3)
       eslint: 8.57.0
       eslint-scope: 5.1.1
-      semver: 7.5.4
+      semver: 7.6.2
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -5938,13 +6229,6 @@ packages:
       is-data-view: 1.0.1
     dev: true
 
-  /date-fns@2.30.0:
-    resolution: {integrity: sha512-fnULvOpxnC5/Vg3NCiWelDsLiUc9bRwAPs/+LfTLNvetFCtCTN+yQz15C/fs4AwX1R9K5GLtLfn8QW+dWisaAw==}
-    engines: {node: '>=0.11'}
-    dependencies:
-      '@babel/runtime': 7.23.2
-    dev: false
-
   /date-fns@3.3.1:
     resolution: {integrity: sha512-y8e109LYGgoQDveiEBD3DYXKba1jWf5BA8YU1FL5Tvm0BTdEfy54WLCwnuYWZNnzzvALy/QQ4Hov+Q9RVRv+Zw==}
     dev: false
@@ -6517,18 +6801,6 @@ packages:
       postgres: 3.4.3
     dev: false
 
-  /dropbox@10.34.0(@types/node-fetch@2.6.11):
-    resolution: {integrity: sha512-5jb5/XzU0fSnq36/hEpwT5/QIep7MgqKuxghEG44xCu7HruOAjPdOb3x0geXv5O/hd0nHpQpWO+r5MjYTpMvJg==}
-    engines: {node: '>=0.10.3'}
-    peerDependencies:
-      '@types/node-fetch': ^2.5.7
-    dependencies:
-      '@types/node-fetch': 2.6.11
-      node-fetch: 2.7.0
-    transitivePeerDependencies:
-      - encoding
-    dev: false
-
   /eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
     dev: true
@@ -7050,7 +7322,7 @@ packages:
     dependencies:
       escape-string-regexp: 1.0.5
       eslint: 8.57.0
-      ignore: 5.2.4
+      ignore: 5.3.1
     dev: true
 
   /eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.15.0)(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0):
@@ -8052,11 +8324,6 @@ packages:
   /hono@4.3.2:
     resolution: {integrity: sha512-wiZcF5N06tc232U11DnqW6hP8DNoypjsrxslKXfvOqOAkTdh7K1HLZJH/92Mf+urxUTGi96f1w4xx/1Qozoqiw==}
     engines: {node: '>=16.0.0'}
-
-  /hono@4.4.10:
-    resolution: {integrity: sha512-z6918u9rXRU5CCisMHd2uUVoQXcNyUrUMmYY7VH10v4HJG7+hqgMK/G8YNTd13C6s4rBfzF09iz8VpOip9qG3A==}
-    engines: {node: '>=16.0.0'}
-    dev: true
 
   /hosted-git-info@2.8.9:
     resolution: {integrity: sha512-mxIDAb9Lsm6DoOJ7xH+5+X4y1LU/4Hi50L9C5sIswK3JzULS4bwk1FvjdBgvYR4bzT4tuUQiC15FE2f5HbLvYw==}
@@ -9923,6 +10190,7 @@ packages:
 
   /regenerator-runtime@0.14.0:
     resolution: {integrity: sha512-srw17NI0TUWHuGa5CFGGmhfNIeja30WMBfbslPNhf6JrqQlLN5gcrvig1oqPxiVaXb0oW0XRKtH6Nngs5lKCIA==}
+    dev: true
 
   /regexp-tree@0.1.27:
     resolution: {integrity: sha512-iETxpjK6YoRWJG5o6hXLwvjYAoW+FEZn9os0PD/b6AP6xQwsa/Y7lCVgIixBbUPMfhu+i2LtdeAqVTgGlQarfA==}

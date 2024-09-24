@@ -1,16 +1,23 @@
 import { beforeEach } from 'node:test';
 import { describe, expect, test, vi } from 'vitest';
 import { NonRetriableError } from 'inngest';
+import { db } from '@/database/client';
+import { organisationsTable } from '@/database/schema';
+import { DropboxError } from '@/connectors/common/error';
 import { unauthorizedMiddleware } from './unauthorized-middleware';
-import { insertOrganisations } from '@/test-utils/token';
-import { DropboxResponseError } from 'dropbox';
 
-const organisationId = '00000000-0000-0000-0000-000000000000';
-const region = 'eu';
+const organisation = {
+  id: '00000000-0000-0000-0000-000000000001',
+  accessToken: 'access-token',
+  refreshToken: 'refresh-token',
+  adminTeamMemberId: 'admin-team-member-id',
+  rootNamespaceId: 'root-namespace-id',
+  region: 'us',
+};
 
 describe('unauthorized middleware', () => {
   beforeEach(async () => {
-    await insertOrganisations();
+    await db.insert(organisationsTable).values(organisation);
   });
 
   test('should not transform the output when their is no error', async () => {
@@ -25,20 +32,11 @@ describe('unauthorized middleware', () => {
           result: {},
         })
     ).resolves.toBeUndefined();
+
     expect(send).toBeCalledTimes(0);
   });
 
   test('should not transform the output when the error is not about Dropbox authorization', async () => {
-    const generalError = new DropboxResponseError(
-      403,
-      {},
-      {
-        error_summary: 'other/...',
-        error: {
-          '.tag': 'other',
-        },
-      }
-    );
     const send = vi.fn().mockResolvedValue(undefined);
     await expect(
       unauthorizedMiddleware
@@ -48,24 +46,21 @@ describe('unauthorized middleware', () => {
         .onFunctionRun({ fn: { name: 'foo' }, ctx: { event: { data: {} } } })
         .transformOutput({
           result: {
-            error: generalError,
+            error: new Error('foo bar'),
           },
         })
     ).resolves.toBeUndefined();
+
     expect(send).toBeCalledTimes(0);
   });
 
-  test('should transform the output error to NonRetriableError and remove the organisation when the error is about github authorization', async () => {
-    const unauthorizedError = new DropboxResponseError(
-      401,
-      {},
-      {
-        error_summary: 'invalid_access_token/...',
-        error: {
-          '.tag': 'invalid_access_token',
-        },
-      }
-    );
+  test('should transform the output error to NonRetriableError and remove the organisation when the error is about Dropbox authorization', async () => {
+    const unauthorizedError = await DropboxError.fromResponse('foo bar', {
+      response: new Response('', {
+        status: 401,
+        statusText: 'Unauthorized',
+      }),
+    });
 
     const context = {
       foo: 'bar',
@@ -79,15 +74,20 @@ describe('unauthorized middleware', () => {
     };
 
     const send = vi.fn().mockResolvedValue(undefined);
-
     const result = await unauthorizedMiddleware
       // @ts-expect-error -- this is a mock
       .init({ client: { send } })
       .onFunctionRun({
         // @ts-expect-error -- this is a mock
         fn: { name: 'foo' },
-        // @ts-expect-error -- this is a mock
-        ctx: { event: { data: { organisationId, region } } },
+        ctx: {
+          // @ts-expect-error -- this is a mock
+          event: {
+            data: {
+              organisationId: organisation.id,
+            },
+          },
+        },
       })
       .transformOutput(context);
     expect(result?.result.error).toBeInstanceOf(NonRetriableError);
@@ -104,9 +104,9 @@ describe('unauthorized middleware', () => {
 
     expect(send).toBeCalledTimes(1);
     expect(send).toBeCalledWith({
-      name: 'dropbox/elba_app.uninstall.requested',
+      name: 'dropbox/app.uninstalled',
       data: {
-        organisationId,
+        organisationId: organisation.id,
       },
     });
   });

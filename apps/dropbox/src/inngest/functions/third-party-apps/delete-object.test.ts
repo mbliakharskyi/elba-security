@@ -1,72 +1,69 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { createInngestFunctionMock, spyOnElba } from '@elba-security/test-utils';
-import { deleteThirdPartyAppsObject } from './delete-object';
-import { db, organisations } from '@/database';
-import { insertOrganisations } from '@/test-utils/token';
-import * as crypto from '@/common/crypto';
+import { afterAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { createInngestFunctionMock } from '@elba-security/test-utils';
 import { NonRetriableError } from 'inngest';
+import * as crypto from '@/common/crypto';
+import { encrypt } from '@/common/crypto';
+import { organisationsTable, type Organisation } from '@/database/schema';
+import * as appsConnectors from '@/connectors/dropbox/apps';
+import { db } from '@/database/client';
+import { deleteThirdPartyAppsObject } from './delete-object';
 
-const organisationId = '00000000-0000-0000-0000-000000000001';
+const accessToken = 'test-access-token';
+const refreshToken = 'test-refresh-token';
+
+const organisation: Omit<Organisation, 'createdAt'> = {
+  id: '00000000-0000-0000-0000-000000000001',
+  accessToken: await encrypt(accessToken),
+  refreshToken: await encrypt(refreshToken),
+  adminTeamMemberId: 'admin-team-member-id',
+  rootNamespaceId: 'root-namespace-id',
+  region: 'us',
+};
+
 const setup = createInngestFunctionMock(
   deleteThirdPartyAppsObject,
   'dropbox/third_party_apps.delete_object.requested'
 );
 
-const mocks = vi.hoisted(() => {
-  return {
-    teamLinkedAppsRevokeLinkedAppMock: vi.fn(),
-  };
-});
+describe('deleteThirdPartyAppsObject', () => {
+  beforeEach(() => {
+    vi.spyOn(crypto, 'decrypt').mockResolvedValue('test-access-token');
+  });
 
-vi.mock('@/connectors/dropbox/dbx-access', () => {
-  const actual = vi.importActual('dropbox');
-  return {
-    ...actual,
-    DBXAccess: vi.fn(() => {
-      return {
-        setHeaders: vi.fn(),
-        teamLinkedAppsRevokeLinkedApp: mocks.teamLinkedAppsRevokeLinkedAppMock,
-      };
-    }),
-  };
-});
-
-describe('third-party-apps-delete-objects', () => {
-  beforeEach(async () => {
-    await db.delete(organisations);
-    await insertOrganisations();
-    vi.spyOn(crypto, 'decrypt').mockResolvedValue('token');
-    vi.clearAllMocks();
+  afterAll(() => {
+    vi.restoreAllMocks();
   });
 
   test('should abort sync when organisation is not registered', async () => {
-    mocks.teamLinkedAppsRevokeLinkedAppMock.mockResolvedValue({});
+    vi.spyOn(appsConnectors, 'revokeMemberLinkedApp');
 
-    const elba = spyOnElba();
-    const [result, { step }] = await setup({
-      organisationId: '00000000-0000-0000-0000-000000000010',
-      teamMemberId: 'team-member-id',
+    const [result, { step }] = setup({
+      organisationId: organisation.id,
+      userId: 'team-member-id',
       appId: 'app-id',
     });
 
     await expect(result).rejects.toBeInstanceOf(NonRetriableError);
-
-    expect(elba).toBeCalledTimes(0);
-    expect(mocks.teamLinkedAppsRevokeLinkedAppMock).toBeCalledTimes(0);
+    expect(appsConnectors.revokeMemberLinkedApp).toBeCalledTimes(0);
     expect(step.sendEvent).toBeCalledTimes(0);
   });
 
   test('should delete the member third party app', async () => {
-    mocks.teamLinkedAppsRevokeLinkedAppMock.mockResolvedValue({});
+    await db.insert(organisationsTable).values(organisation);
+    vi.spyOn(appsConnectors, 'revokeMemberLinkedApp').mockResolvedValue(undefined);
 
-    const [result] = await setup({
-      organisationId,
+    const [result] = setup({
+      organisationId: organisation.id,
+      userId: 'team-member-id',
+      appId: 'app-id',
+    });
+    await expect(result).resolves.toBeUndefined();
+
+    expect(appsConnectors.revokeMemberLinkedApp).toBeCalledTimes(1);
+    expect(appsConnectors.revokeMemberLinkedApp).toBeCalledWith({
+      accessToken,
       teamMemberId: 'team-member-id',
       appId: 'app-id',
     });
-
-    await expect(result).resolves.toBeUndefined();
-
-    await expect(mocks.teamLinkedAppsRevokeLinkedAppMock).toBeCalledTimes(1);
   });
 });

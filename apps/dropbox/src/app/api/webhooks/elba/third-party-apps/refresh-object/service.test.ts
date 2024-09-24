@@ -1,8 +1,6 @@
 import { expect, test, describe, vi } from 'vitest';
-import { mockNextRequest } from '@/test-utils/mock-app-route';
-import { POST as handler } from './route';
 import { inngest } from '@/inngest/client';
-import { insertOrganisations } from '@/test-utils/token';
+import { refreshThirdPartyAppsObject } from './service';
 
 const organisationId = '00000000-0000-0000-0000-000000000001';
 const userId = 'team-member-id-1';
@@ -10,19 +8,13 @@ const appId = 'app-id-1';
 
 describe('refreshThirdPartyAppsObject', () => {
   test('should send request to refresh third party objects', async () => {
-    await insertOrganisations();
     const send = vi.spyOn(inngest, 'send').mockResolvedValue({ ids: [] });
 
-    const response = await mockNextRequest({
-      handler,
-      body: {
-        organisationId,
-        userId,
-        appId,
-      },
+    await refreshThirdPartyAppsObject({
+      organisationId,
+      userId,
+      appId,
     });
-
-    expect(response.status).toBe(200);
 
     expect(send).toBeCalledTimes(1);
     expect(send).toBeCalledWith({

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { refreshObject } from './service';
 import { parseWebhookEventData } from '@elba-security/sdk';
+import { refreshDataProtectionObject } from './service';
 
 export async function POST(request: Request) {
   const data: unknown = await request.json();
@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     data
   );
 
-  await refreshObject({
+  await refreshDataProtectionObject({
     id,
     organisationId,
     metadata,

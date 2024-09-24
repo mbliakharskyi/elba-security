@@ -1,52 +1,47 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { memberLinkedApps, membersLinkedAppFirstPage } from './__mocks__/member-linked-apps';
+import { afterAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createInngestFunctionMock, spyOnElba } from '@elba-security/test-utils';
-import { refreshThirdPartyAppsObject } from './refresh-objects';
-import { insertOrganisations } from '@/test-utils/token';
-import { db, organisations } from '@/database';
-import * as crypto from '@/common/crypto';
 import { NonRetriableError } from 'inngest';
+import * as crypto from '@/common/crypto';
+import { db } from '@/database/client';
+import type { Organisation } from '@/database/schema';
+import { organisationsTable } from '@/database/schema';
+import { encrypt } from '@/common/crypto';
+import * as appsConnector from '@/connectors/dropbox/apps';
+import { env } from '@/common/env';
+import { refreshThirdPartyAppsObject } from './refresh-objects';
+import { createLinkedApps } from './__mocks__/member-linked-apps';
 
-const organisationId = '00000000-0000-0000-0000-000000000001';
-
-const mocks = vi.hoisted(() => {
-  return {
-    teamLinkedAppsListMemberLinkedAppsMock: vi.fn(),
-  };
-});
-
-vi.mock('@/connectors/dropbox/dbx-access', () => {
-  const actual = vi.importActual('dropbox');
-  return {
-    ...actual,
-    DBXAccess: vi.fn(() => {
-      return {
-        setHeaders: vi.fn(),
-        teamLinkedAppsListMemberLinkedApps: mocks.teamLinkedAppsListMemberLinkedAppsMock,
-      };
-    }),
-  };
-});
+const organisation: Omit<Organisation, 'createdAt'> = {
+  id: '00000000-0000-0000-0000-000000000001',
+  accessToken: await encrypt('test-access-token'),
+  refreshToken: await encrypt('test-refresh-token'),
+  adminTeamMemberId: 'admin-team-member-id',
+  rootNamespaceId: 'root-namespace-id',
+  region: 'us',
+};
 
 const setup = createInngestFunctionMock(
   refreshThirdPartyAppsObject,
   'dropbox/third_party_apps.refresh_objects.requested'
 );
 
-describe('third-party-apps-refresh-objects', () => {
-  beforeEach(async () => {
-    await db.delete(organisations);
-    await insertOrganisations();
+describe('refreshThirdPartyAppsObject', () => {
+  beforeEach(() => {
     vi.spyOn(crypto, 'decrypt').mockResolvedValue('token');
-    vi.clearAllMocks();
   });
 
-  test('should abort sync when organisation is not registered', async () => {
-    mocks.teamLinkedAppsListMemberLinkedAppsMock.mockImplementation(() => {});
+  afterAll(() => {
+    vi.restoreAllMocks();
+  });
+
+  test('should abort refresh when organisation is not registered', async () => {
+    vi.spyOn(appsConnector, 'getMemberLinkedApps').mockResolvedValue({
+      apps: [],
+    });
 
     const elba = spyOnElba();
-    const [result, { step }] = await setup({
-      organisationId: '00000000-0000-0000-0000-000000000010',
+    const [result] = setup({
+      organisationId: organisation.id,
       userId: 'team-member-id',
       appId: 'app-id',
       isFirstSync: false,
@@ -55,22 +50,18 @@ describe('third-party-apps-refresh-objects', () => {
     await expect(result).rejects.toBeInstanceOf(NonRetriableError);
 
     expect(elba).toBeCalledTimes(0);
-    expect(mocks.teamLinkedAppsListMemberLinkedAppsMock).toBeCalledTimes(0);
-    expect(step.sendEvent).toBeCalledTimes(0);
+    expect(appsConnector.getMemberLinkedApps).toBeCalledTimes(0);
   });
 
   test("should request elba to delete when the user does't have any linked apps", async () => {
+    await db.insert(organisationsTable).values(organisation);
     const elba = spyOnElba();
-    mocks.teamLinkedAppsListMemberLinkedAppsMock.mockImplementation(() => {
-      return {
-        result: {
-          linked_api_apps: [],
-        },
-      };
+    vi.spyOn(appsConnector, 'getMemberLinkedApps').mockResolvedValue({
+      apps: [],
     });
 
-    const [result] = await setup({
-      organisationId,
+    const [result] = setup({
+      organisationId: organisation.id,
       userId: 'team-member-id',
       appId: 'app-id',
       isFirstSync: false,
@@ -80,10 +71,10 @@ describe('third-party-apps-refresh-objects', () => {
 
     expect(elba).toBeCalledTimes(1);
     expect(elba).toBeCalledWith({
-      baseUrl: 'https://api.elba.io',
-      apiKey: 'elba-api-key',
-      organisationId,
-      region: 'eu',
+      organisationId: organisation.id,
+      region: organisation.region,
+      apiKey: env.ELBA_API_KEY,
+      baseUrl: env.ELBA_API_BASE_URL,
     });
 
     const elbaInstance = elba.mock.results[0]?.value;
@@ -101,28 +92,19 @@ describe('third-party-apps-refresh-objects', () => {
   });
 
   test('should request elba to delete when the the app is not found in the source & rest of the apps should be refreshed', async () => {
+    await db.insert(organisationsTable).values(organisation);
     const elba = spyOnElba();
-    mocks.teamLinkedAppsListMemberLinkedAppsMock.mockImplementation(() => {
-      return {
-        result: {
-          linked_api_apps: [
-            {
-              app_id: 'app-id-2',
-              app_name: 'app-name-2',
-              publisher: 'publisher-2',
-              publisher_url: 'https://foo.com',
-              linked: '2023-01-23T16:53:47Z',
-              is_app_folder: false,
-            },
-          ],
-        },
-      };
+    vi.spyOn(appsConnector, 'getMemberLinkedApps').mockResolvedValue({
+      apps: createLinkedApps({
+        length: 2,
+        startFrom: 0,
+      }).memberApps,
     });
 
-    const [result] = await setup({
-      organisationId,
+    const [result] = setup({
+      organisationId: organisation.id,
       userId: 'team-member-id',
-      appId: 'app-id',
+      appId: 'app-id-10',
       isFirstSync: false,
     });
 
@@ -130,10 +112,10 @@ describe('third-party-apps-refresh-objects', () => {
 
     expect(elba).toBeCalledTimes(1);
     expect(elba).toBeCalledWith({
-      baseUrl: 'https://api.elba.io',
-      apiKey: 'elba-api-key',
-      organisationId,
-      region: 'eu',
+      organisationId: organisation.id,
+      region: organisation.region,
+      apiKey: env.ELBA_API_KEY,
+      baseUrl: env.ELBA_API_BASE_URL,
     });
 
     const elbaInstance = elba.mock.results[0]?.value;
@@ -142,13 +124,26 @@ describe('third-party-apps-refresh-objects', () => {
     expect(elbaInstance?.thirdPartyApps.updateObjects).toBeCalledWith({
       apps: [
         {
-          id: 'app-id-2',
-          name: 'app-name-2',
-          publisherName: 'publisher-2',
-          url: 'https://foo.com',
+          id: 'app-id-0',
+          name: 'app-name-0',
+          publisherName: 'publisher-0',
+          url: 'publisher-url-0',
           users: [
             {
-              createdAt: '2023-01-23T16:53:47Z',
+              createdAt: 'linked-0',
+              id: 'team-member-id',
+              scopes: [],
+            },
+          ],
+        },
+        {
+          id: 'app-id-1',
+          name: 'app-name-1',
+          publisherName: 'publisher-1',
+          url: 'publisher-url-1',
+          users: [
+            {
+              createdAt: 'linked-1',
               id: 'team-member-id',
               scopes: [],
             },
@@ -156,29 +151,24 @@ describe('third-party-apps-refresh-objects', () => {
         },
       ],
     });
+
     expect(elbaInstance?.thirdPartyApps.deleteObjects).toBeCalledTimes(1);
     expect(elbaInstance?.thirdPartyApps.deleteObjects).toBeCalledWith({
       ids: [
         {
           userId: 'team-member-id',
-          appId: 'app-id',
+          appId: 'app-id-10',
         },
       ],
     });
   });
 
   test('should fetch all the apps connected by the member and send to elba', async () => {
+    await db.insert(organisationsTable).values(organisation);
     const elba = spyOnElba();
-    mocks.teamLinkedAppsListMemberLinkedAppsMock.mockImplementation(() => {
-      return {
-        result: {
-          linked_api_apps: membersLinkedAppFirstPage.at(0)?.linked_api_apps,
-        },
-      };
-    });
 
-    const [result] = await setup({
-      organisationId,
+    const [result] = setup({
+      organisationId: organisation.id,
       userId: 'team-member-id',
       appId: 'app-id',
       isFirstSync: false,
@@ -188,15 +178,44 @@ describe('third-party-apps-refresh-objects', () => {
 
     expect(elba).toBeCalledTimes(1);
     expect(elba).toBeCalledWith({
-      baseUrl: 'https://api.elba.io',
-      apiKey: 'elba-api-key',
-      organisationId,
-      region: 'eu',
+      organisationId: organisation.id,
+      region: organisation.region,
+      apiKey: env.ELBA_API_KEY,
+      baseUrl: env.ELBA_API_BASE_URL,
     });
 
     const elbaInstance = elba.mock.results[0]?.value;
 
     expect(elbaInstance?.thirdPartyApps.updateObjects).toBeCalledTimes(1);
-    expect(elbaInstance?.thirdPartyApps.updateObjects).toBeCalledWith(memberLinkedApps);
+    expect(elbaInstance?.thirdPartyApps.updateObjects).toBeCalledWith({
+      apps: [
+        {
+          id: 'app-id-0',
+          name: 'app-name-0',
+          publisherName: 'publisher-0',
+          url: 'publisher-url-0',
+          users: [
+            {
+              createdAt: 'linked-0',
+              id: 'team-member-id',
+              scopes: [],
+            },
+          ],
+        },
+        {
+          id: 'app-id-1',
+          name: 'app-name-1',
+          publisherName: 'publisher-1',
+          url: 'publisher-url-1',
+          users: [
+            {
+              createdAt: 'linked-1',
+              id: 'team-member-id',
+              scopes: [],
+            },
+          ],
+        },
+      ],
+    });
   });
 });
