@@ -10,12 +10,7 @@ import {
 } from '@elba-security/design-system';
 import { useFormState } from 'react-dom';
 import { install } from './actions';
-import type { FormState } from './actions';
-
-type Workspace = {
-  id: string;
-  subdomain: string;
-};
+import type { FormState, Workspace } from './actions';
 
 export default function InstallPage() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -47,6 +42,11 @@ export default function InstallPage() {
               </option>
             ))}
           </Select>
+          <input
+            type="hidden"
+            name="workspaces"
+            value={encodeURIComponent(JSON.stringify(workspaces))}
+          />
           <FormErrorMessage>
             {state.errors?.workspaceId?.at(0) ? (
               <FormErrorMessage>{state.errors.workspaceId.at(0)}</FormErrorMessage>

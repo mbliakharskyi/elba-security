@@ -22,6 +22,10 @@ export type FormState = {
     workspaceId?: string[] | undefined;
   };
 };
+export type Workspace = {
+  id: string;
+  subdomain: string;
+};
 
 export const install = async (_: FormState, formData: FormData): Promise<FormState> => {
   unstable_noStore();
@@ -52,8 +56,26 @@ export const install = async (_: FormState, formData: FormData): Promise<FormSta
     };
   }
 
+  // filter a workspace subdomain with selected workspace id
+  const workspacesString = formData.get('workspaces') as string;
+  const workspaces = JSON.parse(decodeURIComponent(workspacesString)) as Workspace[];
+  const selectedWorkspace = workspaces.find(
+    (workspace) => workspace.id === result.data.workspaceId
+  );
+
+  if (!selectedWorkspace) {
+    return {
+      errors: {
+        workspaceId: ['Workspace not found'],
+      },
+    };
+  }
+
+  const workspaceSubdomain = selectedWorkspace.subdomain;
+
   await setupOrganisation({
     workspaceId: result.data.workspaceId,
+    workspaceSubdomain,
   });
 
   redirect(

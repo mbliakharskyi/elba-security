@@ -10,14 +10,20 @@ import { decrypt } from '@/common/crypto';
 import { type AirslateUser } from '@/connectors/airslate/users';
 import { createElbaClient } from '@/connectors/elba/client';
 
-const formatElbaUser = ({ user }: { user: AirslateUser }): User => ({
+const formatElbaUser = ({
+  user,
+  workspaceSubdomain,
+}: {
+  user: AirslateUser;
+  workspaceSubdomain: string;
+}): User => ({
   id: user.id,
   displayName: user.username,
   email: user.email,
   role: user.role.code,
   additionalEmails: [],
   isSuspendable: user.role.code !== 'WORKSPACE_OWNER',
-  url: 'https://airslate.com/app/admin/users',
+  url: `https://${workspaceSubdomain}.airslate.com/management`,
 });
 
 export const syncUsers = inngest.createFunction(
@@ -50,6 +56,7 @@ export const syncUsers = inngest.createFunction(
       .select({
         token: organisationsTable.accessToken,
         workspaceId: organisationsTable.workspaceId,
+        workspaceSubdomain: organisationsTable.workspaceSubdomain,
         region: organisationsTable.region,
       })
       .from(organisationsTable)
@@ -61,6 +68,7 @@ export const syncUsers = inngest.createFunction(
     const elba = createElbaClient({ organisationId, region: organisation.region });
     const token = await decrypt(organisation.token);
     const workspaceId = organisation.workspaceId;
+    const workspaceSubdomain = organisation.workspaceSubdomain;
 
     const nextPage = await step.run('list-users', async () => {
       const result = await getUsers({
@@ -69,7 +77,9 @@ export const syncUsers = inngest.createFunction(
         workspaceId,
       });
 
-      const users = result.validUsers.map((user) => formatElbaUser({ user }));
+      const users = result.validUsers
+        .filter((user) => user.org_data.status === 'ACTIVE')
+        .map((user) => formatElbaUser({ user, workspaceSubdomain }));
 
       if (result.invalidUsers.length > 0) {
         logger.warn('Retrieved users contains invalid data', {

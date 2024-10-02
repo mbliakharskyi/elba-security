@@ -19,7 +19,7 @@ export const env = z
     AIRSLATE_CLIENT_SECRET: z.string().min(1),
     AIRSLATE_REDIRECT_URI: z.string().url(),
     AIRSLATE_DELETE_USER_CONCURRENCY: zEnvInt().default(5),
-    AIRSLATE_USERS_SYNC_BATCH_SIZE: zEnvInt().default(20),
+    AIRSLATE_USERS_SYNC_BATCH_SIZE: zEnvInt().default(15),
     AIRSLATE_USERS_SYNC_CRON: z.string().default('0 0 * * *'),
   })
   .parse(process.env);

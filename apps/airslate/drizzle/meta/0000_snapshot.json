@@ -1,5 +1,5 @@
 {
-  "id": "ee75093d-b2ef-4a13-85ba-e4eb48a60e1d",
+  "id": "92a414ba-40a2-4fe4-b62a-88bb23685666",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "5",
   "dialect": "pg",
@@ -41,6 +41,12 @@
         },
         "workspace_id": {
           "name": "workspace_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "workspace_subdomain": {
+          "name": "workspace_subdomain",
           "type": "text",
           "primaryKey": false,
           "notNull": true

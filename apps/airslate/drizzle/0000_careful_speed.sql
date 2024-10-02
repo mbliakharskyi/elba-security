@@ -4,5 +4,6 @@ CREATE TABLE IF NOT EXISTS "organisations" (
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"access_token" text NOT NULL,
 	"refresh_token" text NOT NULL,
-	"workspace_id" text NOT NULL
+	"workspace_id" text NOT NULL,
+	"workspace_subdomain" text NOT NULL
 );

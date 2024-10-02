@@ -8,6 +8,7 @@ import { encrypt } from '../../common/crypto';
 
 type SetupOrganisationParams = {
   workspaceId: string;
+  workspaceSubdomain: string;
 };
 
 const airslateTokenCookieSchema = z.object({
@@ -18,7 +19,10 @@ const airslateTokenCookieSchema = z.object({
   region: z.string(),
 });
 
-export const setupOrganisation = async ({ workspaceId }: SetupOrganisationParams) => {
+export const setupOrganisation = async ({
+  workspaceId,
+  workspaceSubdomain,
+}: SetupOrganisationParams) => {
   const authCookie = cookies().get('airslateToken')?.value;
   if (!authCookie) {
     throw new Error('No auth cookie found');
@@ -44,6 +48,7 @@ export const setupOrganisation = async ({ workspaceId }: SetupOrganisationParams
       accessToken: encodedAccessToken,
       refreshToken: encodedRefreshToken,
       workspaceId,
+      workspaceSubdomain,
       region,
     })
     .onConflictDoUpdate({
@@ -53,6 +58,7 @@ export const setupOrganisation = async ({ workspaceId }: SetupOrganisationParams
         accessToken: encodedAccessToken,
         refreshToken: encodedRefreshToken,
         workspaceId,
+        workspaceSubdomain,
         region,
       },
     });

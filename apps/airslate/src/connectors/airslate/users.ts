@@ -79,14 +79,20 @@ export const getUsers = async ({ accessToken, workspaceId, page }: GetUsersParam
 };
 
 // Owner of the organization cannot be deleted
-export const deleteUser = async ({ userId, accessToken }: DeleteUsersParams) => {
-  const response = await fetch(`${env.AIRSLATE_API_BASE_URL}/organization_memberships/${userId}`, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
+export const deleteUser = async ({ userId, accessToken, workspaceId }: DeleteUsersParams) => {
+  const response = await fetch(
+    `${env.AIRSLATE_API_BASE_URL}/organizations/${workspaceId}/users/${userId}`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        status: 'BLOCKED',
+      }),
+    }
+  );
 
   if (!response.ok && response.status !== 404) {
     throw new AirslateError(`Could not delete user with Id: ${userId}`, { response });

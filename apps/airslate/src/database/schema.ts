@@ -7,4 +7,5 @@ export const organisationsTable = pgTable('organisations', {
   accessToken: text('access_token').notNull(),
   refreshToken: text('refresh_token').notNull(),
   workspaceId: text('workspace_id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull(),
 });
