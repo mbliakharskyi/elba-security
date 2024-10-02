@@ -8,19 +8,19 @@ import { getWorkspaces } from './workspaces';
 const validToken = 'valid-token';
 const workspaceResponseData = [
   {
-    uuid: 'test-id',
-    name: 'test-name',
+    id: 'test-id',
+    subdomain: 'test-subdomain',
   },
 ];
 describe('getWorkspaces', () => {
   beforeEach(() => {
     server.use(
-      http.get(`${env.AIRSLATE_API_BASE_URL}/workspaces`, ({ request }) => {
+      http.get(`${env.AIRSLATE_API_BASE_URL}/organizations`, ({ request }) => {
         if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
           return new Response(undefined, { status: 401 });
         }
         return Response.json({
-          values: workspaceResponseData,
+          data: workspaceResponseData,
         });
       })
     );

@@ -15,12 +15,14 @@ const accessToken = 'access-token';
 const refreshToken = 'refresh-token';
 const workspaceId = 'workspace-id';
 const expiresIn = 60;
+const workspaceSubdomain = 'test-workspace-subdomain';
 
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   accessToken: await encrypt(accessToken),
   refreshToken: await encrypt(refreshToken),
   workspaceId,
+  workspaceSubdomain,
   region: 'us',
 };
 
@@ -58,7 +60,7 @@ describe('setupOrganisation', () => {
 
     await db.insert(organisationsTable).values(organisation);
 
-    await setupOrganisation({ workspaceId });
+    await setupOrganisation({ workspaceId, workspaceSubdomain });
 
     expect(send).toBeCalledTimes(1);
     expect(send).toBeCalledWith([
@@ -68,7 +70,7 @@ describe('setupOrganisation', () => {
           organisationId: organisation.id,
           syncStartedAt: now.getTime(),
           isFirstSync: true,
-          page: null,
+          page: '1',
         },
       },
       {
@@ -94,6 +96,8 @@ describe('setupOrganisation', () => {
 
     vi.mocked(cookies).mockReturnValue(mockCookiesWithoutAuth as ReadonlyRequestCookies);
 
-    await expect(setupOrganisation({ workspaceId })).rejects.toThrow('No auth cookie found');
+    await expect(setupOrganisation({ workspaceId, workspaceSubdomain })).rejects.toThrow(
+      'No auth cookie found'
+    );
   });
 });

@@ -8,14 +8,13 @@ import { getToken, getRefreshToken } from './auth';
 const validCode = '1234';
 const accessToken = 'access-token-1234';
 const validRefreshToken = 'valid-refresh-token';
-const organization = 'some-organization';
 const expiresIn = 1234;
 
 describe('auth connector', () => {
   describe('getToken', () => {
     beforeEach(() => {
       server.use(
-        http.post(`${env.AIRSLATE_APP_INSTALL_URL}/token`, async ({ request }) => {
+        http.post(`${env.AIRSLATE_APP_INSTALL_URL}/oauth/token`, async ({ request }) => {
           const body = await request.text();
           const searchParams = new URLSearchParams(body);
           const grantType = searchParams.get('grant_type');
@@ -29,7 +28,6 @@ describe('auth connector', () => {
             access_token: accessToken,
             refresh_token: validRefreshToken,
             expires_in: expiresIn,
-            organization,
           });
         })
       );
@@ -40,7 +38,6 @@ describe('auth connector', () => {
         accessToken,
         refreshToken: validRefreshToken,
         expiresIn,
-        organizationUri: organization,
       });
     });
 
@@ -52,7 +49,7 @@ describe('auth connector', () => {
   describe('getRefreshToken', () => {
     beforeEach(() => {
       server.use(
-        http.post(`${env.AIRSLATE_APP_INSTALL_URL}/token`, async ({ request }) => {
+        http.post(`${env.AIRSLATE_APP_INSTALL_URL}/oauth/token`, async ({ request }) => {
           const body = await request.text();
           const searchParams = new URLSearchParams(body);
 
@@ -66,7 +63,6 @@ describe('auth connector', () => {
           return Response.json({
             access_token: accessToken,
             refresh_token: validRefreshToken,
-            organization,
             expires_in: expiresIn,
           });
         })

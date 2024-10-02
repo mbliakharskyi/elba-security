@@ -11,6 +11,7 @@ const organisation = {
   accessToken: 'access-token',
   refreshToken: 'refresh-token',
   workspaceId: 'test-workspace-id',
+  workspaceSubdomain: 'test-workspace-subdomain',
   region: 'us',
 };
 

@@ -7,8 +7,8 @@ import type { AirslateUser } from './users';
 import { getUsers, deleteUser } from './users';
 
 const validToken = 'token-1234';
-const endPageToken = '3';
-const nextPageToken = '2';
+const endPage = 3;
+const nextPage = 2;
 const userId = 'test-user-id';
 const workspaceId = 'test-workspace-id';
 
@@ -30,37 +30,41 @@ describe('users connector', () => {
   describe('getUsers', () => {
     beforeEach(() => {
       server.use(
-        http.get(`${env.AIRSLATE_API_BASE_URL}/organization_memberships`, ({ request }) => {
-          if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
-            return new Response(undefined, { status: 401 });
-          }
+        http.get(
+          `${env.AIRSLATE_API_BASE_URL}/organizations/${workspaceId}/users`,
+          ({ request }) => {
+            if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
+              return new Response(undefined, { status: 401 });
+            }
 
-          const url = new URL(request.url);
-          const pageToken = url.searchParams.get('page_token');
-          const responseData = {
-            collection: validUsers,
-            pagination: {
-              next_page_token: pageToken === endPageToken ? null : nextPageToken,
-            },
-          };
-          return Response.json(responseData);
-        })
+            const url = new URL(request.url);
+            const currentPage = url.searchParams.get('page') ?? '1';
+            const responseData = {
+              data: validUsers,
+              meta: {
+                current_page: parseInt(currentPage, 10),
+                last_page: endPage,
+              },
+            };
+            return Response.json(responseData);
+          }
+        )
       );
     });
 
     test('should return users and nextPage when the token is valid and their is another page', async () => {
       await expect(
-        getUsers({ accessToken: validToken, page: nextPageToken, workspaceId })
+        getUsers({ accessToken: validToken, page: String(nextPage), workspaceId })
       ).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
-        nextPage: nextPageToken,
+        nextPage: String(nextPage + 1),
       });
     });
 
     test('should return users and no nextPage when the token is valid and their is no other page', async () => {
       await expect(
-        getUsers({ accessToken: validToken, page: endPageToken, workspaceId })
+        getUsers({ accessToken: validToken, page: String(endPage), workspaceId })
       ).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
@@ -78,8 +82,8 @@ describe('users connector', () => {
   describe('deleteUser', () => {
     beforeEach(() => {
       server.use(
-        http.delete<{ userId: string }>(
-          `${env.AIRSLATE_API_BASE_URL}/organization_memberships/${userId}`,
+        http.patch<{ userId: string }>(
+          `${env.AIRSLATE_API_BASE_URL}/organizations/${workspaceId}/users/${userId}`,
           ({ request }) => {
             if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
               return new Response(undefined, { status: 401 });

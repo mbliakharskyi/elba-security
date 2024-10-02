@@ -19,7 +19,7 @@ export const rateLimitMiddleware = new InngestMiddleware({
 
             if (error.response?.status === 429) {
               let retryAfter = 60;
-              const retryAfterHeader = error.response.headers.get('x-ratelimit-reset');
+              const retryAfterHeader = error.response.headers.get('retry-after');
               if (retryAfterHeader) {
                 retryAfter = parseInt(retryAfterHeader, 10);
               }

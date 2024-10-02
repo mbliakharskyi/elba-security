@@ -24,7 +24,8 @@ const organisation = {
   accessToken: encryptedTokens.accessToken,
   refreshToken: encryptedTokens.refreshToken,
   region: 'us',
-  organizationUri: 'some-org-uri',
+  workspaceId: 'test-workspace-id',
+  workspaceSubdomain: 'test-workspace-subdomain',
 };
 const now = new Date();
 // current token expires in an hour

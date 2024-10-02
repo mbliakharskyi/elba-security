@@ -13,7 +13,8 @@ const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   accessToken: await encrypt(accessToken),
   refreshToken: await encrypt(refreshToken),
-  organizationUri: 'some organization_uri',
+  workspaceId: 'test-workspace-id',
+  workspaceSubdomain: 'test-workspace-subdomain',
   region: 'us',
 };
 
@@ -36,6 +37,7 @@ describe('deleteUser', () => {
     expect(usersConnector.deleteUser).toBeCalledWith({
       userId,
       accessToken,
+      workspaceId: 'test-workspace-id',
     });
   });
 });

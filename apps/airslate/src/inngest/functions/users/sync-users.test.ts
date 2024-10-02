@@ -10,25 +10,25 @@ import { syncUsers } from './sync-users';
 const syncStartedAt = Date.now();
 const syncedBefore = Date.now();
 const nextPage = '1';
-const organizationUri = 'some-org-uri';
 
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   accessToken: await encrypt('test-access-token'),
   refreshToken: await encrypt('test-refresh-token'),
-  organizationUri,
+  workspaceId: 'test-workspace-id',
+  workspaceSubdomain: 'test-workspace-subdomain',
   region: 'us',
 };
 
-const roles = ['owner', 'admin', 'user'];
-
 const users: usersConnector.AirslateUser[] = Array.from({ length: 3 }, (_, i) => ({
-  uri: `https://test-uri/organization_memberships/00000000-0000-0000-0000-00000000009${i}`,
-  role: roles[i] ?? 'user',
-  user: {
-    name: `name-${i}`,
-    email: `user-${i}@foo.bar`,
-    uri: `https://test-uri/users/00000000-0000-0000-0000-00000000009${i}`,
+  id: `00000000-0000-0000-0000-00000000009${i}`,
+  email: `user-${i}@foo.bar`,
+  username: `username-${i}`,
+  org_data: {
+    status: 'ACTIVE',
+  },
+  role: {
+    code: 'MEMBER',
   },
 }));
 
@@ -46,7 +46,7 @@ describe('sync-users', () => {
       organisationId: organisation.id,
       isFirstSync: false,
       syncStartedAt: Date.now(),
-      page: null,
+      page: '1',
     });
 
     await expect(result).rejects.toBeInstanceOf(NonRetriableError);
@@ -92,30 +92,30 @@ describe('sync-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'name-0',
+          displayName: 'username-0',
           email: 'user-0@foo.bar',
           id: '00000000-0000-0000-0000-000000000090',
-          role: 'owner',
-          isSuspendable: false,
-          url: 'https://airslate.com/app/admin/users',
+          role: 'MEMBER',
+          isSuspendable: true,
+          url: 'https://test-workspace-subdomain.airslate.com/management',
         },
         {
           additionalEmails: [],
-          displayName: 'name-1',
+          displayName: 'username-1',
           email: 'user-1@foo.bar',
-          role: 'admin',
+          role: 'MEMBER',
           id: '00000000-0000-0000-0000-000000000091',
-          isSuspendable: false,
-          url: 'https://airslate.com/app/admin/users',
+          isSuspendable: true,
+          url: 'https://test-workspace-subdomain.airslate.com/management',
         },
         {
           additionalEmails: [],
-          displayName: 'name-2',
+          displayName: 'username-2',
           email: 'user-2@foo.bar',
-          role: 'user',
+          role: 'MEMBER',
           id: '00000000-0000-0000-0000-000000000092',
           isSuspendable: true,
-          url: 'https://airslate.com/app/admin/users',
+          url: 'https://test-workspace-subdomain.airslate.com/management',
         },
       ],
     });
@@ -135,7 +135,7 @@ describe('sync-users', () => {
       organisationId: organisation.id,
       isFirstSync: false,
       syncStartedAt,
-      page: null,
+      page: '1',
     });
 
     await expect(result).resolves.toStrictEqual({ status: 'completed' });
@@ -145,30 +145,30 @@ describe('sync-users', () => {
       users: [
         {
           additionalEmails: [],
-          displayName: 'name-0',
+          displayName: 'username-0',
           email: 'user-0@foo.bar',
-          role: 'owner',
           id: '00000000-0000-0000-0000-000000000090',
-          isSuspendable: false,
-          url: 'https://airslate.com/app/admin/users',
+          role: 'MEMBER',
+          isSuspendable: true,
+          url: 'https://test-workspace-subdomain.airslate.com/management',
         },
         {
           additionalEmails: [],
-          displayName: 'name-1',
+          displayName: 'username-1',
           email: 'user-1@foo.bar',
-          role: 'admin',
+          role: 'MEMBER',
           id: '00000000-0000-0000-0000-000000000091',
-          isSuspendable: false,
-          url: 'https://airslate.com/app/admin/users',
+          isSuspendable: true,
+          url: 'https://test-workspace-subdomain.airslate.com/management',
         },
         {
           additionalEmails: [],
-          displayName: 'name-2',
+          displayName: 'username-2',
           email: 'user-2@foo.bar',
-          role: 'user',
+          role: 'MEMBER',
           id: '00000000-0000-0000-0000-000000000092',
           isSuspendable: true,
-          url: 'https://airslate.com/app/admin/users',
+          url: 'https://test-workspace-subdomain.airslate.com/management',
         },
       ],
     });
