@@ -20,18 +20,17 @@ export function GET(request: NextRequest) {
     });
   }
 
-  const state = crypto.randomUUID();
   cookies().set('organisation_id', organisationId);
   cookies().set('region', region);
-  cookies().set('state', state);
 
   const redirectUrl = new URL(`${env.AIRSLATE_APP_INSTALL_URL}/authorize`);
   redirectUrl.searchParams.append('response_type', 'code');
   redirectUrl.searchParams.append('client_id', env.AIRSLATE_CLIENT_ID);
   redirectUrl.searchParams.append('client_secret', env.AIRSLATE_CLIENT_SECRET);
   redirectUrl.searchParams.append('redirect_uri', env.AIRSLATE_REDIRECT_URI);
-  redirectUrl.searchParams.append('state', state);
-  redirectUrl.searchParams.append('scope', 'read:organizations');
+  redirectUrl.searchParams.append('scope', 'email');
+
+  cookies().set('redirect_url', redirectUrl.toString());
 
   redirect(redirectUrl.toString());
 }

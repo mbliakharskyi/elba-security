@@ -1,65 +1,42 @@
-import { addSeconds } from 'date-fns/addSeconds';
-import { db } from '@/database/client';
-import { organisationsTable } from '@/database/schema';
+import { cookies } from 'next/headers';
 import { getToken } from '@/connectors/airslate/auth';
-import { inngest } from '@/inngest/client';
-import { encrypt } from '@/common/crypto';
+import { getWorkspaces } from '@/connectors/airslate/workspaces';
 
-type SetupOrganisationParams = {
-  organisationId: string;
-  code: string;
-  region: string;
-};
-
-export const setupOrganisation = async ({
+export const getWorkspacesAndStoreToken = async ({
   organisationId,
   code,
   region,
-}: SetupOrganisationParams) => {
+}: {
+  organisationId: string;
+  code: string;
+  region: string;
+}) => {
   const { accessToken, refreshToken, expiresIn } = await getToken(code);
 
-  const encryptedAccessToken = await encrypt(accessToken);
-  const encodedRefreshToken = await encrypt(refreshToken);
+  const workspaces = await getWorkspaces(accessToken);
 
-  await db
-    .insert(organisationsTable)
-    .values({
-      id: organisationId,
-      accessToken: encryptedAccessToken,
-      refreshToken: encodedRefreshToken,
-      region,
-    })
-    .onConflictDoUpdate({
-      target: organisationsTable.id,
-      set: {
-        accessToken: encryptedAccessToken,
-        refreshToken: encodedRefreshToken,
-        region,
-      },
-    });
+  const tokenData = {
+    organisationId,
+    accessToken,
+    refreshToken,
+    expiresAt: expiresIn,
+    region,
+  };
 
-  await inngest.send([
-    {
-      name: 'airslate/users.sync.requested',
-      data: {
-        organisationId,
-        isFirstSync: true,
-        syncStartedAt: Date.now(),
-        page: null,
-      },
-    },
-    {
-      name: 'airslate/app.installed',
-      data: {
-        organisationId,
-      },
-    },
-    {
-      name: 'airslate/token.refresh.requested',
-      data: {
-        organisationId,
-        expiresAt: addSeconds(new Date(), expiresIn).getTime(),
-      },
-    },
-  ]);
+  cookies().set({
+    name: 'airslateToken',
+    value: JSON.stringify(tokenData),
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 3600, // 1 hour
+  });
+
+  if (!workspaces.length) {
+    throw new Error('No workspaces found');
+  }
+
+  return {
+    workspaces,
+  };
 };

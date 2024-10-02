@@ -3,42 +3,44 @@ import { env } from '@/common/env';
 import { AirslateError } from '../common/error';
 
 const airslateUserSchema = z.object({
-  user: z.object({
-    name: z.string(),
-    email: z.string(),
-    uri: z.string(),
+  id: z.string(),
+  email: z.string(),
+  username: z.string(),
+  role: z.object({
+    code: z.string(),
   }),
-  uri: z.string(),
-  role: z.string(),
+  org_data: z.object({
+    status: z.string(),
+  }),
 });
 
 export type AirslateUser = z.infer<typeof airslateUserSchema>;
 
 const airslateResponseSchema = z.object({
-  collection: z.array(z.unknown()),
-  pagination: z.object({
-    next_page_token: z.string().nullable(),
+  data: z.array(z.unknown()),
+  meta: z.object({
+    current_page: z.number(),
+    last_page: z.number(),
   }),
 });
 
 export type GetUsersParams = {
   accessToken: string;
-  page?: string | null;
+  workspaceId: string;
+  page: string;
 };
 
 export type DeleteUsersParams = {
   accessToken: string;
+  workspaceId: string;
   userId: string;
 };
 
-export const getUsers = async ({ accessToken, page }: GetUsersParams) => {
-  const url = new URL(`${env.AIRSLATE_API_BASE_URL}/organization_memberships`);
+export const getUsers = async ({ accessToken, workspaceId, page }: GetUsersParams) => {
+  const url = new URL(`${env.AIRSLATE_API_BASE_URL}/organizations/${workspaceId}/users`);
 
-  url.searchParams.append('count', `${env.AIRSLATE_USERS_SYNC_BATCH_SIZE}`);
-
-  if (page) {
-    url.searchParams.append('page_token', page);
-  }
+  url.searchParams.append('per_page', `${env.AIRSLATE_USERS_SYNC_BATCH_SIZE}`);
+  url.searchParams.append('page', page);
 
   const response = await fetch(url.toString(), {
     method: 'GET',
@@ -59,7 +61,7 @@ export const getUsers = async ({ accessToken, page }: GetUsersParams) => {
   const validUsers: AirslateUser[] = [];
   const invalidUsers: unknown[] = [];
 
-  for (const user of result.collection) {
+  for (const user of result.data) {
     const userResult = airslateUserSchema.safeParse(user);
     if (userResult.success) {
       validUsers.push(userResult.data);
@@ -71,7 +73,8 @@ export const getUsers = async ({ accessToken, page }: GetUsersParams) => {
   return {
     validUsers,
     invalidUsers,
-    nextPage: result.pagination.next_page_token ?? null,
+    nextPage:
+      result.meta.current_page < result.meta.last_page ? String(parseInt(page, 10) + 1) : null,
   };
 };
 

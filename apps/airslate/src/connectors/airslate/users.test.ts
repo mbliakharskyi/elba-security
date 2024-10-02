@@ -10,15 +10,18 @@ const validToken = 'token-1234';
 const endPageToken = '3';
 const nextPageToken = '2';
 const userId = 'test-user-id';
+const workspaceId = 'test-workspace-id';
 
 const validUsers: AirslateUser[] = Array.from({ length: 5 }, (_, i) => ({
-  uri: `uri-${i}`,
-  user: {
-    name: `name-${i}`,
-    email: `user-${i}@foo.bar`,
-    uri: `https://test-uri/users/00000000-0000-0000-0000-00000000009${i}`,
+  id: `i`,
+  email: `user-${i}@foo.bar`,
+  username: `usernake -${i}`,
+  org_data: {
+    status: 'ACTIVE',
   },
-  role: 'user',
+  role: {
+    code: 'MEMBER',
+  },
 }));
 
 const invalidUsers = [];
@@ -47,7 +50,7 @@ describe('users connector', () => {
 
     test('should return users and nextPage when the token is valid and their is another page', async () => {
       await expect(
-        getUsers({ accessToken: validToken, page: nextPageToken })
+        getUsers({ accessToken: validToken, page: nextPageToken, workspaceId })
       ).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
@@ -57,7 +60,7 @@ describe('users connector', () => {
 
     test('should return users and no nextPage when the token is valid and their is no other page', async () => {
       await expect(
-        getUsers({ accessToken: validToken, page: endPageToken })
+        getUsers({ accessToken: validToken, page: endPageToken, workspaceId })
       ).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
@@ -66,7 +69,9 @@ describe('users connector', () => {
     });
 
     test('should throws when the token is invalid', async () => {
-      await expect(getUsers({ accessToken: 'foo-bar' })).rejects.toBeInstanceOf(AirslateError);
+      await expect(
+        getUsers({ accessToken: 'foo-bar', workspaceId, page: '1' })
+      ).rejects.toBeInstanceOf(AirslateError);
     });
   });
 
@@ -86,17 +91,21 @@ describe('users connector', () => {
     });
 
     test('should delete user successfully when token is valid', async () => {
-      await expect(deleteUser({ accessToken: validToken, userId })).resolves.not.toThrow();
+      await expect(
+        deleteUser({ accessToken: validToken, userId, workspaceId })
+      ).resolves.not.toThrow();
     });
 
     test('should not throw when the user is not found', async () => {
-      await expect(deleteUser({ accessToken: validToken, userId })).resolves.toBeUndefined();
+      await expect(
+        deleteUser({ accessToken: validToken, userId, workspaceId })
+      ).resolves.toBeUndefined();
     });
 
     test('should throw AirslateError when token is invalid', async () => {
-      await expect(deleteUser({ accessToken: 'invalidToken', userId })).rejects.toBeInstanceOf(
-        AirslateError
-      );
+      await expect(
+        deleteUser({ accessToken: 'invalidToken', userId, workspaceId })
+      ).rejects.toBeInstanceOf(AirslateError);
     });
   });
 });

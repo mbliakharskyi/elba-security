@@ -10,19 +10,13 @@ import { decrypt } from '@/common/crypto';
 import { type AirslateUser } from '@/connectors/airslate/users';
 import { createElbaClient } from '@/connectors/elba/client';
 
-// extract uuid from user's unique uri like this: "https://api.airslate.com/organization_memberships/AAAAAAAAAAAAAAAA"
-const extractUUID = (user: AirslateUser): string => {
-  const regex = /organization_memberships\/(?<uuid>[a-f0-9-]{36})/;
-  const match = regex.exec(user.uri);
-  return match?.groups?.uuid ? match.groups.uuid : user.user.email;
-};
 const formatElbaUser = ({ user }: { user: AirslateUser }): User => ({
-  id: extractUUID(user),
-  displayName: user.user.name,
-  email: user.user.email,
-  role: user.role,
+  id: user.id,
+  displayName: user.username,
+  email: user.email,
+  role: user.role.code,
   additionalEmails: [],
-  isSuspendable: true,
+  isSuspendable: user.role.code !== 'WORKSPACE_OWNER',
   url: 'https://airslate.com/app/admin/users',
 });
 
@@ -55,6 +49,7 @@ export const syncUsers = inngest.createFunction(
     const [organisation] = await db
       .select({
         token: organisationsTable.accessToken,
+        workspaceId: organisationsTable.workspaceId,
         region: organisationsTable.region,
       })
       .from(organisationsTable)
@@ -65,11 +60,13 @@ export const syncUsers = inngest.createFunction(
 
     const elba = createElbaClient({ organisationId, region: organisation.region });
     const token = await decrypt(organisation.token);
+    const workspaceId = organisation.workspaceId;
 
     const nextPage = await step.run('list-users', async () => {
       const result = await getUsers({
         accessToken: token,
         page,
+        workspaceId,
       });
 
       const users = result.validUsers.map((user) => formatElbaUser({ user }));
