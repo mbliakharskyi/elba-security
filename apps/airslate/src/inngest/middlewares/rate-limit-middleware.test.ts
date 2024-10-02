@@ -16,7 +16,7 @@ describe('rate-limit middleware', () => {
     ).toBeUndefined();
   });
 
-  test('should not transform the output when the error is not about Doppler rate limit', () => {
+  test('should not transform the output when the error is not about Airslate rate limit', () => {
     expect(
       rateLimitMiddleware
         .init()
@@ -30,7 +30,7 @@ describe('rate-limit middleware', () => {
     ).toBeUndefined();
   });
 
-  test('should transform the output error to RetryAfterError when the error is about Doppler rate limit', () => {
+  test('should transform the output error to RetryAfterError when the error is about Airslate rate limit', () => {
     const rateLimitError = new AirslateError('foo bar', {
       // @ts-expect-error this is a mock
       response: {

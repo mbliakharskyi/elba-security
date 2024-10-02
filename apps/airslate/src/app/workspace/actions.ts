@@ -56,7 +56,7 @@ export const install = async (_: FormState, formData: FormData): Promise<FormSta
     };
   }
 
-  // filter a workspace subdomain with selected workspace id
+  // filter a workspace subdomain with the selected workspace id
   const workspacesString = formData.get('workspaces') as string;
   const workspaces = JSON.parse(decodeURIComponent(workspacesString)) as Workspace[];
   const selectedWorkspace = workspaces.find(
