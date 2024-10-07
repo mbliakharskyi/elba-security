@@ -27,38 +27,25 @@ export default function InstallPage() {
       <h1>Setup dbt Labs integration</h1>
       <InstructionsSteps>
         <InstructionsStep index={1}>
-          <h3>Create Service Token</h3>
-          <p>1. Click the setting icon in the right-nav and open the Account setting page.</p>
+          <h3>Create Api Key</h3>
           <p>
-            2. In the Account section, copy <strong>Account ID</strong> and{' '}
-            <strong>Access URL</strong>
+            1. Go to <strong>Account Settings</strong>
+            {' > '}
+            <strong>Developer Settings</strong> in the Checkr Dashboard
           </p>
           <p>
-            3. In the <strong>API tokens/Service tokens</strong> section, click{' '}
-            <strong>+ Create service token</strong>.
+            2. In the <strong>Api keys</strong> section, click <strong>+ Create api key</strong>.
           </p>
           <p>
-            4. Click on the <strong>+ Add</strong> Button and in <strong>Permission set</strong>{' '}
-            select <strong>Account Admin</strong>
-          </p>
-          <p>
-            5. Enter the name for the service token in <strong>Token name</strong>
-          </p>
-          <p>
-            6. Click on <strong>Save</strong> and copy the token.
+            3. Use the <strong>Secret Key</strong> within your staging and production environments.
           </p>
         </InstructionsStep>
         <InstructionsStep index={2}>
-          <h3>Connect dbt Labs</h3>
+          <h3>Connect checkr</h3>
           <Form action={formAction}>
             <FormField isInvalid={Boolean(state.errors?.apiKey?.at(0))}>
-              <FormLabel>Service Token</FormLabel>
-              <Input
-                minLength={1}
-                name="apiKey"
-                placeholder="Paste Your Service Token"
-                type="text"
-              />
+              <FormLabel>Api Key</FormLabel>
+              <Input minLength={1} name="apiKey" placeholder="Paste Your Api Key" type="text" />
               {state.errors?.apiKey?.at(0) ? (
                 <FormErrorMessage>{state.errors.apiKey.at(0)}</FormErrorMessage>
               ) : null}
