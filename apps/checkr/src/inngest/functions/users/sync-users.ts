@@ -27,22 +27,30 @@ const formatElbaUserRole = (user: CheckrUser) => {
 
   let highestRole = user.roles[0]?.name;
 
+  // Function to convert snake_case to PascalCase
+  const toPascalCase = (role: string) => {
+    return role
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join('');
+  };
+
   for (let i = 1; i < user.roles.length; i++) {
     const currentRole = user.roles[i]?.name;
 
     // Skip if currentRole or highestRole is undefined
     if (!currentRole || !highestRole) continue;
 
-    // Convert role names to PascalCase before comparing (safely handle undefined cases)
-    const formattedCurrentRole = currentRole.replace(/_./g, (s) => (s[1] ? s[1].toUpperCase() : s));
-    const formattedHighestRole = highestRole.replace(/_./g, (s) => (s[1] ? s[1].toUpperCase() : s));
+    // Convert role names to PascalCase before comparing
+    const formattedCurrentRole = toPascalCase(currentRole);
+    const formattedHighestRole = toPascalCase(highestRole);
 
     // Compare based on RolePriority and reassign highestRole if necessary
     if (
       RolePriority[formattedCurrentRole as keyof typeof RolePriority] <
       RolePriority[formattedHighestRole as keyof typeof RolePriority]
     ) {
-      highestRole = currentRole;
+      highestRole = currentRole; // Store the original name, not the PascalCase one
     }
   }
 
