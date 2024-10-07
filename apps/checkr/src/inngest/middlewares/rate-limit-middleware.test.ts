@@ -16,7 +16,7 @@ describe('rate-limit middleware', () => {
     ).toBeUndefined();
   });
 
-  test('should not transform the output when the error is not about zoom rate limit', () => {
+  test('should not transform the output when the error is not about Checkr rate limit', () => {
     expect(
       rateLimitMiddleware
         .init()
@@ -30,11 +30,12 @@ describe('rate-limit middleware', () => {
     ).toBeUndefined();
   });
 
-  test('should transform the output error to RetryAfterError when the error is about zoom rate limit', () => {
+  test('should transform the output error to RetryAfterError when the error is about Checkr rate limit', () => {
     const rateLimitError = new CheckrError('foo bar', {
       // @ts-expect-error this is a mock
       response: {
         status: 429,
+        headers: new Headers({ 'retry-after': '60' }),
       },
     });
 

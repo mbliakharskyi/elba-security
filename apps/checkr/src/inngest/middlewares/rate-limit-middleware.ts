@@ -16,16 +16,19 @@ export const rateLimitMiddleware = new InngestMiddleware({
             if (!(error instanceof CheckrError)) {
               return;
             }
-            // dbt Labs doesn't provide ratel imit headers, therefore we are using a default value
-            if (error instanceof CheckrError && error.response?.status === 429) {
-              const retryAfter = 60;
 
+            if (error.response?.status === 429) {
+              let retryAfter = 60;
+              const retryAfterHeader = error.response.headers.get('retry-after');
+              if (retryAfterHeader) {
+                retryAfter = parseInt(retryAfterHeader, 10);
+              }
               return {
                 ...context,
                 result: {
                   ...result,
                   error: new RetryAfterError(
-                    `Rate limit exceeded for '${fn.name}'`,
+                    `Rate limit exceeded for '${fn.name}'. Retry after ${retryAfter} seconds.`,
                     `${retryAfter}s`,
                     {
                       cause: error,
