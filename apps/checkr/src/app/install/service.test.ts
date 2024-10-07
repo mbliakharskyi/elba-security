@@ -14,12 +14,14 @@ const now = new Date();
 const getUsersData = {
   validUsers: [
     {
-      id: 1,
-      first_name: `first_name`,
-      last_name: `last_name`,
-      fullname: `fullname`,
-      is_active: true,
+      id: '1',
+      full_name: `fullname`,
       email: `user@foo.bar`,
+      roles: [
+        {
+          name: 'admin',
+        },
+      ],
     },
   ],
   invalidUsers: [],

@@ -7,7 +7,7 @@ import { organisationsTable } from '@/database/schema';
 import { encrypt } from '@/common/crypto';
 import { syncUsers } from './sync-users';
 
-const nextPage = 1;
+const nextPage = '1';
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   apiKey: await encrypt('test-api-key'),
@@ -15,12 +15,14 @@ const organisation = {
 };
 
 const users: usersConnector.CheckrUser[] = Array.from({ length: 2 }, (_, i) => ({
-  id: i,
-  first_name: `firstName-${i}`,
-  last_name: `lastName-${i}`,
-  fullname: `fullname-${i}`,
-  is_active: true,
+  id: `${i}`,
+  full_name: `fullname-${i}`,
   email: `user-${i}@foo.bar`,
+  roles: [
+    {
+      name: 'admin',
+    },
+  ],
 }));
 
 const syncStartedAt = Date.now();
@@ -75,14 +77,16 @@ describe('sync-users', () => {
           displayName: 'fullname-0',
           email: 'user-0@foo.bar',
           id: '0',
-          url: 'https://example.us1.dbt.com/settings/accounts/00000/pages/users',
+          role: 'admin',
+          url: 'https://dashboard.checkrhq-staging.net/account/user/0',
         },
         {
           additionalEmails: [],
           displayName: 'fullname-1',
           email: 'user-1@foo.bar',
           id: '1',
-          url: 'https://example.us1.dbt.com/settings/accounts/00000/pages/users',
+          role: 'admin',
+          url: 'https://dashboard.checkrhq-staging.net/account/user/1',
         },
       ],
     });
@@ -128,14 +132,16 @@ describe('sync-users', () => {
           displayName: 'fullname-0',
           email: 'user-0@foo.bar',
           id: '0',
-          url: 'https://example.us1.dbt.com/settings/accounts/00000/pages/users',
+          role: 'admin',
+          url: 'https://dashboard.checkrhq-staging.net/account/user/0',
         },
         {
           additionalEmails: [],
           displayName: 'fullname-1',
           email: 'user-1@foo.bar',
           id: '1',
-          url: 'https://example.us1.dbt.com/settings/accounts/00000/pages/users',
+          role: 'admin',
+          url: 'https://dashboard.checkrhq-staging.net/account/user/1',
         },
       ],
     });
