@@ -24,7 +24,7 @@ export default function InstallPage() {
 
   return (
     <>
-      <h1>Setup dbt Labs integration</h1>
+      <h1>Setup checkr integration</h1>
       <InstructionsSteps>
         <InstructionsStep index={1}>
           <h3>Create Api Key</h3>
