@@ -7,19 +7,17 @@ import type { GustoUser } from './users';
 import { getUsers, deleteUser, getAuthUser } from './users';
 
 const validToken = 'token-1234';
-const endPageToken = '3';
-const nextPageToken = '2';
+const endPage = 3;
+const nextPage = 2;
+const companyId = 'test-company-id';
 const userId = 'test-user-id';
-const companyId = 'https://api.gusto.com/users/AAAAAAAAAAAAAAAA';
 
 const validUsers: GustoUser[] = Array.from({ length: 5 }, (_, i) => ({
-  uri: `uri-${i}`,
-  user: {
-    name: `name-${i}`,
-    email: `user-${i}@foo.bar`,
-    uri: `https://test-uri/users/00000000-0000-0000-0000-00000000009${i}`,
-  },
-  role: 'user',
+  email: `user-${i}@foo.bar`,
+  first_name: `first_name-${i}`,
+  last_name: `last_name-${i}`,
+  terminated: false,
+  uuid: `${i}`,
 }));
 
 const invalidUsers = [];
@@ -28,37 +26,39 @@ describe('users connector', () => {
   describe('getUsers', () => {
     beforeEach(() => {
       server.use(
-        http.get(`${env.GUSTO_API_BASE_URL}/organization_memberships`, ({ request }) => {
+        http.get(`${env.GUSTO_API_BASE_URL}/v1/companies/${companyId}/employees`, ({ request }) => {
           if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
             return new Response(undefined, { status: 401 });
           }
 
-          const url = new URL(request.url);
-          const pageToken = url.searchParams.get('page_token');
-          const responseData = {
-            collection: validUsers,
-            pagination: {
-              next_page_token: pageToken === endPageToken ? null : nextPageToken,
-            },
-          };
-          return Response.json(responseData);
+          const responseData = validUsers;
+          return new Response(
+            JSON.stringify(responseData), // Body of the response
+            {
+              status: 200,
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Total-Pages': `${endPage}`, // Add the mock header value for X-Total-Pages
+              },
+            }
+          );
         })
       );
     });
 
     test('should return users and nextPage when the token is valid and their is another page', async () => {
       await expect(
-        getUsers({ accessToken: validToken, page: nextPageToken })
+        getUsers({ accessToken: validToken, page: nextPage, companyId })
       ).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
-        nextPage: nextPageToken,
+        nextPage: nextPage + 1,
       });
     });
 
     test('should return users and no nextPage when the token is valid and their is no other page', async () => {
       await expect(
-        getUsers({ accessToken: validToken, page: endPageToken })
+        getUsers({ accessToken: validToken, page: endPage, companyId })
       ).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
@@ -67,15 +67,17 @@ describe('users connector', () => {
     });
 
     test('should throws when the token is invalid', async () => {
-      await expect(getUsers({ accessToken: 'foo-bar' })).rejects.toBeInstanceOf(GustoError);
+      await expect(
+        getUsers({ accessToken: 'foo-bar', page: nextPage, companyId })
+      ).rejects.toBeInstanceOf(GustoError);
     });
   });
 
   describe('deleteUser', () => {
     beforeEach(() => {
       server.use(
-        http.delete<{ userId: string }>(
-          `${env.GUSTO_API_BASE_URL}/organization_memberships/${userId}`,
+        http.post<{ userId: string }>(
+          `${env.GUSTO_API_BASE_URL}/v1/employees/${userId}/terminations`,
           ({ request }) => {
             if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
               return new Response(undefined, { status: 401 });
@@ -104,14 +106,14 @@ describe('users connector', () => {
   describe('getAuthUser', () => {
     beforeEach(() => {
       server.use(
-        http.get(`${env.GUSTO_API_BASE_URL}/users/me`, ({ request }) => {
+        http.get(`${env.GUSTO_API_BASE_URL}/v1/token_info`, ({ request }) => {
           if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
             return new Response(undefined, { status: 401 });
           }
 
           const returnData = {
             resource: {
-              uri: companyId,
+              uuid: companyId,
             },
           };
 
@@ -122,7 +124,7 @@ describe('users connector', () => {
 
     test('should return auth user id when the token is valid', async () => {
       await expect(getAuthUser(validToken)).resolves.toStrictEqual({
-        companyId: String(companyId),
+        companyId,
       });
     });
 

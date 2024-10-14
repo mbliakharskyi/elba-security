@@ -10,9 +10,15 @@ import { decrypt } from '@/common/crypto';
 import { type GustoUser } from '@/connectors/gusto/users';
 import { createElbaClient } from '@/connectors/elba/client';
 
+const formatElbaUserDisplayName = (user: GustoUser) => {
+  if (user.first_name && user.last_name) {
+    return `${user.first_name} ${user.last_name}`;
+  }
+  return user.email;
+};
 const formatElbaUser = (user: GustoUser): User => ({
   id: user.uuid,
-  displayName: user.first_name,
+  displayName: formatElbaUserDisplayName(user),
   email: user.email,
   additionalEmails: [],
   isSuspendable: true,

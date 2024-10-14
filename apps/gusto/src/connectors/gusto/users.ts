@@ -23,7 +23,6 @@ export type GetUsersParams = {
 
 export type DeleteUsersParams = {
   accessToken: string;
-  companyId: string;
   userId: string;
 };
 
