@@ -24,8 +24,7 @@ const organisation = {
   accessToken: encryptedTokens.accessToken,
   refreshToken: encryptedTokens.refreshToken,
   region: 'us',
-  organizationUri: 'some-org-uri',
-  authUserUri: 'https://api.gusto.com/users/AAAAAAAAAAAAAAAA',
+  companyId: 'https://api.gusto.com/users/AAAAAAAAAAAAAAAA',
 };
 const now = new Date();
 // current token expires in an hour

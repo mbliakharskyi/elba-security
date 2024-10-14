@@ -4,44 +4,34 @@ import { env } from '@/common/env';
 import { GustoError } from '../common/error';
 
 const gustoUserSchema = z.object({
-  user: z.object({
-    name: z.string(),
-    email: z.string(),
-    uri: z.string(),
-  }),
-  uri: z.string(),
-  role: z.string(),
+  uuid: z.string(),
+  email: z.string(),
+  first_name: z.string(),
+  last_name: z.string(),
+  terminated: z.boolean(),
 });
 
 export type GustoUser = z.infer<typeof gustoUserSchema>;
 
-const gustoResponseSchema = z.object({
-  collection: z.array(z.unknown()),
-  pagination: z.object({
-    next_page_token: z.string().nullable(),
-  }),
-});
+const gustoResponseSchema = z.array(z.unknown());
 
 export type GetUsersParams = {
   accessToken: string;
-  organizationUri: string;
-  page?: string | null;
+  companyId: string;
+  page: number;
 };
 
 export type DeleteUsersParams = {
   accessToken: string;
+  companyId: string;
   userId: string;
 };
 
-export const getUsers = async ({ accessToken, organizationUri, page }: GetUsersParams) => {
-  const url = new URL(`${env.GUSTO_API_BASE_URL}/organization_memberships`);
+export const getUsers = async ({ accessToken, page, companyId }: GetUsersParams) => {
+  const url = new URL(`${env.GUSTO_API_BASE_URL}/v1/companies/${companyId}/employees`);
 
-  url.searchParams.append('organization', organizationUri);
-  url.searchParams.append('count', `${env.GUSTO_USERS_SYNC_BATCH_SIZE}`);
-
-  if (page) {
-    url.searchParams.append('page_token', page);
-  }
+  url.searchParams.append('per', `${env.GUSTO_USERS_SYNC_BATCH_SIZE}`);
+  url.searchParams.append('page', String(page));
 
   const response = await fetch(url.toString(), {
     method: 'GET',
@@ -62,7 +52,7 @@ export const getUsers = async ({ accessToken, organizationUri, page }: GetUsersP
   const validUsers: GustoUser[] = [];
   const invalidUsers: unknown[] = [];
 
-  for (const user of result.collection) {
+  for (const user of result) {
     const userResult = gustoUserSchema.safeParse(user);
     if (userResult.success) {
       validUsers.push(userResult.data);
@@ -71,16 +61,19 @@ export const getUsers = async ({ accessToken, organizationUri, page }: GetUsersP
     }
   }
 
+  // Extract pagination information from headers
+  const totalPages = Number(response.headers.get('X-Total-Pages')) || 0;
+
   return {
     validUsers,
     invalidUsers,
-    nextPage: result.pagination.next_page_token ?? null,
+    nextPage: page !== totalPages ? page + 1 : null,
   };
 };
 
 // Owner of the organization cannot be deleted
-export const deleteUser = async ({ userId, accessToken }: DeleteUsersParams) => {
-  const response = await fetch(`${env.GUSTO_API_BASE_URL}/organization_memberships/${userId}`, {
+export const deleteUser = async ({ userId, accessToken, companyId }: DeleteUsersParams) => {
+  const response = await fetch(`${env.GUSTO_API_BASE_URL}/v1/companies/${companyId}/${userId}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
@@ -95,12 +88,12 @@ export const deleteUser = async ({ userId, accessToken }: DeleteUsersParams) => 
 
 const authUserIdResponseSchema = z.object({
   resource: z.object({
-    uri: z.string(),
+    uuid: z.string(),
   }),
 });
 
 export const getAuthUser = async (accessToken: string) => {
-  const url = new URL(`${env.GUSTO_API_BASE_URL}/users/me`);
+  const url = new URL(`${env.GUSTO_API_BASE_URL}/v1/token_info`);
 
   const response = await fetch(url.toString(), {
     method: 'GET',
@@ -123,6 +116,6 @@ export const getAuthUser = async (accessToken: string) => {
   }
 
   return {
-    authUserUri: String(result.data.resource.uri),
+    companyId: String(result.data.resource.uuid),
   };
 };

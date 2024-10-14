@@ -6,7 +6,6 @@ import { GustoError } from '../common/error';
 const tokenResponseSchema = z.object({
   access_token: z.string(),
   refresh_token: z.string(),
-  organization: z.string(),
   expires_in: z.number(),
 });
 
@@ -15,10 +14,11 @@ export const getToken = async (code: string) => {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${btoa(`${env.GUSTO_CLIENT_ID}:${env.GUSTO_CLIENT_SECRET}`)}`,
     },
     body: new URLSearchParams({
       grant_type: 'authorization_code',
+      client_id: env.GUSTO_CLIENT_ID,
+      client_secret: env.GUSTO_CLIENT_SECRET,
       redirect_uri: env.GUSTO_REDIRECT_URI,
       code,
     }),
@@ -36,7 +36,6 @@ export const getToken = async (code: string) => {
     accessToken: result.access_token,
     refreshToken: result.refresh_token,
     expiresIn: result.expires_in,
-    organizationUri: result.organization,
   };
 };
 

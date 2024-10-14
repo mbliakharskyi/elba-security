@@ -12,9 +12,8 @@ export const organisations = Array.from({ length: 5 }, (_, i) => ({
   id: `00000000-0000-0000-0000-00000000000${i}`,
   accessToken: `test-access-token${i}`,
   refreshToken: `test-refresh-token${i}`,
-  organizationUri: `some organization_uri-${i}`,
   region: `us`,
-  authUserUri: 'https://api.gusto.com/users/AAAAAAAAAAAAAAAA',
+  companyId: 'https://api.gusto.com/users/AAAAAAAAAAAAAAAA',
 }));
 
 describe('schedule-users-syncs', () => {
@@ -48,7 +47,7 @@ describe('schedule-users-syncs', () => {
           organisationId: id,
           syncStartedAt: now,
           isFirstSync: false,
-          page: null,
+          page: 1,
         },
       }))
     );

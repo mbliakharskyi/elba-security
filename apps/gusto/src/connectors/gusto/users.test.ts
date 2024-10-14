@@ -10,8 +10,7 @@ const validToken = 'token-1234';
 const endPageToken = '3';
 const nextPageToken = '2';
 const userId = 'test-user-id';
-const organizationUri = 'some-organization-uri';
-const authUserUri = 'https://api.gusto.com/users/AAAAAAAAAAAAAAAA';
+const companyId = 'https://api.gusto.com/users/AAAAAAAAAAAAAAAA';
 
 const validUsers: GustoUser[] = Array.from({ length: 5 }, (_, i) => ({
   uri: `uri-${i}`,
@@ -49,7 +48,7 @@ describe('users connector', () => {
 
     test('should return users and nextPage when the token is valid and their is another page', async () => {
       await expect(
-        getUsers({ accessToken: validToken, organizationUri, page: nextPageToken })
+        getUsers({ accessToken: validToken, page: nextPageToken })
       ).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
@@ -59,7 +58,7 @@ describe('users connector', () => {
 
     test('should return users and no nextPage when the token is valid and their is no other page', async () => {
       await expect(
-        getUsers({ accessToken: validToken, organizationUri, page: endPageToken })
+        getUsers({ accessToken: validToken, page: endPageToken })
       ).resolves.toStrictEqual({
         validUsers,
         invalidUsers,
@@ -68,9 +67,7 @@ describe('users connector', () => {
     });
 
     test('should throws when the token is invalid', async () => {
-      await expect(getUsers({ accessToken: 'foo-bar', organizationUri })).rejects.toBeInstanceOf(
-        GustoError
-      );
+      await expect(getUsers({ accessToken: 'foo-bar' })).rejects.toBeInstanceOf(GustoError);
     });
   });
 
@@ -114,7 +111,7 @@ describe('users connector', () => {
 
           const returnData = {
             resource: {
-              uri: authUserUri,
+              uri: companyId,
             },
           };
 
@@ -125,7 +122,7 @@ describe('users connector', () => {
 
     test('should return auth user id when the token is valid', async () => {
       await expect(getAuthUser(validToken)).resolves.toStrictEqual({
-        authUserUri: String(authUserUri),
+        companyId: String(companyId),
       });
     });
 

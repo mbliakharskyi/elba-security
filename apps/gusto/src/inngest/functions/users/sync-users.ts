@@ -10,20 +10,13 @@ import { decrypt } from '@/common/crypto';
 import { type GustoUser } from '@/connectors/gusto/users';
 import { createElbaClient } from '@/connectors/elba/client';
 
-// extract uuid from user's unique uri like this: "https://api.gusto.com/organization_memberships/AAAAAAAAAAAAAAAA"
-const extractUUID = (user: GustoUser): string => {
-  const regex = /organization_memberships\/(?<uuid>[a-f0-9-]{36})/;
-  const match = regex.exec(user.uri);
-  return match?.groups?.uuid ? match.groups.uuid : user.user.email;
-};
-const formatElbaUser = ({ user, authUserUri }: { user: GustoUser; authUserUri: string }): User => ({
-  id: extractUUID(user),
-  displayName: user.user.name,
-  email: user.user.email,
-  role: user.role,
+const formatElbaUser = (user: GustoUser): User => ({
+  id: user.uuid,
+  displayName: user.first_name,
+  email: user.email,
   additionalEmails: [],
-  isSuspendable: user.user.uri !== authUserUri && user.role !== 'owner',
-  url: 'https://gusto.com/app/admin/users',
+  isSuspendable: true,
+  url: 'https://app.gusto-demo.com/payroll_admin/people/all',
 });
 
 export const syncUsers = inngest.createFunction(
@@ -55,9 +48,8 @@ export const syncUsers = inngest.createFunction(
     const [organisation] = await db
       .select({
         token: organisationsTable.accessToken,
-        authUserUri: organisationsTable.authUserUri,
+        companyId: organisationsTable.companyId,
         region: organisationsTable.region,
-        organizationUri: organisationsTable.organizationUri,
       })
       .from(organisationsTable)
       .where(eq(organisationsTable.id, organisationId));
@@ -67,16 +59,16 @@ export const syncUsers = inngest.createFunction(
 
     const elba = createElbaClient({ organisationId, region: organisation.region });
     const token = await decrypt(organisation.token);
-    const authUserUri = organisation.authUserUri;
+    const companyId = organisation.companyId;
 
     const nextPage = await step.run('list-users', async () => {
       const result = await getUsers({
         accessToken: token,
-        organizationUri: organisation.organizationUri,
         page,
+        companyId,
       });
 
-      const users = result.validUsers.map((user) => formatElbaUser({ user, authUserUri }));
+      const users = result.validUsers.map(formatElbaUser);
 
       if (result.invalidUsers.length > 0) {
         logger.warn('Retrieved users contains invalid data', {

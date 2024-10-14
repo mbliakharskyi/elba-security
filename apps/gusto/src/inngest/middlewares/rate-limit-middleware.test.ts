@@ -35,7 +35,6 @@ describe('rate-limit middleware', () => {
       // @ts-expect-error this is a mock
       response: {
         status: 429,
-        headers: new Headers({ 'X-RateLimit-Reset': '60' }),
       },
     });
 

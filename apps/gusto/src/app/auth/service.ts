@@ -17,8 +17,8 @@ export const setupOrganisation = async ({
   code,
   region,
 }: SetupOrganisationParams) => {
-  const { accessToken, refreshToken, expiresIn, organizationUri } = await getToken(code);
-  const { authUserUri } = await getAuthUser(accessToken);
+  const { accessToken, refreshToken, expiresIn } = await getToken(code);
+  const { companyId } = await getAuthUser(accessToken);
 
   const encryptedAccessToken = await encrypt(accessToken);
   const encodedRefreshToken = await encrypt(refreshToken);
@@ -30,8 +30,7 @@ export const setupOrganisation = async ({
       accessToken: encryptedAccessToken,
       refreshToken: encodedRefreshToken,
       region,
-      organizationUri,
-      authUserUri,
+      companyId,
     })
     .onConflictDoUpdate({
       target: organisationsTable.id,
@@ -39,8 +38,7 @@ export const setupOrganisation = async ({
         accessToken: encryptedAccessToken,
         refreshToken: encodedRefreshToken,
         region,
-        organizationUri,
-        authUserUri,
+        companyId,
       },
     });
 
@@ -51,7 +49,7 @@ export const setupOrganisation = async ({
         organisationId,
         isFirstSync: true,
         syncStartedAt: Date.now(),
-        page: null,
+        page: 1,
       },
     },
     {

@@ -40,7 +40,6 @@ describe('auth connector', () => {
         accessToken,
         refreshToken: validRefreshToken,
         expiresIn,
-        organizationUri: organization,
       });
     });
 

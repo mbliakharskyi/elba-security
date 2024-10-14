@@ -15,26 +15,24 @@ const refreshToken = 'some refresh token';
 const expiresIn = 60;
 const region = 'us';
 const now = new Date();
-const authUserUri = 'https://api.gusto.com/users/AAAAAAAAAAAAAAAA';
+const companyId = 'https://api.gusto.com/users/AAAAAAAAAAAAAAAA';
 
 const getTokenData = {
   accessToken,
   refreshToken,
   expiresIn,
-  organizationUri: 'some organization_uri',
 };
 
 const getAuthUserData = {
-  authUserUri: String(authUserUri),
+  companyId: String(companyId),
 };
 
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   accessToken,
   refreshToken,
-  organizationUri: 'some organization_uri',
   region,
-  authUserUri,
+  companyId,
 };
 
 describe('setupOrganisation', () => {
@@ -84,7 +82,7 @@ describe('setupOrganisation', () => {
           isFirstSync: true,
           organisationId: organisation.id,
           syncStartedAt: now.getTime(),
-          page: null,
+          page: 1,
         },
       },
       {
@@ -142,7 +140,7 @@ describe('setupOrganisation', () => {
           isFirstSync: true,
           organisationId: organisation.id,
           syncStartedAt: now.getTime(),
-          page: null,
+          page: 1,
         },
       },
       {
