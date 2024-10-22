@@ -8,11 +8,21 @@ import { inngest } from '@/inngest/client';
 import { decrypt } from '@/common/crypto';
 import { createElbaClient } from '@/connectors/elba/client';
 
-const formatElbaUser = (user: AzuredevopsUser): User => ({
-  id: user.user.uuid,
-  displayName: user.user.display_name,
+const formatElbaUser = ({
+  user,
+  workspaceId,
+  authUserEmail,
+}: {
+  user: AzuredevopsUser;
+  workspaceId: string;
+  authUserEmail: string;
+}): User => ({
+  id: user.descriptor,
+  email: user.mailAddress,
+  displayName: user.displayName,
   additionalEmails: [],
-  url: `https://azuredevops.org/${user.workspace.slug}/workspace/settings/user-directory`,
+  isSuspendable: user.mailAddress !== authUserEmail,
+  url: `https://dev.azure.com/${workspaceId}/_settings/users`,
 });
 
 export const syncUsers = inngest.createFunction(
@@ -45,6 +55,7 @@ export const syncUsers = inngest.createFunction(
       .select({
         accessToken: organisationsTable.accessToken,
         workspaceId: organisationsTable.workspaceId,
+        authUserEmail: organisationsTable.authUserEmail,
         region: organisationsTable.region,
       })
       .from(organisationsTable)
@@ -57,6 +68,7 @@ export const syncUsers = inngest.createFunction(
     const elba = createElbaClient({ organisationId, region: organisation.region });
     const accessToken = await decrypt(organisation.accessToken);
     const workspaceId = organisation.workspaceId;
+    const authUserEmail = organisation.authUserEmail;
 
     const nextPage = await step.run('list-users', async () => {
       const result = await getUsers({
@@ -65,7 +77,9 @@ export const syncUsers = inngest.createFunction(
         page,
       });
 
-      const users = result.validUsers.map(formatElbaUser);
+      const users = result.validUsers.map((user) =>
+        formatElbaUser({ user, workspaceId, authUserEmail })
+      );
 
       if (result.invalidUsers.length > 0) {
         logger.warn('Retrieved users contains invalid data', {

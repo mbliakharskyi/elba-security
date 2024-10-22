@@ -4,19 +4,16 @@ import { env } from '@/common/env';
 import { AzuredevopsError } from '../common/error';
 
 const getUsersResponseSchema = z.object({
-  values: z.array(z.unknown()),
-  next: z.string().optional(),
+  value: z.array(z.unknown()),
+  continuationToken: z.string().optional(),
 });
 
 export const azuredevopsUserSchema = z.object({
-  user: z.object({
-    display_name: z.string(),
-    uuid: z.string(),
-    type: z.literal('user'), // user
-  }),
-  workspace: z.object({
-    slug: z.string(),
-  }),
+  mailAddress: z.string(),
+  origin: z.literal('msa'),
+  displayName: z.string(),
+  descriptor: z.string(),
+  subjectKind: z.literal('user'), // user
 });
 
 export type AzuredevopsUser = z.infer<typeof azuredevopsUserSchema>;
@@ -39,8 +36,10 @@ type CheckWorkspaceSettingParams = {
 
 export const getUsers = async ({ accessToken, workspaceId, page }: GetUsersParams) => {
   const url = new URL(`${env.AZUREDEVOPS_API_BASE_URL}/${workspaceId}/_apis/graph/users`);
-  url.searchParams.append('api-version', `${env.AZUREDEVOPS_USERS_SYNC_BATCH_SIZE}`);
   url.searchParams.append('api-version', `7.2-preview.1`);
+  if (page) {
+    url.searchParams.append('continuationToken', `page`);
+  }
 
   const response = await fetch(page ?? url.toString(), {
     method: 'GET',
@@ -51,11 +50,6 @@ export const getUsers = async ({ accessToken, workspaceId, page }: GetUsersParam
   });
 
   if (!response.ok) {
-    if (response.status === 401) {
-      return {
-        isInvalidSecuritySetting: true,
-      };
-    }
     throw new AzuredevopsError('Could not retrieve users', { response });
   }
 
@@ -65,7 +59,7 @@ export const getUsers = async ({ accessToken, workspaceId, page }: GetUsersParam
   const validUsers: AzuredevopsUser[] = [];
   const invalidUsers: unknown[] = [];
 
-  for (const user of result.values) {
+  for (const user of result.value) {
     const userResult = azuredevopsUserSchema.safeParse(user);
     if (userResult.success) {
       validUsers.push(userResult.data);
@@ -77,7 +71,7 @@ export const getUsers = async ({ accessToken, workspaceId, page }: GetUsersParam
   return {
     validUsers,
     invalidUsers,
-    nextPage: result.next ?? null,
+    nextPage: result.continuationToken ?? null,
   };
 };
 
