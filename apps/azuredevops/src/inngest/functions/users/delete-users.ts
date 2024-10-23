@@ -23,6 +23,7 @@ export const deleteUser = inngest.createFunction(
     const [organisation] = await db
       .select({
         token: organisationsTable.accessToken,
+        workspaceId: organisationsTable.workspaceId,
       })
       .from(organisationsTable)
       .where(eq(organisationsTable.id, organisationId));
@@ -31,7 +32,8 @@ export const deleteUser = inngest.createFunction(
       throw new NonRetriableError(`Could not retrieve ${userId}`);
     }
     const accessToken = await decrypt(organisation.token);
+    const workspaceId = organisation.workspaceId;
 
-    await deleteAzuredevopsUser({ userId, accessToken });
+    await deleteAzuredevopsUser({ userId, accessToken, workspaceId });
   }
 );

@@ -84,7 +84,7 @@ describe('users connector', () => {
     beforeEach(() => {
       server.use(
         http.delete<{ userId: string }>(
-          `${env.AZUREDEVOPS_API_BASE_URL}/organization_memberships/${userId}`,
+          `${env.AZUREDEVOPS_API_BASE_URL}/${workspaceId}/_apis/graph/users/${userId}`,
           ({ request }) => {
             if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
               return new Response(undefined, { status: 401 });
@@ -96,17 +96,21 @@ describe('users connector', () => {
     });
 
     test('should delete user successfully when token is valid', async () => {
-      await expect(deleteUser({ accessToken: validToken, userId })).resolves.not.toThrow();
+      await expect(
+        deleteUser({ accessToken: validToken, userId, workspaceId })
+      ).resolves.not.toThrow();
     });
 
     test('should not throw when the user is not found', async () => {
-      await expect(deleteUser({ accessToken: validToken, userId })).resolves.toBeUndefined();
+      await expect(
+        deleteUser({ accessToken: validToken, userId, workspaceId })
+      ).resolves.toBeUndefined();
     });
 
     test('should throw AzuredevopsError when token is invalid', async () => {
-      await expect(deleteUser({ accessToken: 'invalidToken', userId })).rejects.toBeInstanceOf(
-        AzuredevopsError
-      );
+      await expect(
+        deleteUser({ accessToken: 'invalidToken', userId, workspaceId })
+      ).rejects.toBeInstanceOf(AzuredevopsError);
     });
   });
 

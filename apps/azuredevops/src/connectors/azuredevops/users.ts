@@ -27,6 +27,7 @@ type GetUsersParams = {
 export type DeleteUsersParams = {
   accessToken: string;
   userId: string;
+  workspaceId: string;
 };
 
 type CheckWorkspaceSettingParams = {
@@ -75,17 +76,17 @@ export const getUsers = async ({ accessToken, workspaceId, page }: GetUsersParam
   };
 };
 
-export const deleteUser = async ({ userId, accessToken }: DeleteUsersParams) => {
-  const response = await fetch(
-    `${env.AZUREDEVOPS_API_BASE_URL}/organization_memberships/${userId}`,
-    {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }
-  );
+export const deleteUser = async ({ userId, accessToken, workspaceId }: DeleteUsersParams) => {
+  const url = new URL(`${env.AZUREDEVOPS_API_BASE_URL}/${workspaceId}/_apis/graph/users/${userId}`);
+
+  url.searchParams.append('api-version', `7.2-preview.1`);
+  const response = await fetch(url.toString(), {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
 
   if (!response.ok && response.status !== 404) {
     throw new AzuredevopsError(`Could not delete user with Id: ${userId}`, { response });

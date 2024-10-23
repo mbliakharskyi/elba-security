@@ -37,6 +37,7 @@ describe('deleteUser', () => {
     expect(usersConnector.deleteUser).toBeCalledWith({
       userId,
       accessToken,
+      workspaceId: organisation.workspaceId,
     });
   });
 });

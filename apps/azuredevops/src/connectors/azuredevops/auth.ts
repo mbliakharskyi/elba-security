@@ -59,7 +59,6 @@ export const getRefreshToken = async (refreshToken: string) => {
   }
 
   const data: unknown = await response.json();
-
   try {
     const result = tokenResponseSchema.parse(data);
     return {
