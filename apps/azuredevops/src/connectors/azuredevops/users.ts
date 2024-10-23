@@ -140,15 +140,7 @@ export const checkWorkspaceSetting = async ({
     },
   });
 
-  if (!response.ok) {
-    if (response.status === 401) {
-      return {
-        isInvalidSecuritySetting: true,
-      };
-    }
-  }
-
   return {
-    isInvalidSecuritySetting: false,
+    isInvalidSecuritySetting: !response.ok && response.status === 401,
   };
 };
