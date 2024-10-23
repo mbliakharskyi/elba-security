@@ -11,6 +11,7 @@ const organisation: Organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   accessToken: 'access_test_token',
   refreshToken: 'refresh-token',
+  authUserEmail: 'test@gmail.com',
   workspaceId: 'workspace-id',
   region: 'us',
 };

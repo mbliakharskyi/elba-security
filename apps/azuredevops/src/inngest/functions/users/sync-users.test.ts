@@ -22,18 +22,17 @@ const organisation = {
   accessToken: encryptedTokens.accessToken,
   refreshToken: encryptedTokens.refreshToken,
   workspaceId: '00000000-0000-0000-0000-000000000010',
+  authUserEmail: 'test@gmail.com',
   region: 'us',
 };
 const syncStartedAt = Date.now();
 
 const users: usersConnector.AzuredevopsUser[] = Array.from({ length: 5 }, (_, i) => ({
-  user: {
-    uuid: `user-id-${i}`,
-    display_name: `user ${i}`,
-  },
-  workspace: {
-    slug: `test-workspace-name-${i}`,
-  },
+  mailAddress: `user${i}@gmail.com`,
+  displayName: `user${i}-displayName`,
+  descriptor: `user${i}-displayName`,
+  origin: `msa`,
+  subjectKind: `user`,
 }));
 
 const setup = createInngestFunctionMock(syncUsers, 'azuredevops/users.sync.requested');

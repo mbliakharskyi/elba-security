@@ -9,13 +9,15 @@ const accessToken = 'access-token';
 const refreshToken = 'refresh-token';
 const workspaceId = 'workspace-id';
 const workspaceName = 'test-workspace-name';
-const expiresIn = 60;
+const expiresIn = '60';
+const authUserEmail = 'test@gmail.com';
 
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   workspaceId,
   accessToken,
   refreshToken,
+  authUserEmail,
   region,
 };
 
@@ -35,13 +37,10 @@ vi.mock('next/headers', () => ({
 
 describe('getWorkspacesAndStoreToken', () => {
   test('should obtain the access token & fetch workspaces', async () => {
-    const getAccessToken = vi
-      .spyOn(authConnector, 'getAccessToken')
-      .mockResolvedValue(getTokenData);
+    const getToken = vi.spyOn(authConnector, 'getToken').mockResolvedValue(getTokenData);
     const getWorkspaces = vi.spyOn(workspaceConnector, 'getWorkspaces').mockResolvedValue([
       {
-        uuid: workspaceId,
-        name: workspaceName,
+        AccountName: workspaceName,
       },
     ]);
 
@@ -51,8 +50,8 @@ describe('getWorkspacesAndStoreToken', () => {
       region,
     });
 
-    expect(getAccessToken).toHaveBeenCalledTimes(1);
-    expect(getAccessToken).toHaveBeenCalledWith(code);
+    expect(getToken).toHaveBeenCalledTimes(1);
+    expect(getToken).toHaveBeenCalledWith(code);
     expect(getWorkspaces).toHaveBeenCalledTimes(1);
     expect(getWorkspaces).toHaveBeenCalledWith(accessToken);
     expect(mockSet).toHaveBeenCalledTimes(1);
@@ -70,13 +69,11 @@ describe('getWorkspacesAndStoreToken', () => {
       sameSite: 'lax',
       maxAge: 3600,
     });
-    expect(result).toEqual({ workspaces: [{ uuid: workspaceId, name: workspaceName }] });
+    expect(result).toEqual({ workspaces: [{ AccountName: workspaceName }] });
   });
 
-  test('should throw an error if getAccessToken fails', async () => {
-    vi.spyOn(authConnector, 'getAccessToken').mockRejectedValue(
-      new Error('Failed to get access token')
-    );
+  test('should throw an error if getToken fails', async () => {
+    vi.spyOn(authConnector, 'getToken').mockRejectedValue(new Error('Failed to get access token'));
 
     await expect(
       getWorkspacesAndStoreToken({
@@ -88,7 +85,7 @@ describe('getWorkspacesAndStoreToken', () => {
   });
 
   test('should throw an error if getWorkspaces fails', async () => {
-    vi.spyOn(authConnector, 'getAccessToken').mockResolvedValue(getTokenData);
+    vi.spyOn(authConnector, 'getToken').mockResolvedValue(getTokenData);
     vi.spyOn(workspaceConnector, 'getWorkspaces').mockRejectedValue(
       new Error('Failed to get workspaces')
     );
@@ -105,11 +102,10 @@ describe('getWorkspacesAndStoreToken', () => {
     const originalEnv = process.env;
     vi.stubEnv('NODE_ENV', 'production');
 
-    vi.spyOn(authConnector, 'getAccessToken').mockResolvedValue(getTokenData);
+    vi.spyOn(authConnector, 'getToken').mockResolvedValue(getTokenData);
     vi.spyOn(workspaceConnector, 'getWorkspaces').mockResolvedValue([
       {
-        uuid: workspaceId,
-        name: workspaceName,
+        AccountName: workspaceName,
       },
     ]);
     await getWorkspacesAndStoreToken({

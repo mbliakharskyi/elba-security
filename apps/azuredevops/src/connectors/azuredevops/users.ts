@@ -38,10 +38,10 @@ export const getUsers = async ({ accessToken, workspaceId, page }: GetUsersParam
   const url = new URL(`${env.AZUREDEVOPS_API_BASE_URL}/${workspaceId}/_apis/graph/users`);
   url.searchParams.append('api-version', `7.2-preview.1`);
   if (page) {
-    url.searchParams.append('continuationToken', `page`);
+    url.searchParams.append('continuationToken', page);
   }
 
-  const response = await fetch(page ?? url.toString(), {
+  const response = await fetch(url.toString(), {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${accessToken}`,

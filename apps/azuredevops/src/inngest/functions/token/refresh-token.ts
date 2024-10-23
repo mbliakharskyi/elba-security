@@ -34,7 +34,6 @@ export const refreshToken = inngest.createFunction(
   { event: 'azuredevops/token.refresh.requested' },
   async ({ event, step }) => {
     const { organisationId, expiresAt } = event.data;
-
     await step.sleepUntil('wait-before-expiration', subMinutes(new Date(expiresAt), 30));
 
     const nextExpiresAt = await step.run('refresh-token', async () => {
@@ -68,7 +67,7 @@ export const refreshToken = inngest.createFunction(
         })
         .where(eq(organisationsTable.id, organisationId));
 
-      return addSeconds(new Date(), expiresIn);
+      return addSeconds(new Date(), parseInt(expiresIn, 10));
     });
 
     await step.sendEvent('next-refresh', {

@@ -5,6 +5,7 @@ import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { inngest } from '@/inngest/client';
 import { encrypt } from '@/common/crypto';
+import * as usersConnector from '@/connectors/azuredevops/users';
 import { setupOrganisation } from './service';
 
 type PartialMockCookies = Pick<ReadonlyRequestCookies, 'get'>;
@@ -14,13 +15,15 @@ const now = new Date();
 const accessToken = 'access-token';
 const refreshToken = 'refresh-token';
 const workspaceId = 'workspace-id';
-const expiresIn = 60;
+const expiresIn = '60';
+const authUserEmail = 'test@gmail.com';
 
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
   accessToken: await encrypt(accessToken),
   refreshToken: await encrypt(refreshToken),
   workspaceId,
+  authUserEmail,
   region: 'us',
 };
 
@@ -31,6 +34,14 @@ const mockCookieValue = JSON.stringify({
   expiresAt: expiresIn,
   region,
 });
+
+const checkWorkspaceSettingData = {
+  isInvalidSecuritySetting: false,
+};
+
+const getAuthUserData = {
+  authUserEmail,
+};
 
 vi.mock('next/headers', () => ({
   cookies: vi.fn(),
@@ -50,6 +61,8 @@ describe('setupOrganisation', () => {
   test('should successfully setup the organisation', async () => {
     // @ts-expect-error --  @typescript-eslint/ban-ts-comment
     const send = vi.spyOn(inngest, 'send').mockResolvedValue(undefined);
+    vi.spyOn(usersConnector, 'checkWorkspaceSetting').mockResolvedValue(checkWorkspaceSettingData);
+    vi.spyOn(usersConnector, 'getAuthUser').mockResolvedValue(getAuthUserData);
 
     const mockCookies: PartialMockCookies = {
       get: vi.fn().mockReturnValue({ value: mockCookieValue }),

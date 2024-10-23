@@ -44,13 +44,13 @@ export const getRefreshToken = async (refreshToken: string) => {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${btoa(
-        `${env.AZUREDEVOPS_CLIENT_ID}:${env.AZUREDEVOPS_CLIENT_SECRET}`
-      )}`,
     },
     body: new URLSearchParams({
+      client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+      client_assertion: env.AZUREDEVOPS_CLIENT_SECRET,
       grant_type: 'refresh_token',
-      refresh_token: refreshToken,
+      assertion: refreshToken,
+      redirect_uri: env.AZUREDEVOPS_REDIRECT_URI,
     }),
   });
 

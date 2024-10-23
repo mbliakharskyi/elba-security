@@ -4,13 +4,21 @@ import { NonRetriableError } from 'inngest';
 import { db } from '@/database/client';
 import { organisationsTable } from '@/database/schema';
 import { AzuredevopsError } from '@/connectors/common/error';
+import { encrypt } from '@/common/crypto';
 import { unauthorizedMiddleware } from './unauthorized-middleware';
+
+const newTokens = {
+  accessToken: 'new-access-token',
+  refreshToken: 'new-refresh-token',
+};
 
 const organisation = {
   id: '00000000-0000-0000-0000-000000000001',
-  accessToken: 'access-token',
-  teamId: 'team-id',
+  accessToken: await encrypt(newTokens.accessToken),
+  refreshToken: await encrypt(newTokens.refreshToken),
   region: 'us',
+  authUserEmail: 'test@gmail.com',
+  workspaceId: 'some-workspace-id',
 };
 
 describe('unauthorized middleware', () => {

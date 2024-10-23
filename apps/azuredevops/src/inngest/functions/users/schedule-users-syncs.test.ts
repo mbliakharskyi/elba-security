@@ -16,6 +16,7 @@ export const organisations = [
     accessToken: await encrypt(newTokens.accessToken),
     refreshToken: await encrypt(newTokens.refreshToken),
     region: 'us',
+    authUserEmail: 'test@gmail.com',
     workspaceId: 'some-workspace-id',
   },
 ];

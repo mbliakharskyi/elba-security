@@ -8,15 +8,15 @@ import { getToken } from './auth';
 const validAuthCode = 'valid-code';
 const accessToken = 'access-token';
 const refreshToken = 'refresh-token';
-const expiresIn = 1234;
+const expiresIn = '1234';
 
 describe('getToken', () => {
   beforeEach(() => {
     server.use(
-      http.post(`${env.AZUREDEVOPS_APP_INSTALL_URL}/access_token`, async ({ request }) => {
+      http.post(`${env.AZUREDEVOPS_APP_INSTALL_URL}/oauth2/token`, async ({ request }) => {
         const body = await request.text();
         const searchParams = new URLSearchParams(body);
-        const code = searchParams.get('code');
+        const code = searchParams.get('assertion');
         if (code !== validAuthCode) {
           return new Response(undefined, { status: 401 });
         }

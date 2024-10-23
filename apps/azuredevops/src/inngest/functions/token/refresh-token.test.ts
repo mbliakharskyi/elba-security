@@ -24,6 +24,7 @@ const organisation = {
   accessToken: encryptedTokens.accessToken,
   refreshToken: encryptedTokens.refreshToken,
   region: 'us',
+  authUserEmail: 'test@gmail.com',
   workspaceId: 'some-workspace-id',
 };
 
@@ -31,7 +32,7 @@ const now = new Date();
 // current token expires in an hour
 const expiresAt = now.getTime() + 60 * 1000;
 // next token duration
-const expiresIn = 60 * 1000;
+const expiresIn = '6000';
 
 const setup = createInngestFunctionMock(refreshToken, 'azuredevops/token.refresh.requested');
 
@@ -99,7 +100,7 @@ describe('refresh-token', () => {
       name: 'azuredevops/token.refresh.requested',
       data: {
         organisationId: organisation.id,
-        expiresAt: now.getTime() + expiresIn * 1000,
+        expiresAt: now.getTime() + parseInt(expiresIn, 10) * 1000,
       },
     });
   });

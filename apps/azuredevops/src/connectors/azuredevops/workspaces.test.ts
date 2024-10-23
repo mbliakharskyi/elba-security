@@ -8,20 +8,17 @@ import { getWorkspaces } from './workspaces';
 const validToken = 'valid-token';
 const workspaceResponseData = [
   {
-    uuid: 'test-id',
-    name: 'test-name',
+    AccountName: 'test-name',
   },
 ];
 describe('getWorkspaces', () => {
   beforeEach(() => {
     server.use(
-      http.get(`${env.AZUREDEVOPS_API_BASE_URL}/workspaces`, ({ request }) => {
+      http.get(`${env.AZUREDEVOPS_APP_INSTALL_URL}/_apis/accounts`, ({ request }) => {
         if (request.headers.get('Authorization') !== `Bearer ${validToken}`) {
           return new Response(undefined, { status: 401 });
         }
-        return Response.json({
-          values: workspaceResponseData,
-        });
+        return Response.json(workspaceResponseData);
       })
     );
   });

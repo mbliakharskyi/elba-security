@@ -14,7 +14,8 @@ const organisation = {
   accessToken: await encrypt(accessToken),
   refreshToken: await encrypt(refreshToken),
   region: 'us',
-  authUserEmail: 'https://api.azuredevops.com/users/AAAAAAAAAAAAAAAA',
+  workspaceId: 'some-workspace-id',
+  authUserEmail: 'test@gmail.com',
 };
 
 const setup = createInngestFunctionMock(deleteUser, 'azuredevops/users.delete.requested');
