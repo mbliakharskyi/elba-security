@@ -161,7 +161,7 @@ describe('users connector', () => {
       );
     });
 
-    test('should return auth user id when the token is valid', async () => {
+    test('should return false when the response is successful', async () => {
       await expect(
         checkWorkspaceSetting({ accessToken: validToken, workspaceId })
       ).resolves.toStrictEqual({
@@ -169,7 +169,7 @@ describe('users connector', () => {
       });
     });
 
-    test('should throws when the token is invalid', async () => {
+    test('should throws when the response is not successful', async () => {
       await expect(
         checkWorkspaceSetting({ accessToken: 'foo-bar', workspaceId })
       ).resolves.toStrictEqual({
