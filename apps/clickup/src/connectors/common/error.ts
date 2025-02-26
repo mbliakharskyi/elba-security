@@ -27,6 +27,9 @@ export const mapElbaConnectionError: MapConnectionErrorFn = (error) => {
   if (error instanceof ClickUpMultipleWorkspaceError) {
     return 'multiple_workspaces_not_supported';
   }
+  if (error instanceof ClickUpMultipleWorkspaceError) {
+    return 'multiple_workspaces_not_supported';
+  }
 
   return null;
 };
