@@ -15,17 +15,12 @@ export class ClickUpError extends Error {
 
 export class ClickUpMultipleWorkspaceError extends ClickUpError {}
 
-export class ClickUpMultipleWorkspaceError extends ClickUpError {}
-
 export const mapElbaConnectionError: MapConnectionErrorFn = (error) => {
   if (error instanceof NangoConnectionError && error.response.status === 404) {
     return 'unauthorized';
   }
   if (error instanceof ClickUpError && error.response?.status === 401) {
     return 'unauthorized';
-  }
-  if (error instanceof ClickUpMultipleWorkspaceError) {
-    return 'multiple_workspaces_not_supported';
   }
   if (error instanceof ClickUpMultipleWorkspaceError) {
     return 'multiple_workspaces_not_supported';
